@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - IT Fleet Report</title>
+
+    <link rel="icon" type="image/jpeg" href="{{ asset('img/Logo_PT_ASM.jpg') }}">
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap');
@@ -40,8 +43,9 @@
 
             <div class="text-center mb-8 relative z-10">
                 <div class="mb-6 flex justify-center relative z-10">
-                    <img src="{{ asset('img/Logo_PT_ASM.jpg') }}" alt="PT Amarin" class="w-24 h-24 object-contain bg-white rounded-2xl shadow-lg ring-4 ring-white/50 animate-float">
+                    <img src="{{ asset('images/Logo_PT_ASM.jpg') }}" alt="PT Amarin" class="w-24 h-24 object-contain bg-white rounded-2xl shadow-lg ring-4 ring-white/50 animate-float">
                 </div>
+
                 <h2 class="text-3xl font-black text-slate-800 tracking-tighter drop-shadow-sm">
                     FLEET <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-500 to-blue-600">REPORT</span>
                 </h2>
