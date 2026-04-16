@@ -6,38 +6,40 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('weekly_reports', function (Blueprint $table) {
             $table->id();
             $table->foreignId('vessel_id')->constrained()->cascadeOnDelete();
+            $table->integer('employee_id')->nullable(); // ID dari user yang login (SSO)
             $table->date('report_date');
 
-            // Availability
-            $table->boolean('vessel_status')->default(true); // Up/Down
-            $table->decimal('uptime_percentage', 5, 2);
+            // 1. Availability
+            $table->string('vessel_status')->nullable();
+            $table->decimal('uptime_percentage', 5, 2)->nullable();
+            $table->string('sla_compliance')->nullable();
 
-            // Scope Status (Bisa dibikin text/enum, kita pakai text untuk simplisitas)
-            $table->text('cctv_status')->nullable();
-            $table->text('network_status')->nullable();
-            $table->text('user_support_log')->nullable();
-            $table->text('security_status')->nullable();
-            $table->text('backup_system_status')->nullable();
+            // 2. Incident
+            $table->text('incident_list')->nullable();
+            $table->text('root_cause')->nullable();
 
-            // Incident & Maintenance
-            $table->text('incident_issues')->nullable();
-            $table->text('maintenance_activities')->nullable();
+            // 3. Maintenance
+            $table->string('maintenance_type')->nullable();
+            $table->text('preventive_maintenance')->nullable();
+
+            // 4-9. Scope Lainnya
+            $table->text('performance_trend')->nullable();
+            $table->text('risk_identification')->nullable();
+            $table->text('activity_log')->nullable();
+            $table->text('inventory_tracking')->nullable();
+
+            // Status Laporan (1 = Draft, 3 = Final/Completed)
+            $table->integer('status')->default(1);
 
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('weekly_reports');

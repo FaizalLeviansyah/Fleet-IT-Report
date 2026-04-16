@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - IT Fleet Report</title>
 
-    <link rel="icon" type="image/jpeg" href="{{ asset('img/Logo_PT_ASM.jpg') }}">
+    <link rel="icon" type="image/jpeg" href="{{ asset('public\img\Logo_PT_ASM.jpg') }}">
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
