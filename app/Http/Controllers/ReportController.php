@@ -35,14 +35,18 @@ class ReportController extends Controller
     {
         $status = $request->input('action_type') === 'draft' ? 1 : 3;
 
+        // Kita ubah patokan pencariannya HANYA menggunakan vessel_id dan status draft.
+        // Ini mencegah duplikasi jika user mengubah tanggal laporan.
         WeeklyReport::updateOrCreate(
             [
                 'vessel_id' => $request->vessel_id,
-                'report_date' => $request->report_date,
-                'status' => 1
+                'status' => 1 // Selalu cari yang masih DRAFT untuk ditimpa
             ],
             [
                 'employee_id' => Auth::id(),
+                // BULLETPROOF: Jika browser gagal kirim tanggal, paksa pakai tanggal hari ini
+                'report_date' => $request->filled('report_date') ? $request->report_date : \Carbon\Carbon::now()->format('Y-m-d'),
+
                 'vessel_status' => $request->vessel_status,
                 'uptime_percentage' => $request->uptime_percentage,
                 'sla_compliance' => $request->sla_compliance,
@@ -63,26 +67,46 @@ class ReportController extends Controller
     }
 
     // FUNGSI BARU UNTUK DOWNLOAD PDF
-    public function downloadPdf($id)
+    public function downloadPdf(Request $request, $id)
     {
-        // Cari laporan berdasarkan ID, beserta data kapal dan pembuatnya
+        // Cari laporan beserta relasi vessel-nya
         $report = WeeklyReport::with(['vessel'])->findOrFail($id);
 
-        // Render file view 'reports.pdf' menjadi dokumen PDF
+        // Render file view 'reports.pdf' menjadi PDF
         $pdf = Pdf::loadView('reports.pdf', compact('report'));
 
-        // Atur ukuran kertas (A4)
+        // Atur ukuran kertas
         $pdf->setPaper('A4', 'portrait');
 
-        // Nama file PDF dinamis (Misal: IT_Report_SOVIANA_20260424.pdf)
+        // Penamaan file PDF
         $fileName = 'IT_Report_' . str_replace(' ', '_', $report->vessel->vessel_name) . '_' . Carbon::parse($report->report_date)->format('Ymd') . '.pdf';
 
-        return $pdf->download($fileName);
-        // (Atau gunakan $pdf->stream($fileName) jika ingin PDF-nya terbuka di browser dulu tanpa langsung terdownload)
+        // Jika ada request ?download=1, maka paksa unduh. Jika tidak, tampilkan (stream)
+        if ($request->query('download') == 1) {
+            return $pdf->download($fileName);
+        }
+
+        return $pdf->stream($fileName);
     }
 
-    public function history()
+    public function history(Request $request)
     {
-        return view('reports.history');
+        // Ambil query pencarian jika ada
+        $search = $request->input('search');
+
+        // Ambil data laporan yang HANYA berstatus FINAL (status = 3)
+        $query = WeeklyReport::with('vessel')->where('status', 3);
+
+        if ($search) {
+            $query->whereHas('vessel', function($q) use ($search) {
+                $q->where('vessel_name', 'like', "%{$search}%");
+            })->orWhere('report_date', 'like', "%{$search}%");
+        }
+
+        // Urutkan dari yang paling baru
+        $historyReports = $query->orderBy('report_date', 'desc')->paginate(10);
+
+        return view('reports.history', compact('historyReports', 'search'));
     }
+
 }
