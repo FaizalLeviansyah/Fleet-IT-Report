@@ -11,24 +11,37 @@ use Barryvdh\DomPDF\Facade\Pdf; // TAMBAHKAN INI UNTUK PDF
 
 class ReportController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $vessels = Vessel::all();
-        $startOfWeek = Carbon::now()->startOfWeek()->format('Y-m-d');
-        $endOfWeek = Carbon::now()->endOfWeek()->format('Y-m-d');
 
-        $reportsThisWeek = WeeklyReport::whereBetween('report_date', [$startOfWeek, $endOfWeek])->get();
+        // 1. Ambil Tahun dari inputan (Default: Tahun Ini)
+        $selectedYear = $request->input('year', \Carbon\Carbon::now()->year);
 
-        $vesselReports = $vessels->map(function ($vessel) use ($reportsThisWeek) {
-            $report = $reportsThisWeek->where('vessel_id', $vessel->id)->first();
-            return (object) [
-                'vessel' => $vessel,
-                'report' => $report,
-                'status' => $report ? $report->status : 0
-            ];
-        });
+        // 2. Buat Mesin Kalender (1 Tahun = 52/53 Minggu, Dikelompokkan per Bulan)
+        $calendar = [];
+        $weeksInYear = \Carbon\Carbon::create($selectedYear)->isoWeeksInYear;
 
-        return view('reports.index', compact('vesselReports'));
+        for ($week = 1; $week <= $weeksInYear; $week++) {
+            $date = \Carbon\Carbon::now()->setISODate($selectedYear, $week);
+            $monthName = $date->translatedFormat('F'); // Contoh: "January", "February"
+
+            // Simpan tanggal hari Jumat pada minggu tersebut sebagai target default form
+            $targetFriday = $date->endOfWeek(\Carbon\Carbon::FRIDAY)->format('Y-m-d');
+            $calendar[$monthName][$week] = $targetFriday;
+        }
+
+        // 3. Ambil Semua Laporan di Tahun Tersebut
+        $reports = WeeklyReport::whereYear('report_date', $selectedYear)->get();
+
+        // 4. Petakan laporan ke dalam Array [ID_KAPAL][MINGGU_KE] agar mudah diakses di View
+        $reportMap = [];
+        foreach ($reports as $report) {
+            $weekNum = \Carbon\Carbon::parse($report->report_date)->isoWeek;
+            $reportMap[$report->vessel_id][$weekNum] = $report;
+        }
+
+        return view('reports.index', compact('vessels', 'selectedYear', 'calendar', 'reportMap'));
     }
 
     public function store(Request $request)
