@@ -18,4 +18,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
     Route::post('/reports', [ReportController::class, 'store'])->name('reports.store');
     Route::get('/reports/history', [ReportController::class, 'history'])->name('reports.history');
+
+    // RUTE BARU UNTUK DOWNLOAD PDF
+    Route::get('/reports/{id}/pdf', [ReportController::class, 'downloadPdf'])->name('reports.pdf');
 });
