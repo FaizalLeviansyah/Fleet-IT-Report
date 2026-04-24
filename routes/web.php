@@ -14,11 +14,17 @@ Route::middleware('auth')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-    // Rute Manajemen Laporan Terpisah
+    // MANAJEMEN LAPORAN TERPISAH
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
     Route::post('/reports', [ReportController::class, 'store'])->name('reports.store');
     Route::get('/reports/history', [ReportController::class, 'history'])->name('reports.history');
 
-    // RUTE BARU UNTUK DOWNLOAD PDF
+    // BARU UNTUK DOWNLOAD PDF
     Route::get('/reports/{id}/pdf', [ReportController::class, 'downloadPdf'])->name('reports.pdf');
+
+    // MASTER DATA KAPAL
+    Route::get('/master/vessels', [App\Http\Controllers\MasterVesselController::class, 'index'])->name('master.vessels.index');
+    Route::post('/master/vessels', [App\Http\Controllers\MasterVesselController::class, 'store'])->name('master.vessels.store');
+    Route::put('/master/vessels/{id}', [App\Http\Controllers\MasterVesselController::class, 'update'])->name('master.vessels.update');
+    Route::delete('/master/vessels/{id}', [App\Http\Controllers\MasterVesselController::class, 'destroy'])->name('master.vessels.destroy');
 });

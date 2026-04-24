@@ -107,6 +107,15 @@
                 </a>
              </li>
           </ul>
+          <div class="mb-3 px-4 text-[10px] font-black text-slate-500 uppercase tracking-widest">Administrator</div>
+          <ul class="space-y-3 font-medium mb-8 px-2">
+             <li>
+                <a href="{{ route('master.vessels.index') }}" class="group flex items-center p-3.5 rounded-xl transition-all border {{ request()->routeIs('master.vessels.*') ? 'bg-indigo-50 border-indigo-200 text-indigo-700 shadow-sm transform scale-105' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 shadow-sm hover:scale-105' }}">
+                    <svg class="w-5 h-5 transition duration-75 {{ request()->routeIs('master.vessels.*') ? 'text-indigo-600' : 'text-slate-500 group-hover:text-indigo-600' }}" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                    <span class="ml-3 font-bold text-[13px]">Master Data Armada</span>
+                </a>
+             </li>
+          </ul>
        </div>
     </aside>
 

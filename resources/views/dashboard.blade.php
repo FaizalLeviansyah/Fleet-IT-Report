@@ -8,6 +8,34 @@
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 animate-fade-in-up">
         <div>
             <h1 class="text-3xl font-black fancy-header tracking-tight">IT Command Center</h1>
+            @if($myPendingVessels->count() > 0)
+    <div class="mb-8 animate-fade-in-up" style="animation-delay: 0.05s;">
+        <div class="w-full relative overflow-hidden rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 border-4 border-amber-200 shadow-xl">
+            <div class="absolute top-0 right-0 -mt-4 -mr-4 w-32 h-32 bg-white opacity-10 rounded-full blur-2xl"></div>
+            <div class="relative z-10 px-6 py-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div class="flex items-center gap-4 text-white text-left">
+                    <div class="p-3 bg-white/20 rounded-xl backdrop-blur-sm animate-pulse shrink-0">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                    </div>
+                    <div>
+                        <h2 class="text-lg sm:text-xl font-black uppercase tracking-wider drop-shadow-md">TUGAS MINGGU INI BELUM SELESAI, MAS {{ strtoupper(explode(' ', Auth::user()->full_name ?? Auth::user()->name)[0]) }}!</h2>
+                        <p class="text-xs sm:text-sm font-bold text-amber-50 mt-0.5 leading-relaxed">
+                            Ada <span class="bg-white text-orange-600 px-2 py-0.5 rounded font-black mx-1">{{ $myPendingVessels->count() }} Kapal</span> tanggung jawab Anda yang belum di-submit:
+                            <span class="italic text-white">
+                                {{ $myPendingVessels->pluck('vessel_name')->take(3)->implode(', ') }}
+                                {{ $myPendingVessels->count() > 3 ? '...dll' : '' }}
+                            </span>
+                        </p>
+                    </div>
+                </div>
+                <a href="{{ route('reports.index') }}" class="flex items-center gap-2 bg-white/20 px-5 py-2.5 rounded-lg text-xs font-black text-white backdrop-blur-sm border border-white/30 hover:bg-white hover:text-orange-600 transition-colors shrink-0">
+                    KERJAKAN SEKARANG
+                    <svg class="w-4 h-4 animate-bounce" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                </a>
+            </div>
+        </div>
+    </div>
+    @endif
             <p class="text-slate-600 text-xs font-bold uppercase tracking-widest mt-1">Fleet IT Operations & Monitoring</p>
         </div>
         <div class="hidden md:flex items-center gap-3 mt-4 md:mt-0">
