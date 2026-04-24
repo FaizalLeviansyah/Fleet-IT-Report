@@ -119,6 +119,14 @@
                 <form id="reportForm" action="{{ route('reports.store') }}" method="POST">
                     @csrf
                     <input type="hidden" name="vessel_id" id="modal-vessel-id">
+                    <input type="hidden" name="late_remark" id="modal-late-remark"> <div id="late-remark-alert" class="hidden mb-6 p-4 rounded-xl border-2 border-red-300 bg-red-50 animate-fade-in-up">
+                        <div class="flex items-start gap-3">
+                            <svg class="w-6 h-6 text-red-600 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                            <div>
+                                <h3 class="text-sm font-black text-red-800 uppercase tracking-widest">Laporan Terlambat (Late Submission)</h3>
+                                <p class="text-xs font-bold text-red-600 mt-1">Remark Audit: <span id="late-remark-text" class="text-slate-700 italic"></span></p>
+                            </div>
+                        </div>
 
                     <div id="form-step-1" class="space-y-6 animate-fade-in-up">
                         <div class="bg-white border-2 border-slate-300 rounded-xl shadow-sm overflow-hidden border-l-8 border-l-slate-400"><div class="p-3 bg-slate-50 border-b border-slate-200"><h2 class="text-xs font-black text-slate-800 uppercase tracking-widest">Informasi Utama</h2></div><div class="p-4 grid grid-cols-1 md:grid-cols-2 gap-4"><div><label class="block mb-2 text-xs font-bold text-slate-600 uppercase">Periode Laporan</label><input type="date" name="report_date" id="modal-report-date" required class="w-full rounded-lg border-2 border-slate-300 text-sm font-bold focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition-all"></div></div></div>
@@ -213,9 +221,60 @@
     }
 
     function openReportModal(vesselId, vesselName, targetDate, reportData) {
-        const today = new Date().getDay();
+        const todayDay = new Date().getDay();
 
-        if (!reportData && (today >= 1 && today <= 3)) {
+        // Tarik batas waktu minggu ini langsung dari server Laravel
+        const currentWeekStart = "{{ now()->startOfWeek()->format('Y-m-d') }}";
+        const currentWeekEnd = "{{ now()->endOfWeek(\Carbon\Carbon::FRIDAY)->format('Y-m-d') }}";
+
+        // SENSOR 0: PEMBLOKIRAN MASA DEPAN (Future Week Block)
+        // Jika target tanggal lebih besar dari hari Jumat minggu ini, BLOKIR TOTAL!
+        if (!reportData && targetDate > currentWeekEnd) {
+            Swal.fire({
+                title: 'Akses Ditolak!',
+                text: 'Anda tidak dapat membuat laporan untuk periode yang belum terjadi (Masa Depan).',
+                icon: 'error',
+                confirmButtonColor: '#dc2626', // Warna Merah Tegas
+                confirmButtonText: 'Mengerti',
+                customClass: { popup: 'border-2 border-slate-300 rounded-2xl shadow-xl' }
+            });
+            return; // Script dihentikan total di sini, modal tidak akan terbuka
+        }
+
+        // SENSOR 1: JIKA TERLAMBAT (Target tanggal lebih kecil dari hari Senin minggu ini)
+        if (!reportData && targetDate < currentWeekStart) {
+            Swal.fire({
+                title: 'Laporan Terlambat!',
+                text: 'Periode minggu ini sudah terlewat. Wajib mengisi alasan (remark) untuk keperluan audit manajemen IT.',
+                input: 'textarea',
+                inputPlaceholder: 'Contoh: Lupa input karena sedang cuti / Kendala sinkronisasi data kapal...',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ea580c',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'Simpan Alasan & Lanjut',
+                cancelButtonText: 'Batal',
+                reverseButtons: true,
+                customClass: { popup: 'border-2 border-slate-300 rounded-2xl shadow-xl' },
+                preConfirm: (text) => {
+                    if (!text) { Swal.showValidationMessage('Alasan keterlambatan tidak boleh kosong!'); }
+                    return text;
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('modal-late-remark').value = result.value;
+                    document.getElementById('late-remark-alert').classList.remove('hidden');
+                    document.getElementById('late-remark-text').innerText = `"${result.value}"`;
+                    lanjutBukaModal(vesselId, vesselName, targetDate, reportData);
+                } else {
+                    document.getElementById('close-report-modal').click();
+                }
+            });
+            return;
+        }
+
+        // SENSOR 2: JIKA TERLALU CEPAT (Target minggu ini, tapi dikerjakan Senin-Rabu)
+        if (!reportData && targetDate >= currentWeekStart && targetDate <= currentWeekEnd && (todayDay >= 1 && todayDay <= 3)) {
             Swal.fire({
                 title: 'Belum Waktunya!',
                 text: "Laporan Mingguan idealnya diisi pada hari Kamis/Jumat untuk merangkum operasional 1 minggu. Yakin ingin mulai mencicil draf sekarang?",
@@ -231,18 +290,24 @@
                 if (result.isConfirmed) {
                     lanjutBukaModal(vesselId, vesselName, targetDate, reportData);
                 } else {
-                    // TUTUP PAKSA MODAL JIKA BATAL DIKLIK!
                     document.getElementById('close-report-modal').click();
                 }
             });
             return;
         }
 
+        // SENSOR 3: AMAN / TEPAT WAKTU
         lanjutBukaModal(vesselId, vesselName, targetDate, reportData);
     }
 
     function lanjutBukaModal(vesselId, vesselName, targetDate, reportData) {
         document.getElementById('reportForm').reset();
+
+        // Bersihkan Alert Terlambat (jika sebelumnya membuka modal lain)
+        if (!reportData && targetDate >= "{{ now()->startOfWeek()->format('Y-m-d') }}") {
+            document.getElementById('late-remark-alert').classList.add('hidden');
+            document.getElementById('modal-late-remark').value = '';
+        }
 
         currentStep = 1;
         document.getElementById('form-step-1').classList.remove('hidden');
@@ -255,6 +320,15 @@
         document.getElementById('modal-report-date').value = targetDate;
 
         if(reportData) {
+            // Jika Draft ini adalah laporan terlambat, tampilkan kembali alasannya
+            if(reportData.late_remark) {
+                document.getElementById('late-remark-alert').classList.remove('hidden');
+                document.getElementById('late-remark-text').innerText = `"${reportData.late_remark}"`;
+                document.getElementById('modal-late-remark').value = reportData.late_remark;
+            } else {
+                document.getElementById('late-remark-alert').classList.add('hidden');
+            }
+
             if(reportData.report_date) document.getElementById('modal-report-date').value = reportData.report_date.substring(0, 10);
             if(reportData.vessel_status) document.querySelector('[name="vessel_status"]').value = reportData.vessel_status;
             if(reportData.uptime_percentage) document.querySelector('[name="uptime_percentage"]').value = reportData.uptime_percentage;

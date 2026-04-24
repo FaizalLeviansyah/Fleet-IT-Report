@@ -13,7 +13,8 @@ class WeeklyReport extends Model
         'vessel_id', 'employee_id', 'report_date', 'vessel_status',
         'uptime_percentage', 'sla_compliance', 'incident_list', 'root_cause',
         'maintenance_type', 'preventive_maintenance', 'performance_trend',
-        'risk_identification', 'activity_log', 'inventory_tracking', 'status'
+        'risk_identification', 'activity_log', 'inventory_tracking', 'status',
+        'late_remark'
     ];
 
     // Relasi balik ke Kapal

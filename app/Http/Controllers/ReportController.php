@@ -71,6 +71,7 @@ class ReportController extends Controller
                 'risk_identification' => $request->risk_identification,
                 'activity_log' => $request->activity_log,
                 'inventory_tracking' => $request->inventory_tracking,
+                'late_remark' => $request->late_remark, // <--- TAMBAHKAN INI
                 'status' => $status
             ]
         );
