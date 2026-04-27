@@ -9,7 +9,7 @@ class PersonalItReport extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['user_id', 'start_date', 'end_date', 'status'];
+    protected $fillable = ['user_id', 'start_date', 'end_date', 'status', 'late_remark'];
 
     // Relasi ke tabel user (Pembuat laporan)
     public function user() {

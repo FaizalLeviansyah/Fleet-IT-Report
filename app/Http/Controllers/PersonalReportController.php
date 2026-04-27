@@ -26,31 +26,29 @@ class PersonalReportController extends Controller
     {
         $status = $request->input('action_type') === 'draft' ? 1 : 3;
         $today = Carbon::now();
+        $endDate = Carbon::parse($request->end_date); // Hari Jumat laporan tersebut
 
-        // --- PERTAHANAN BACKEND: BLOKIR SUBMIT FINAL SEBELUM JUMAT ---
-        // 0=Minggu, 1=Senin, 2=Selasa, 3=Rabu, 4=Kamis, 5=Jumat, 6=Sabtu
-        if ($status === 3 && ($today->dayOfWeek >= 1 && $today->dayOfWeek <= 4)) {
-            // Jika memaksa Submit Final antara Senin-Kamis, kembalikan dengan paksa!
-            return redirect()->back()->with('error', 'Sistem Terkunci: Laporan Final hanya boleh di-submit pada hari Jumat. Silakan gunakan fitur Simpan Draft untuk mencicil.');
+        // PERTAHANAN BACKEND CERDAS:
+        // Jika status Final, DAN tanggal akhir laporan adalah minggu ini/masa depan,
+        // DAN hari ini belum hari Jumat (masih Senin-Kamis) -> BLOKIR!
+        if ($status === 3 && ($endDate->isFuture() || $today->isSameWeek($endDate))) {
+            if ($today->dayOfWeek >= 1 && $today->dayOfWeek <= 4) {
+                return redirect()->back()->with('error', 'Sistem Terkunci: Laporan minggu ini hanya boleh di-submit final pada hari Jumat.');
+            }
         }
 
-        // Cari apakah minggu ini sudah ada laporannya? Jika ada, update. Jika belum, buat baru.
         $report = PersonalItReport::updateOrCreate(
-            [
-                'user_id' => Auth::id(),
-                'start_date' => $request->start_date, // Patokan awal minggu
-            ],
+            ['user_id' => Auth::id(), 'start_date' => $request->start_date],
             [
                 'end_date' => $request->end_date,
-                'status' => $status
+                'status' => $status,
+                'late_remark' => $request->late_remark // Simpan Alasan Terlambat
             ]
         );
 
-        // Hapus data detail lama agar tidak menumpuk saat update DRAFT
         $report->actualTasks()->delete();
         $report->plannedTasks()->delete();
 
-        // Simpan Baris-Baris Actual Pekerjaan
         if ($request->has('actual_task')) {
             foreach ($request->actual_task as $key => $taskName) {
                 if (!empty($taskName)) {
@@ -66,7 +64,6 @@ class PersonalReportController extends Controller
             }
         }
 
-        // Simpan Baris-Baris Planning Minggu Depan
         if ($request->has('planned_task')) {
             foreach ($request->planned_task as $key => $planName) {
                 if (!empty($planName)) {

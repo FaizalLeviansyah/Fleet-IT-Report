@@ -84,14 +84,29 @@
                 <form id="personalForm" action="{{ route('personal.reports.store') }}" method="POST" class="space-y-6">
                     @csrf
 
-                    <div class="bg-white border-2 border-slate-300 rounded-xl shadow-sm overflow-hidden p-4 grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 cursor-not-allowed">
-                        <div>
-                            <label class="block mb-2 text-xs font-bold text-slate-600 uppercase">Periode Mulai (Senin)</label>
-                            <input type="date" name="start_date" id="start_date" readonly class="w-full rounded-lg border-2 border-slate-200 text-sm font-bold bg-slate-100 text-slate-500 cursor-not-allowed pointer-events-none">
+                    <div class="bg-slate-50 border-2 border-slate-300 rounded-xl shadow-sm p-4 mb-6">
+                        <div class="flex items-center justify-between mb-4 pb-4 border-b border-slate-200">
+                            <h3 class="text-xs font-black text-slate-800 uppercase tracking-widest">Pengaturan Periode</h3>
+                            <label class="flex items-center gap-2 cursor-pointer bg-red-50 px-3 py-1.5 rounded border border-red-200 text-red-700 hover:bg-red-100 transition-colors">
+                                <input type="checkbox" id="mode-terlambat" class="w-4 h-4 text-red-600 rounded focus:ring-red-500 cursor-pointer" onchange="toggleLateMode(this)">
+                                <span class="text-[10px] font-black uppercase">Buat Laporan Terlambat (Backdate)</span>
+                            </label>
                         </div>
-                        <div>
-                            <label class="block mb-2 text-xs font-bold text-slate-600 uppercase">Periode Selesai (Jumat)</label>
-                            <input type="date" name="end_date" id="end_date" readonly class="w-full rounded-lg border-2 border-slate-200 text-sm font-bold bg-slate-100 text-slate-500 cursor-not-allowed pointer-events-none">
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block mb-2 text-xs font-bold text-slate-600 uppercase">Periode Mulai (Senin)</label>
+                                <input type="date" name="start_date" id="start_date" readonly class="w-full rounded-lg border-2 border-slate-200 text-sm font-bold bg-slate-100 text-slate-500 cursor-not-allowed pointer-events-none" onchange="calculateFriday()">
+                            </div>
+                            <div>
+                                <label class="block mb-2 text-xs font-bold text-slate-600 uppercase">Periode Selesai (Jumat)</label>
+                                <input type="date" name="end_date" id="end_date" readonly class="w-full rounded-lg border-2 border-slate-200 text-sm font-bold bg-slate-100 text-slate-500 cursor-not-allowed pointer-events-none">
+                            </div>
+                        </div>
+
+                        <div id="remark-container" class="hidden mt-4 pt-4 border-t border-slate-200 animate-fade-in-up">
+                            <label class="block mb-2 text-xs font-black text-red-600 uppercase tracking-widest">Alasan Keterlambatan Laporan (Wajib Diisi)</label>
+                            <textarea name="late_remark" id="late_remark" rows="2" class="w-full rounded-lg border-2 border-red-300 bg-red-50 text-sm font-bold focus:border-red-600 focus:ring-4 focus:ring-red-100 placeholder-red-300" placeholder="Contoh: Terlambat submit karena dinas luar kota..."></textarea>
                         </div>
                     </div>
 
@@ -177,32 +192,12 @@
         document.getElementById('start_date').value = new Date(curr.setDate(first)).toISOString().split('T')[0];
         document.getElementById('end_date').value = new Date(curr.setDate(last)).toISOString().split('T')[0];
 
-        // LOGIKA STRICT: MENCEGAH SUBMIT SEBELUM JUMAT
-        const todayDay = new Date().getDay(); // 0=Minggu, 1=Senin, 2=Selasa, 3=Rabu, 4=Kamis, 5=Jumat, 6=Sabtu
+        const todayDay = new Date().getDay();
         const submitBtn = document.getElementById('btn-submit-personal');
 
-        if (todayDay >= 1 && todayDay <= 4) {
-            // Jika Senin - Kamis, ubah tombol menjadi tombol peringatan!
-            submitBtn.type = 'button'; // Matikan fungsi submit bawaan
-            submitBtn.classList.replace('bg-blue-600', 'bg-slate-400');
-            submitBtn.classList.replace('border-blue-800', 'border-slate-500');
-            submitBtn.classList.remove('hover:bg-blue-700', 'hover:scale-105');
-
-            submitBtn.onclick = function() {
-                Swal.fire({
-                    title: 'Sistem Terkunci!',
-                    text: 'Pengiriman laporan Final hanya dibuka pada hari Jumat. Anda harus menggunakan tombol "Simpan Draft" untuk mencicil pekerjaan hari ini.',
-                    icon: 'warning',
-                    confirmButtonColor: '#f97316',
-                    confirmButtonText: 'Baik, Saya Akan Nyicil Draft',
-                    customClass: { popup: 'border-2 border-slate-300 rounded-2xl shadow-xl' }
-                });
-            };
-        } else {
-            // Jika Jumat, Sabtu, atau Minggu, kembalikan tombol normal
-            submitBtn.type = 'submit';
-            submitBtn.onclick = null;
-        }
+        // Reset tombol dan checkbox mode terlambat
+        document.getElementById('mode-terlambat').checked = false;
+        toggleLateMode(document.getElementById('mode-terlambat'));
 
         document.getElementById('actual-body').innerHTML = '';
         document.getElementById('planned-body').innerHTML = '';
@@ -215,12 +210,106 @@
         document.getElementById('personalModal').classList.remove('flex');
     }
 
+    function toggleLateMode(checkbox) {
+        const startInput = document.getElementById('start_date');
+        const remarkContainer = document.getElementById('remark-container');
+        const remarkInput = document.getElementById('late_remark');
+        const submitBtn = document.getElementById('btn-submit-personal');
+
+        if (checkbox.checked) {
+            startInput.readOnly = false;
+            startInput.classList.remove('bg-slate-100', 'text-slate-500', 'cursor-not-allowed', 'pointer-events-none', 'border-slate-200');
+            startInput.classList.add('bg-white', 'text-slate-900', 'border-blue-300', 'focus:border-blue-600');
+
+            remarkContainer.classList.remove('hidden');
+            remarkInput.required = true;
+
+            submitBtn.type = 'submit';
+            submitBtn.classList.replace('bg-slate-400', 'bg-blue-600');
+            submitBtn.classList.replace('border-slate-500', 'border-blue-800');
+            submitBtn.onclick = null;
+        } else {
+            startInput.readOnly = true;
+            startInput.classList.add('bg-slate-100', 'text-slate-500', 'cursor-not-allowed', 'pointer-events-none', 'border-slate-200');
+            startInput.classList.remove('bg-white', 'text-slate-900', 'border-blue-300', 'focus:border-blue-600');
+
+            remarkContainer.classList.add('hidden');
+            remarkInput.required = false;
+            remarkInput.value = '';
+
+            let curr = new Date();
+            let first = curr.getDate() - curr.getDay() + 1;
+            document.getElementById('start_date').value = new Date(curr.setDate(first)).toISOString().split('T')[0];
+            calculateFriday(); // Ini akan otomatis menyesuaikan baris tabel juga
+
+            const todayDay = new Date().getDay();
+            if (todayDay >= 1 && todayDay <= 4) {
+                submitBtn.type = 'button';
+                submitBtn.classList.replace('bg-blue-600', 'bg-slate-400');
+                submitBtn.classList.replace('border-blue-800', 'border-slate-500');
+                submitBtn.onclick = function() {
+                    Swal.fire({ title: 'Sistem Terkunci!', text: 'Pengiriman laporan Final hanya dibuka pada hari Jumat.', icon: 'warning' });
+                };
+            }
+        }
+    }
+
+    // FUNGSI PINTAR: Hitung Jumat & Sesuaikan Seluruh Baris Aktual
+    function calculateFriday() {
+        const startVal = document.getElementById('start_date').value;
+        if(startVal) {
+            let startDate = new Date(startVal);
+            if(startDate.getDay() !== 1) {
+                Swal.fire('Format Salah', 'Silakan pilih tanggal yang jatuh pada hari Senin!', 'error');
+                document.getElementById('start_date').value = '';
+                document.getElementById('end_date').value = '';
+                return;
+            }
+            startDate.setDate(startDate.getDate() + 4);
+            const endVal = startDate.toISOString().split('T')[0];
+            document.getElementById('end_date').value = endVal;
+
+            // UPDATE SEMUA TANGGAL DI TABEL ACTUAL AGAR TERKUNCI DI PERIODE INI
+            const actualInputs = document.querySelectorAll('.actual-date-input');
+            actualInputs.forEach(input => {
+                input.min = startVal;
+                input.max = endVal;
+
+                // Jika tanggal yang sedang terisi berada di luar rentang baru, set ke hari Senin
+                if(input.value < startVal || input.value > endVal) {
+                    input.value = startVal;
+                }
+            });
+        }
+    }
+
+    // Fungsi pintar penentu tanggal default saat baris baru ditambah
+    function getSmartDefaultDate() {
+        const startVal = document.getElementById('start_date').value;
+        const endVal = document.getElementById('end_date').value;
+        const today = getLocalToday();
+
+        // Jika hari ini berada di dalam rentang periode form, pakai hari ini
+        if (startVal && endVal && today >= startVal && today <= endVal) {
+            return today;
+        }
+        // Jika form sedang di mode terlambat (Backdate), pakai tanggal Senin periode tersebut
+        return startVal ? startVal : today;
+    }
+
     function addActualRow() {
+        const startVal = document.getElementById('start_date').value;
+        const endVal = document.getElementById('end_date').value;
+
+        // Pasang atribut min & max agar user tidak bisa memilih di luar periode
+        const minAttr = startVal ? `min="${startVal}"` : '';
+        const maxAttr = endVal ? `max="${endVal}"` : '';
+        const defaultDate = getSmartDefaultDate();
+
         const tbody = document.getElementById('actual-body');
         const tr = document.createElement('tr');
-        // Fitur Pintar: Value tanggal langsung diisi dengan getLocalToday()
         tr.innerHTML = `
-            <td class="p-1"><input type="date" name="actual_date[]" value="${getLocalToday()}" required class="w-full rounded border-slate-300 text-xs font-bold focus:border-blue-600 focus:ring-1 focus:ring-blue-100"></td>
+            <td class="p-1"><input type="date" name="actual_date[]" value="${defaultDate}" ${minAttr} ${maxAttr} required class="actual-date-input w-full rounded border-slate-300 text-xs font-bold focus:border-blue-600 focus:ring-1 focus:ring-blue-100"></td>
             <td class="p-1"><input type="text" name="actual_task[]" placeholder="Update Server..." required class="w-full rounded border-slate-300 text-xs font-bold focus:border-blue-600 focus:ring-1 focus:ring-blue-100"></td>
             <td class="p-1"><input type="text" name="actual_result[]" placeholder="Patch berhasil..." class="w-full rounded border-slate-300 text-xs font-bold focus:border-blue-600 focus:ring-1 focus:ring-blue-100"></td>
             <td class="p-1">
