@@ -27,4 +27,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/master/vessels', [App\Http\Controllers\MasterVesselController::class, 'store'])->name('master.vessels.store');
     Route::put('/master/vessels/{id}', [App\Http\Controllers\MasterVesselController::class, 'update'])->name('master.vessels.update');
     Route::delete('/master/vessels/{id}', [App\Http\Controllers\MasterVesselController::class, 'destroy'])->name('master.vessels.destroy');
+
+    // RUTE LAPORAN KINERJA IT (PERSONAL)
+    Route::get('/personal-reports', [App\Http\Controllers\PersonalReportController::class, 'index'])->name('personal.reports.index');
+    Route::post('/personal-reports', [App\Http\Controllers\PersonalReportController::class, 'store'])->name('personal.reports.store');
 });

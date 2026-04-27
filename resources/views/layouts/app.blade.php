@@ -101,6 +101,12 @@
                 </a>
              </li>
              <li>
+                <a href="{{ route('personal.reports.index') }}" class="group flex items-center p-3.5 rounded-xl transition-all border {{ request()->routeIs('personal.reports.*') ? 'bg-blue-50 border-blue-200 text-blue-700 shadow-sm transform scale-105' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 shadow-sm hover:scale-105' }}">
+                   <svg class="w-5 h-5 transition duration-75 {{ request()->routeIs('personal.reports.*') ? 'text-blue-600' : 'text-slate-500 group-hover:text-blue-600' }}" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                   <span class="ml-3 font-bold text-[13px]">Laporan Kinerja IT</span>
+                </a>
+             </li>
+             <li>
                 <a href="{{ route('reports.history') }}" class="group flex items-center p-3.5 rounded-xl transition-all border {{ request()->routeIs('reports.history') ? 'bg-blue-50 border-blue-200 text-blue-700 shadow-sm transform scale-105' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 shadow-sm hover:scale-105' }}">
                     <svg class="w-5 h-5 transition duration-75 {{ request()->routeIs('reports.history') ? 'text-blue-600' : 'text-slate-500 group-hover:text-blue-600' }}" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                     <span class="ml-3 font-bold text-[13px]">Riwayat Laporan</span>
