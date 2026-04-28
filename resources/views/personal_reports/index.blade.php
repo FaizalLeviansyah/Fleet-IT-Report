@@ -9,7 +9,7 @@
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
             </div>
             <div>
-                <h1 class="text-3xl font-black text-slate-900 tracking-tight">Laporan Kinerja IT</h1>
+                <h1 class="text-3xl font-black text-slate-900 tracking-tight">Laporan Kinerja Staff IT</h1>
                 <p class="text-xs font-bold text-slate-500 uppercase tracking-widest mt-1">Weekly Report Individu / Personel IT</p>
             </div>
         </div>
@@ -49,7 +49,7 @@
                             <div class="text-xs font-bold text-slate-600"><span class="text-blue-600 font-black">{{ $report->actualTasks->count() }}</span> Aktual / <span class="text-amber-600 font-black">{{ $report->plannedTasks->count() }}</span> Plan</div>
                         </td>
                         <td class="px-6 py-4 text-right">
-                            <button class="px-4 py-2 bg-slate-100 text-slate-600 border border-slate-300 rounded font-bold hover:bg-slate-200 transition-colors">Lihat Detail</button>
+                            <button onclick="openPersonalModal({{ $report->toJson() }})" class="px-4 py-2 bg-blue-50 text-blue-700 border border-blue-200 rounded font-bold hover:bg-blue-100 hover:ring-2 hover:ring-blue-300 transition-all shadow-sm">Lihat / Edit Detail</button>
                         </td>
                     </tr>
                     @empty
@@ -113,7 +113,12 @@
                     <div class="bg-white border-2 border-slate-300 rounded-xl shadow-sm overflow-hidden border-l-8 border-l-blue-500">
                         <div class="p-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
                             <h2 class="text-xs font-black text-slate-800 uppercase tracking-widest">ACTUAL PEKERJAAN MINGGU INI</h2>
-                            <button type="button" onclick="addActualRow()" class="px-4 py-1.5 bg-blue-600 text-white rounded-lg text-[10px] font-black uppercase hover:bg-blue-700 shadow-sm">+ Tambah Baris</button>
+                            <div class="flex gap-2">
+                                <button type="button" onclick="autoSyncVesselData()" class="px-3 py-1.5 bg-indigo-100 text-indigo-700 border border-indigo-300 rounded-lg text-[10px] font-black uppercase hover:bg-indigo-200 shadow-sm flex items-center gap-1">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg> Tarik Data Armada
+                                </button>
+                                <button type="button" onclick="addActualRow()" class="px-4 py-1.5 bg-blue-600 text-white rounded-lg text-[10px] font-black uppercase hover:bg-blue-700 shadow-sm">+ Tambah Baris</button>
+                            </div>
                         </div>
                         <div class="p-4 overflow-x-auto">
                             <table class="w-full text-xs text-left whitespace-nowrap" id="actual-table">
@@ -128,7 +133,7 @@
                                     </tr>
                                 </thead>
                                 <tbody id="actual-body">
-                                    </tbody>
+                                </tbody>
                             </table>
                         </div>
                     </div>
@@ -151,7 +156,7 @@
                                     </tr>
                                 </thead>
                                 <tbody id="planned-body">
-                                    </tbody>
+                                </tbody>
                             </table>
                         </div>
                     </div>
@@ -159,7 +164,7 @@
             </div>
 
             <div class="flex items-center justify-end gap-3 p-4 md:p-5 border-t-2 border-slate-200 bg-white rounded-b-xl shrink-0">
-                <button type="submit" form="personalForm" name="action_type" value="draft" class="px-6 py-3 bg-orange-50 text-orange-700 border-2 border-orange-300 hover:bg-orange-100 hover:ring-4 hover:ring-orange-200 hover:scale-105 rounded-xl font-black text-xs uppercase tracking-widest transition-all shadow-sm">
+                <button type="submit" id="btn-draft-personal" form="personalForm" name="action_type" value="draft" class="px-6 py-3 bg-orange-50 text-orange-700 border-2 border-orange-300 hover:bg-orange-100 hover:ring-4 hover:ring-orange-200 hover:scale-105 rounded-xl font-black text-xs uppercase tracking-widest transition-all shadow-sm">
                     Simpan Draft
                 </button>
                 <button type="submit" id="btn-submit-personal" form="personalForm" name="action_type" value="final" class="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white border-2 border-blue-800 hover:bg-blue-700 hover:ring-4 hover:ring-blue-200 hover:scale-105 rounded-xl font-black text-xs uppercase tracking-widest transition-all shadow-lg">
@@ -175,34 +180,106 @@
         document.body.appendChild(document.getElementById('personalModal'));
     });
 
-    // Fungsi untuk mendapatkan tanggal lokal (WIB/Indonesia)
+    // Ambil JSON Data Armada dari Controller
+    const autoSyncData = @json($autoSyncTasks ?? []);
+
     function getLocalToday() {
         const date = new Date();
         date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
         return date.toISOString().split('T')[0];
     }
 
-    function openPersonalModal() {
+    function openPersonalModal(reportData = null) {
         document.getElementById('personalModal').classList.remove('hidden');
         document.getElementById('personalModal').classList.add('flex');
 
-        let curr = new Date();
-        let first = curr.getDate() - curr.getDay() + 1; // Senin
-        let last = first + 4; // Jumat
-        document.getElementById('start_date').value = new Date(curr.setDate(first)).toISOString().split('T')[0];
-        document.getElementById('end_date').value = new Date(curr.setDate(last)).toISOString().split('T')[0];
-
-        const todayDay = new Date().getDay();
         const submitBtn = document.getElementById('btn-submit-personal');
-
-        // Reset tombol dan checkbox mode terlambat
-        document.getElementById('mode-terlambat').checked = false;
-        toggleLateMode(document.getElementById('mode-terlambat'));
+        const draftBtn = document.getElementById('btn-draft-personal');
+        const modeTerlambat = document.getElementById('mode-terlambat');
 
         document.getElementById('actual-body').innerHTML = '';
         document.getElementById('planned-body').innerHTML = '';
-        addActualRow();
-        addPlannedRow();
+
+        if (reportData) {
+            // MODE LIHAT DETAIL / EDIT DRAFT
+            document.getElementById('start_date').value = reportData.start_date;
+            document.getElementById('end_date').value = reportData.end_date;
+
+            if (reportData.late_remark) {
+                document.getElementById('remark-container').classList.remove('hidden');
+                document.getElementById('late_remark').value = reportData.late_remark;
+                modeTerlambat.checked = true;
+            } else {
+                document.getElementById('remark-container').classList.add('hidden');
+                modeTerlambat.checked = false;
+            }
+
+            if (reportData.actual_tasks && reportData.actual_tasks.length > 0) {
+                reportData.actual_tasks.forEach(task => addActualRow(task));
+            } else { addActualRow(); }
+
+            if (reportData.planned_tasks && reportData.planned_tasks.length > 0) {
+                reportData.planned_tasks.forEach(task => addPlannedRow(task));
+            } else { addPlannedRow(); }
+
+            // Menyembunyikan tombol jika status FINAL
+            if (reportData.status == 3) {
+                submitBtn.classList.add('hidden');
+                draftBtn.classList.add('hidden');
+            } else {
+                submitBtn.classList.remove('hidden');
+                draftBtn.classList.remove('hidden');
+                applyPokaYokeSubmit(); // Terapkan aturan strict hari Senin-Kamis
+            }
+
+        } else {
+            // MODE BUAT BARU
+            submitBtn.classList.remove('hidden');
+            draftBtn.classList.remove('hidden');
+            modeTerlambat.checked = false;
+            toggleLateMode(modeTerlambat);
+
+            let curr = new Date();
+            let first = curr.getDate() - curr.getDay() + 1; // Senin
+            let last = first + 4; // Jumat
+            document.getElementById('start_date').value = new Date(curr.setDate(first)).toISOString().split('T')[0];
+            document.getElementById('end_date').value = new Date(curr.setDate(last)).toISOString().split('T')[0];
+
+            addActualRow();
+            addPlannedRow();
+
+            applyPokaYokeSubmit(); // Terapkan aturan strict hari Senin-Kamis
+        }
+    }
+
+    // Fungsi Pembatas (Poka-yoke) Tombol Submit
+    function applyPokaYokeSubmit() {
+        const todayDay = new Date().getDay(); // 0=Minggu, 1=Senin, 2=Selasa, 3=Rabu, 4=Kamis, 5=Jumat, 6=Sabtu
+        const submitBtn = document.getElementById('btn-submit-personal');
+
+        if (todayDay >= 1 && todayDay <= 4) {
+            submitBtn.type = 'button';
+            submitBtn.classList.replace('bg-blue-600', 'bg-slate-400');
+            submitBtn.classList.replace('border-blue-800', 'border-slate-500');
+            submitBtn.classList.remove('hover:bg-blue-700', 'hover:scale-105');
+
+            submitBtn.onclick = function() {
+                Swal.fire({
+                    title: 'Sistem Terkunci!',
+                    text: 'Pengiriman laporan Final hanya dibuka pada hari Jumat. Anda harus menggunakan tombol "Simpan Draft" untuk mencicil pekerjaan hari ini.',
+                    icon: 'warning',
+                    confirmButtonColor: '#f97316',
+                    confirmButtonText: 'Ya, Cicil Draf', // TEXT DIKEMBALIKAN SESUAI PERMINTAAN UX
+                    customClass: { popup: 'border-2 border-slate-300 rounded-2xl shadow-xl' }
+                });
+            };
+        } else {
+            submitBtn.type = 'submit';
+            submitBtn.classList.replace('bg-slate-400', 'bg-blue-600');
+            submitBtn.classList.replace('border-slate-500', 'border-blue-800');
+            submitBtn.classList.add('hover:bg-blue-700', 'hover:scale-105');
+            submitBtn.onclick = null;
+        }
     }
 
     function closePersonalModal() {
@@ -224,9 +301,11 @@
             remarkContainer.classList.remove('hidden');
             remarkInput.required = true;
 
+            // Buka kunci tombol Submit karena Backdate
             submitBtn.type = 'submit';
             submitBtn.classList.replace('bg-slate-400', 'bg-blue-600');
             submitBtn.classList.replace('border-slate-500', 'border-blue-800');
+            submitBtn.classList.add('hover:bg-blue-700', 'hover:scale-105');
             submitBtn.onclick = null;
         } else {
             startInput.readOnly = true;
@@ -240,21 +319,12 @@
             let curr = new Date();
             let first = curr.getDate() - curr.getDay() + 1;
             document.getElementById('start_date').value = new Date(curr.setDate(first)).toISOString().split('T')[0];
-            calculateFriday(); // Ini akan otomatis menyesuaikan baris tabel juga
+            calculateFriday();
 
-            const todayDay = new Date().getDay();
-            if (todayDay >= 1 && todayDay <= 4) {
-                submitBtn.type = 'button';
-                submitBtn.classList.replace('bg-blue-600', 'bg-slate-400');
-                submitBtn.classList.replace('border-blue-800', 'border-slate-500');
-                submitBtn.onclick = function() {
-                    Swal.fire({ title: 'Sistem Terkunci!', text: 'Pengiriman laporan Final hanya dibuka pada hari Jumat.', icon: 'warning' });
-                };
-            }
+            applyPokaYokeSubmit(); // Terapkan ulang limit hari jika kembali ke masa sekarang
         }
     }
 
-    // FUNGSI PINTAR: Hitung Jumat & Sesuaikan Seluruh Baris Aktual
     function calculateFriday() {
         const startVal = document.getElementById('start_date').value;
         if(startVal) {
@@ -269,13 +339,11 @@
             const endVal = startDate.toISOString().split('T')[0];
             document.getElementById('end_date').value = endVal;
 
-            // UPDATE SEMUA TANGGAL DI TABEL ACTUAL AGAR TERKUNCI DI PERIODE INI
+            // Update batas min & max pada inputan actual_date
             const actualInputs = document.querySelectorAll('.actual-date-input');
             actualInputs.forEach(input => {
                 input.min = startVal;
                 input.max = endVal;
-
-                // Jika tanggal yang sedang terisi berada di luar rentang baru, set ke hari Senin
                 if(input.value < startVal || input.value > endVal) {
                     input.value = startVal;
                 }
@@ -283,63 +351,106 @@
         }
     }
 
-    // Fungsi pintar penentu tanggal default saat baris baru ditambah
     function getSmartDefaultDate() {
         const startVal = document.getElementById('start_date').value;
         const endVal = document.getElementById('end_date').value;
         const today = getLocalToday();
 
-        // Jika hari ini berada di dalam rentang periode form, pakai hari ini
         if (startVal && endVal && today >= startVal && today <= endVal) {
             return today;
         }
-        // Jika form sedang di mode terlambat (Backdate), pakai tanggal Senin periode tersebut
         return startVal ? startVal : today;
     }
 
-    function addActualRow() {
+    // FUNGSI KILLER: Tarik Data Otomatis
+    function autoSyncVesselData() {
+        if(autoSyncData.length === 0) {
+            Swal.fire('Data Kosong', 'Anda belum mengerjakan Laporan Armada apapun minggu ini.', 'info');
+            return;
+        }
+
+        const actualBody = document.getElementById('actual-body');
+        const firstInput = actualBody.querySelector('input[name="actual_task[]"]');
+        if (actualBody.children.length === 1 && (!firstInput || firstInput.value === '')) {
+            actualBody.innerHTML = '';
+        }
+
+        autoSyncData.forEach(task => {
+            addActualRow({
+                task_date: task.date,
+                task_name: task.task,
+                result: task.result,
+                status: task.status,
+                notes: 'Auto-sync from Vessel Report'
+            });
+        });
+
+        Swal.fire({
+            title: 'Berhasil!',
+            text: `${autoSyncData.length} pekerjaan berhasil ditarik otomatis dari Laporan Armada.`,
+            icon: 'success',
+            toast: true, position: 'top-end', showConfirmButton: false, timer: 3000
+        });
+    }
+
+    // Fungsi Row yang Dimodifikasi untuk Mendukung Lihat Data
+    function addActualRow(data = null) {
         const startVal = document.getElementById('start_date').value;
         const endVal = document.getElementById('end_date').value;
-
-        // Pasang atribut min & max agar user tidak bisa memilih di luar periode
         const minAttr = startVal ? `min="${startVal}"` : '';
         const maxAttr = endVal ? `max="${endVal}"` : '';
-        const defaultDate = getSmartDefaultDate();
+
+        let dateVal = getSmartDefaultDate();
+        let taskVal = '', resultVal = '', statusVal = 'Selesai', notesVal = '';
+
+        if(data) {
+            dateVal = data.task_date || dateVal;
+            taskVal = data.task_name || '';
+            resultVal = data.result || '';
+            statusVal = data.status || 'Selesai';
+            notesVal = data.notes || '';
+        }
 
         const tbody = document.getElementById('actual-body');
         const tr = document.createElement('tr');
         tr.innerHTML = `
-            <td class="p-1"><input type="date" name="actual_date[]" value="${defaultDate}" ${minAttr} ${maxAttr} required class="actual-date-input w-full rounded border-slate-300 text-xs font-bold focus:border-blue-600 focus:ring-1 focus:ring-blue-100"></td>
-            <td class="p-1"><input type="text" name="actual_task[]" placeholder="Update Server..." required class="w-full rounded border-slate-300 text-xs font-bold focus:border-blue-600 focus:ring-1 focus:ring-blue-100"></td>
-            <td class="p-1"><input type="text" name="actual_result[]" placeholder="Patch berhasil..." class="w-full rounded border-slate-300 text-xs font-bold focus:border-blue-600 focus:ring-1 focus:ring-blue-100"></td>
+            <td class="p-1"><input type="date" name="actual_date[]" value="${dateVal}" ${minAttr} ${maxAttr} required class="actual-date-input w-full rounded border-slate-300 text-xs font-bold focus:border-blue-600 focus:ring-1 focus:ring-blue-100"></td>
+            <td class="p-1"><input type="text" name="actual_task[]" value="${taskVal}" placeholder="Update Server..." required class="w-full rounded border-slate-300 text-xs font-bold focus:border-blue-600 focus:ring-1 focus:ring-blue-100"></td>
+            <td class="p-1"><input type="text" name="actual_result[]" value="${resultVal}" placeholder="Patch berhasil..." class="w-full rounded border-slate-300 text-xs font-bold focus:border-blue-600 focus:ring-1 focus:ring-blue-100"></td>
             <td class="p-1">
                 <select name="actual_status[]" class="w-full rounded border-slate-300 text-xs font-bold focus:border-blue-600 focus:ring-1 focus:ring-blue-100">
-                    <option value="Selesai">Selesai</option>
-                    <option value="Pending">Pending</option>
-                    <option value="On Progress">On Progress</option>
+                    <option value="Selesai" ${statusVal === 'Selesai' ? 'selected' : ''}>Selesai</option>
+                    <option value="Pending" ${statusVal === 'Pending' ? 'selected' : ''}>Pending</option>
+                    <option value="On Progress" ${statusVal === 'On Progress' ? 'selected' : ''}>On Progress</option>
                 </select>
             </td>
-            <td class="p-1"><input type="text" name="actual_notes[]" placeholder="-" class="w-full rounded border-slate-300 text-xs font-bold focus:border-blue-600 focus:ring-1 focus:ring-blue-100"></td>
+            <td class="p-1"><input type="text" name="actual_notes[]" value="${notesVal}" placeholder="-" class="w-full rounded border-slate-300 text-xs font-bold focus:border-blue-600 focus:ring-1 focus:ring-blue-100"></td>
             <td class="p-1 text-center"><button type="button" onclick="this.closest('tr').remove()" class="p-1 bg-red-100 text-red-600 hover:bg-red-200 rounded text-xs font-black">X</button></td>
         `;
         tbody.appendChild(tr);
     }
 
-    function addPlannedRow() {
+    function addPlannedRow(data = null) {
+        let taskVal = '', targetVal = '', priorityVal = 'Sedang', deadlineVal = '', notesVal = '';
+        if(data) {
+            taskVal = data.plan_name || ''; targetVal = data.target || '';
+            priorityVal = data.priority || 'Sedang'; deadlineVal = data.deadline || ''; notesVal = data.notes || '';
+        }
+
         const tbody = document.getElementById('planned-body');
         const tr = document.createElement('tr');
         tr.innerHTML = `
-            <td class="p-1"><input type="text" name="planned_task[]" placeholder="Audit Jaringan..." required class="w-full rounded border-slate-300 text-xs font-bold focus:border-emerald-600 focus:ring-1 focus:ring-emerald-100"></td>
-            <td class="p-1"><input type="text" name="planned_target[]" placeholder="100% Cek..." class="w-full rounded border-slate-300 text-xs font-bold focus:border-emerald-600 focus:ring-1 focus:ring-emerald-100"></td>
+            <td class="p-1"><input type="text" name="planned_task[]" value="${taskVal}" placeholder="Audit Jaringan..." required class="w-full rounded border-slate-300 text-xs font-bold focus:border-emerald-600 focus:ring-1 focus:ring-emerald-100"></td>
+            <td class="p-1"><input type="text" name="planned_target[]" value="${targetVal}" placeholder="100% Cek..." class="w-full rounded border-slate-300 text-xs font-bold focus:border-emerald-600 focus:ring-1 focus:ring-emerald-100"></td>
             <td class="p-1">
                 <select name="planned_priority[]" class="w-full rounded border-slate-300 text-xs font-bold focus:border-emerald-600 focus:ring-1 focus:ring-emerald-100">
-                    <option value="Tinggi">Tinggi</option>
-                    <option value="Sedang">Sedang</option>
-                    <option value="Rendah">Rendah</option>
+                    <option value="Tinggi" ${priorityVal === 'Tinggi' ? 'selected' : ''}>Tinggi</option>
+                    <option value="Sedang" ${priorityVal === 'Sedang' ? 'selected' : ''}>Sedang</option>
+                    <option value="Rendah" ${priorityVal === 'Rendah' ? 'selected' : ''}>Rendah</option>
                 </select>
             </td>
-            <td class="p-1"><input type="date" name="planned_deadline[]" class="w-full rounded border-slate-300 text-xs font-bold focus:border-emerald-600 focus:ring-1 focus:ring-emerald-100"></td>
-            <td class="p-1"><input type="text" name="planned_notes[]" placeholder="-" class="w-full rounded border-slate-300 text-xs font-bold focus:border-emerald-600 focus:ring-1 focus:ring-emerald-100"></td>
+            <td class="p-1"><input type="date" name="planned_deadline[]" value="${deadlineVal}" class="w-full rounded border-slate-300 text-xs font-bold focus:border-emerald-600 focus:ring-1 focus:ring-emerald-100"></td>
+            <td class="p-1"><input type="text" name="planned_notes[]" value="${notesVal}" placeholder="-" class="w-full rounded border-slate-300 text-xs font-bold focus:border-emerald-600 focus:ring-1 focus:ring-emerald-100"></td>
             <td class="p-1 text-center"><button type="button" onclick="this.closest('tr').remove()" class="p-1 bg-red-100 text-red-600 hover:bg-red-200 rounded text-xs font-black">X</button></td>
         `;
         tbody.appendChild(tr);

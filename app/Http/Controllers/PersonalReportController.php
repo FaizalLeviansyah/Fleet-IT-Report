@@ -13,13 +13,47 @@ class PersonalReportController extends Controller
 {
     public function index()
     {
-        // Ambil riwayat laporan kinerja khusus untuk user yang sedang login saja
+        // 1. Ambil riwayat laporan kinerja
         $reports = PersonalItReport::with(['actualTasks', 'plannedTasks'])
             ->where('user_id', Auth::id())
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return view('personal_reports.index', compact('reports'));
+        // 2. LOGIKA AUTO-SYNC (Tarik data dari Laporan Armada minggu ini)
+        $startOfWeek = Carbon::now()->startOfWeek()->format('Y-m-d');
+        $endOfWeek = Carbon::now()->endOfWeek()->format('Y-m-d');
+        $myFirstName = explode(' ', Auth::user()->full_name ?? Auth::user()->name)[0] ?? 'IT';
+
+        // Cari laporan armada minggu ini yang dikerjakan oleh user yang sedang login
+        $myVesselReports = \App\Models\WeeklyReport::with('vessel')
+            ->whereBetween('report_date', [$startOfWeek, $endOfWeek])
+            ->whereHas('vessel', function($q) use ($myFirstName) {
+                $q->where('pic_name', 'like', "%{$myFirstName}%");
+            })->get();
+
+        $autoSyncTasks = [];
+        foreach ($myVesselReports as $vr) {
+            // Tarik Insiden
+            if (!empty($vr->incident_list)) {
+                $autoSyncTasks[] = [
+                    'date' => $vr->report_date,
+                    'task' => 'Troubleshooting ' . $vr->vessel->vessel_name,
+                    'result' => substr($vr->incident_list, 0, 50) . '...', // Potong teks agar rapi
+                    'status' => 'Selesai'
+                ];
+            }
+            // Tarik Maintenance
+            if (!empty($vr->preventive_maintenance)) {
+                $autoSyncTasks[] = [
+                    'date' => $vr->report_date,
+                    'task' => 'Maintenance ' . $vr->vessel->vessel_name,
+                    'result' => substr($vr->preventive_maintenance, 0, 50) . '...',
+                    'status' => 'Selesai'
+                ];
+            }
+        }
+
+        return view('personal_reports.index', compact('reports', 'autoSyncTasks'));
     }
 
     public function store(Request $request)
