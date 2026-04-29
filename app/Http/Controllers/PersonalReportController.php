@@ -8,6 +8,8 @@ use App\Models\PersonalActualTask;
 use App\Models\PersonalPlannedTask;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use App\Exports\PersonalReportExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class PersonalReportController extends Controller
 {
@@ -115,5 +117,15 @@ class PersonalReportController extends Controller
 
         $pesan = $status === 1 ? 'Laporan Kinerja disimpan sebagai DRAFT.' : 'Laporan Kinerja FINAL berhasil disubmit.';
         return redirect()->route('personal.reports.index')->with('success', $pesan);
+    }
+    public function exportExcel($id)
+    {
+        $report = PersonalItReport::findOrFail($id);
+
+        // Buat nama file rapi: Weekly_Report_IT_Levi_2026-04-20.xlsx
+        $userName = explode(' ', Auth::user()->full_name ?? Auth::user()->name)[0];
+        $fileName = 'Weekly_Report_IT_' . $userName . '_' . $report->start_date . '.xlsx';
+
+        return Excel::download(new PersonalReportExport($id), $fileName);
     }
 }

@@ -48,8 +48,14 @@
                         <td class="px-6 py-4 text-center">
                             <div class="text-xs font-bold text-slate-600"><span class="text-blue-600 font-black">{{ $report->actualTasks->count() }}</span> Aktual / <span class="text-amber-600 font-black">{{ $report->plannedTasks->count() }}</span> Plan</div>
                         </td>
-                        <td class="px-6 py-4 text-right">
+                        <td class="px-6 py-4 text-right flex justify-end gap-2">
                             <button onclick="openPersonalModal({{ $report->toJson() }})" class="px-4 py-2 bg-blue-50 text-blue-700 border border-blue-200 rounded font-bold hover:bg-blue-100 hover:ring-2 hover:ring-blue-300 transition-all shadow-sm">Lihat / Edit Detail</button>
+
+                            @if($report->status == 3)
+                            <a href="{{ route('personal.reports.export', $report->id) }}" class="px-4 py-2 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded font-bold hover:bg-emerald-100 hover:ring-2 hover:ring-emerald-300 transition-all shadow-sm flex items-center gap-1" title="Download Excel Format Direksi">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg> EXCEL
+                            </a>
+                            @endif
                         </td>
                     </tr>
                     @empty

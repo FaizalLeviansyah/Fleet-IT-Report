@@ -31,4 +31,6 @@ Route::middleware('auth')->group(function () {
     // RUTE LAPORAN KINERJA IT (PERSONAL)
     Route::get('/personal-reports', [App\Http\Controllers\PersonalReportController::class, 'index'])->name('personal.reports.index');
     Route::post('/personal-reports', [App\Http\Controllers\PersonalReportController::class, 'store'])->name('personal.reports.store');
+
+    Route::get('/personal-reports/{id}/export', [App\Http\Controllers\PersonalReportController::class, 'exportExcel'])->name('personal.reports.export');
 });
