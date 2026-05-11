@@ -37,4 +37,9 @@ Route::middleware('auth')->group(function () {
 
     // RUTE ITSM ASSET & INVENTORY
     Route::get('/assets', [App\Http\Controllers\AssetController::class, 'index'])->name('assets.index');
+    // RUTE ITSM ASSET & INVENTORY
+    Route::get('/assets', [App\Http\Controllers\AssetController::class, 'index'])->name('assets.index');
+    Route::post('/assets', [App\Http\Controllers\AssetController::class, 'store'])->name('assets.store');
+    Route::put('/assets/{asset}', [App\Http\Controllers\AssetController::class, 'update'])->name('assets.update');
+    Route::delete('/assets/{asset}', [App\Http\Controllers\AssetController::class, 'destroy'])->name('assets.destroy');
 });
