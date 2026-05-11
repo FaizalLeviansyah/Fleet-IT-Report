@@ -5,6 +5,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ReportController;
 
+
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [AuthController::class, 'login']);
@@ -33,4 +34,5 @@ Route::middleware('auth')->group(function () {
     Route::post('/personal-reports', [App\Http\Controllers\PersonalReportController::class, 'store'])->name('personal.reports.store');
 
     Route::get('/personal-reports/{id}/export', [App\Http\Controllers\PersonalReportController::class, 'exportExcel'])->name('personal.reports.export');
+
 });
