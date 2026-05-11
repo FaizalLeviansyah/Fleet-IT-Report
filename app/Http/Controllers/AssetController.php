@@ -18,7 +18,8 @@ class AssetController extends Controller
         $locations = AssetLocation::all();
         $vessels = Vessel::all(); // Mengambil daftar kapal
 
-        $assets = Asset::with(['vessel', 'location', 'category'])
+        // Penambahan 'logs.user' agar riwayat audit trail terbaca di Modal X-Ray
+        $assets = Asset::with(['vessel', 'location', 'category', 'logs.user'])
             ->whereHas('category', function($q) use ($selectedCategory) {
                 $q->where('name', $selectedCategory);
             })
@@ -33,7 +34,11 @@ class AssetController extends Controller
         $data = $request->validate([
             'asset_name' => 'required|string|max:255',
             'category_id' => 'required|exists:asset_categories,id',
-            'vessel_id' => 'required|exists:vessels,id',
+
+            // KEDUA KOLOM INI KINI DIBUAT NULLABLE (AGAR TIDAK ERROR SAAT SALAH SATU DI-HIDE)
+            'company_entity' => 'nullable|string',
+            'vessel_id' => 'nullable|exists:vessels,id',
+
             'location_id' => 'nullable|exists:asset_locations,id',
             'status' => 'required|string',
             'manufacturer' => 'nullable|string',
@@ -56,7 +61,11 @@ class AssetController extends Controller
         $data = $request->validate([
             'asset_name' => 'required|string|max:255',
             'category_id' => 'required|exists:asset_categories,id',
-            'vessel_id' => 'required|exists:vessels,id',
+
+            // Penambahan validasi Entitas Perusahaan dan membolehkan vessel kosong (nullable)
+            'company_entity' => 'required|in:PT Caraka Tirta Pratama (CTP),PT Amarin Ship Management (ASM),PT Amarin Crewing Services (ACS)',
+            'vessel_id' => 'nullable|exists:vessels,id',
+
             'location_id' => 'nullable|exists:asset_locations,id',
             'status' => 'required|string',
             'manufacturer' => 'nullable|string',
