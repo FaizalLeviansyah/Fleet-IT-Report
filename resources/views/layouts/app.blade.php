@@ -121,6 +121,30 @@
                     <span class="ml-3 font-bold text-[13px]">Master Data Armada</span>
                 </a>
              </li>
+             <li>
+                <button type="button" onclick="document.getElementById('submenu-assets').classList.toggle('hidden')" class="w-full group flex items-center justify-between p-3.5 rounded-xl transition-all border {{ request()->routeIs('assets.*') ? 'bg-blue-50 border-blue-200 text-blue-700 shadow-sm' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 shadow-sm' }}">
+                    <div class="flex items-center">
+                        <svg class="w-5 h-5 transition duration-75 {{ request()->routeIs('assets.*') ? 'text-blue-600' : 'text-slate-500 group-hover:text-blue-600' }}" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"></path></svg>
+                        <span class="ml-3 font-bold text-[13px]">IT Asset & Inventory</span>
+                    </div>
+                    <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path></svg>
+                </button>
+
+                <ul id="submenu-assets" class="mt-2 space-y-1 pl-11 pr-2 {{ request()->routeIs('assets.*') ? '' : 'hidden' }}">
+                    @php $assetCategories = \App\Models\AssetCategory::all(); @endphp
+                    @foreach($assetCategories as $cat)
+                    <li>
+                        <a href="{{ route('assets.index', ['category' => $cat->name]) }}" class="flex items-center justify-between p-2.5 rounded-lg transition-all {{ request('category', 'Computers') == $cat->name && request()->routeIs('assets.index') ? 'bg-blue-600 text-white shadow-md' : 'text-slate-500 hover:bg-slate-100 hover:text-blue-600' }}">
+                            <div class="flex items-center gap-2">
+                                <i class="fa-solid {{ $cat->icon }} w-4 text-center"></i>
+                                <span class="text-[11px] font-black uppercase tracking-wider">{{ $cat->name }}</span>
+                            </div>
+                            <span class="text-[9px] font-black {{ request('category', 'Computers') == $cat->name ? 'text-blue-200' : 'text-slate-400' }}">{{ \App\Models\Asset::where('category_id', $cat->id)->count() }}</span>
+                        </a>
+                    </li>
+                    @endforeach
+                </ul>
+            </li>
           </ul>
        </div>
     </aside>

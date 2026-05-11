@@ -35,4 +35,6 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/personal-reports/{id}/export', [App\Http\Controllers\PersonalReportController::class, 'exportExcel'])->name('personal.reports.export');
 
+    // RUTE ITSM ASSET & INVENTORY
+    Route::get('/assets', [App\Http\Controllers\AssetController::class, 'index'])->name('assets.index');
 });

@@ -9,20 +9,31 @@ class Asset extends Model
 {
     use HasFactory;
 
+    // Daftarkan semua kolom termasuk kolom GLPI v2 yang baru
     protected $fillable = [
-        'vessel_id', 'asset_type', 'asset_name', 'ip_address', 'serial_number',
+        'vessel_id', 'category_id', 'location_id', 'asset_type', 'asset_name',
+        'manufacturer', 'model', 'ip_address', 'mac_address', 'serial_number',
         'status', 'hardware_uuid', 'os_version', 'cpu_model', 'total_ram',
-        'disk_space', 'software_list', 'last_seen'
+        'disk_space', 'current_user', 'contact_person', 'group_name',
+        'last_boot_time', 'software_list', 'last_seen'
     ];
 
-    // INI PENTING: Memberitahu Laravel bahwa kolom ini berisi JSON
     protected $casts = [
         'software_list' => 'array',
     ];
 
+    // Relasi ke Kapal
     public function vessel() {
         return $this->belongsTo(Vessel::class);
     }
 
-    // (HAPUS relasi fungsi software() yang lama, karena tabelnya sudah kita musnahkan)
+    // Relasi ke Kategori (Ini yang bikin error tadi!)
+    public function category() {
+        return $this->belongsTo(AssetCategory::class);
+    }
+
+    // Relasi ke Lokasi
+    public function location() {
+        return $this->belongsTo(AssetLocation::class);
+    }
 }

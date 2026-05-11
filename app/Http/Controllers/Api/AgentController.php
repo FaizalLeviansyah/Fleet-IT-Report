@@ -26,13 +26,18 @@ class AgentController extends Controller
         );
 
         // Update semua data termasuk IP Address dan JSON Software dalam 1 kali tembak!
+        // Update semua data dalam 1 kali tembak!
         $asset->update([
             'ip_address' => $request->input('ip_address'),
+            'mac_address' => $request->input('mac_address'),
+            'serial_number' => $request->input('serial_number'),
             'os_version' => $request->input('os_version'),
             'cpu_model' => $request->input('cpu_model'),
             'total_ram' => $request->input('total_ram'),
             'disk_space' => $request->input('disk_space'),
-            'software_list' => $request->input('software_list'), // Langsung simpan JSON-nya
+            'current_user' => $request->input('current_user'),
+            'last_boot_time' => $request->input('last_boot_time'),
+            'software_list' => $request->input('software_list'),
             'last_seen' => now(),
         ]);
 
