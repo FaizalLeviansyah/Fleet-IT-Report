@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class IncidentTicket extends Model
 {
     protected $fillable = [
-        'ticket_number', 'title', 'description', 'status', 'priority',
+        'ticket_number', 'title', 'description', 'attachment', 'status', 'priority',
         'category', 'requester_id', 'assigned_to', 'asset_id', 'resolved_at'
     ];
 

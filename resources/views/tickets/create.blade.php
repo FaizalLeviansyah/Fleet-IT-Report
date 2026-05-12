@@ -21,7 +21,7 @@
         </div>
     </div>
 
-    <form action="{{ route('tickets.store') }}" method="POST" class="flex flex-col lg:flex-row gap-0 bg-white border-2 border-slate-300 rounded-2xl shadow-sm overflow-hidden animate-fade-in-up" style="animation-delay: 0.2s;">
+    <form action="{{ route('tickets.store') }}" method="POST" enctype="multipart/form-data" class="flex flex-col lg:flex-row gap-0 bg-white border-2 border-slate-300 rounded-2xl shadow-sm overflow-hidden animate-fade-in-up" style="animation-delay: 0.2s;">
         @csrf
 
         <div class="w-full lg:w-8/12 p-6 lg:border-r-2 border-slate-200 bg-slate-50">
@@ -44,10 +44,8 @@
             </div>
 
             <div class="bg-emerald-50/50 border border-emerald-200 p-4 rounded-xl shadow-sm mt-6">
-                <p class="text-[10px] text-emerald-600 font-bold leading-tight"><i class="fa-solid fa-circle-info"></i> <b>File(s) (2048 MB max)</b> | Drag & drop your file here, or </p>
-                <button type="button" class="mt-2 px-4 py-1.5 bg-white text-emerald-600 border border-emerald-200 hover:bg-emerald-50 transition-colors rounded-lg text-xs font-bold flex items-center gap-2">
-                    <i class="fa-solid fa-file-upload"></i> Choose Files
-                </button>
+                <p class="text-[10px] text-emerald-600 font-bold leading-tight mb-2"><i class="fa-solid fa-circle-info"></i> <b>Lampiran / Attachment (Max: 2MB)</b></p>
+                <input type="file" name="attachment" id="attachment" class="block w-full text-xs text-emerald-700 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-black file:bg-emerald-100 file:text-emerald-700 hover:file:bg-emerald-200 transition-all cursor-pointer">
             </div>
         </div>
 

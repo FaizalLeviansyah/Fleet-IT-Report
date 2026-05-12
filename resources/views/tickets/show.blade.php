@@ -62,6 +62,16 @@
                         </div>
                         <h3 class="font-bold text-emerald-900 mb-2">{{ $ticket->title }}</h3>
                         <p class="text-sm text-slate-700 whitespace-pre-line">{{ $ticket->description }}</p>
+
+                        @if($ticket->attachment)
+                            <div class="mt-4 p-3 bg-white border border-emerald-200 rounded-lg inline-block shadow-sm">
+                                <p class="text-[9px] font-black uppercase text-emerald-600 mb-1"><i class="fa-solid fa-paperclip"></i> Lampiran Tiket</p>
+                                <a href="{{ asset('storage/' . $ticket->attachment) }}" target="_blank" class="text-xs font-bold text-slate-700 hover:text-blue-600 hover:underline flex items-center gap-2">
+                                    <i class="fa-regular fa-file-image text-slate-400"></i> Lihat / Download Lampiran
+                                </a>
+                            </div>
+                        @endif
+
                     </div>
                 </div>
 
