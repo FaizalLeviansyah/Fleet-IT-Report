@@ -3,12 +3,26 @@
 @section('content')
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 
-<div class="max-w-7xl mx-auto pb-20">
+<div class="max-w-[1600px] mx-auto pb-20">
 
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 animate-fade-in-up">
         <div>
             <h1 class="text-3xl font-black fancy-header tracking-tight">IT Command Center</h1>
-            @if($myPendingVessels->count() > 0)
+            <p class="text-slate-600 text-[11px] font-bold uppercase tracking-widest mt-1">Universal Fleet Management (ITSM & Reporting)</p>
+        </div>
+        <div class="hidden md:flex items-center gap-3 mt-4 md:mt-0">
+            <div class="bg-white border-2 border-slate-300 px-4 py-2 rounded-xl text-xs font-bold text-slate-700 shadow-sm flex items-center gap-2">
+                <div class="relative flex h-3 w-3">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                </div>
+                <span>SYSTEM ONLINE</span>
+            </div>
+            <p class="text-xs text-slate-500 font-bold">Sync: {{ now()->format('d M Y, H:i') }}</p>
+        </div>
+    </div>
+
+    @if($myPendingVessels->count() > 0)
     <div class="mb-8 animate-fade-in-up" style="animation-delay: 0.05s;">
         <div class="w-full relative overflow-hidden rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 border-4 border-amber-200 shadow-xl">
             <div class="absolute top-0 right-0 -mt-4 -mr-4 w-32 h-32 bg-white opacity-10 rounded-full blur-2xl"></div>
@@ -18,7 +32,7 @@
                         <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
                     </div>
                     <div>
-                        <h2 class="text-lg sm:text-xl font-black uppercase tracking-wider drop-shadow-md">TUGAS MINGGU INI BELUM SELESAI, MAS {{ strtoupper(explode(' ', Auth::user()->full_name ?? Auth::user()->name)[0]) }}!</h2>
+                        <h2 class="text-lg sm:text-xl font-black uppercase tracking-wider drop-shadow-md">TUGAS MINGGU INI BELUM SELESAI, MAS {{ strtoupper(explode(' ', Auth::user()->full_name ?? Auth::user()->name ?? 'IT')[0]) }}!</h2>
                         <p class="text-xs sm:text-sm font-bold text-amber-50 mt-0.5 leading-relaxed">
                             Ada <span class="bg-white text-orange-600 px-2 py-0.5 rounded font-black mx-1">{{ $myPendingVessels->count() }} Kapal</span> tanggung jawab Anda yang belum di-submit:
                             <span class="italic text-white">
@@ -36,141 +50,207 @@
         </div>
     </div>
     @endif
-            <p class="text-slate-600 text-xs font-bold uppercase tracking-widest mt-1">Fleet IT Operations & Monitoring</p>
+
+    <div class="mb-4 mt-8 flex items-center gap-3 border-b-2 border-slate-200 pb-2">
+        <i class="fa-solid fa-satellite-dish text-blue-600 text-xl"></i>
+        <h2 class="text-lg font-black text-slate-800 tracking-widest uppercase">Live Telemetry & Operations</h2>
+        <span class="px-2 py-0.5 bg-blue-100 text-blue-700 text-[9px] font-black rounded uppercase ml-2 animate-pulse">Real-Time</span>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5 mb-6 animate-fade-in-up" style="animation-delay: 0.1s;">
+        <div class="bg-white rounded-xl border-2 border-slate-200 p-5 shadow-sm relative overflow-hidden group hover:border-emerald-300 transition-colors">
+            <div class="absolute -right-4 -top-4 opacity-5 group-hover:opacity-10 transition-opacity"><i class="fa-solid fa-heart-pulse text-9xl text-emerald-500"></i></div>
+            <div class="flex justify-between items-start mb-2 relative z-10">
+                <span class="px-2 py-1 bg-emerald-100 text-emerald-700 text-[9px] font-black uppercase rounded tracking-widest">Live Uptime</span>
+                <div class="p-2 bg-emerald-50 text-emerald-600 rounded-lg"><i class="fa-solid fa-heart-pulse"></i></div>
+            </div>
+            <div class="relative z-10">
+                <h3 class="text-3xl font-black text-slate-800">{{ number_format($fleetHealth, 1) }}<span class="text-lg text-slate-400">%</span></h3>
+                <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Fleet Health Score</p>
+            </div>
         </div>
-        <div class="hidden md:flex items-center gap-3 mt-4 md:mt-0">
-            <div class="bg-white border-2 border-slate-300 px-4 py-2 rounded-xl text-xs font-bold text-slate-700 shadow-sm flex items-center gap-2">
-                <div class="relative flex h-3 w-3">
-                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+        <div class="bg-white rounded-xl border-2 border-slate-200 p-5 shadow-sm relative overflow-hidden group hover:border-amber-300 transition-colors">
+            <div class="absolute -right-4 -top-4 opacity-5 group-hover:opacity-10 transition-opacity"><i class="fa-solid fa-ticket text-9xl text-amber-500"></i></div>
+            <div class="flex justify-between items-start mb-2 relative z-10">
+                <span class="px-2 py-1 bg-amber-100 text-amber-700 text-[9px] font-black uppercase rounded tracking-widest">ITSM Tickets</span>
+                <div class="p-2 bg-amber-50 text-amber-600 rounded-lg"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            </div>
+            <div class="relative z-10">
+                <h3 class="text-3xl font-black text-slate-800">{{ $activeTickets->count() }}</h3>
+                <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Active Incidents</p>
+            </div>
+        </div>
+        <div class="bg-white rounded-xl border-2 border-slate-200 p-5 shadow-sm relative overflow-hidden group hover:border-blue-300 transition-colors">
+            <div class="absolute -right-4 -top-4 opacity-5 group-hover:opacity-10 transition-opacity"><i class="fa-solid fa-network-wired text-9xl text-blue-500"></i></div>
+            <div class="flex justify-between items-start mb-2 relative z-10">
+                <span class="px-2 py-1 bg-blue-100 text-blue-700 text-[9px] font-black uppercase rounded tracking-widest">Sentinel Online</span>
+                <div class="p-2 bg-blue-50 text-blue-600 rounded-lg"><i class="fa-solid fa-check-double"></i></div>
+            </div>
+            <div class="relative z-10">
+                <h3 class="text-3xl font-black text-slate-800">{{ $onlineAssets }}<span class="text-sm text-slate-400 font-bold ml-1">/ {{ $totalAssets }}</span></h3>
+                <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Connected Devices</p>
+            </div>
+        </div>
+        <div class="bg-white rounded-xl border-2 border-slate-200 p-5 shadow-sm relative overflow-hidden group hover:border-red-300 transition-colors">
+            <div class="absolute -right-4 -top-4 opacity-5 group-hover:opacity-10 transition-opacity"><i class="fa-solid fa-video-slash text-9xl text-red-500"></i></div>
+            <div class="flex justify-between items-start mb-2 relative z-10">
+                <span class="px-2 py-1 bg-red-100 text-red-700 text-[9px] font-black uppercase rounded tracking-widest">Lost Connection</span>
+                <div class="p-2 bg-red-50 text-red-600 rounded-lg"><i class="fa-solid fa-plug-circle-xmark"></i></div>
+            </div>
+            <div class="relative z-10">
+                <h3 class="text-3xl font-black text-red-600">{{ $offlineAssets }}</h3>
+                <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Assets & CCTV Offline</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-12 animate-fade-in-up" style="animation-delay: 0.2s;">
+        <div class="bg-white border-2 border-slate-200 rounded-xl shadow-sm p-5 flex flex-col h-full">
+            <div class="flex justify-between items-center mb-4">
+                <div>
+                    <h3 class="font-black text-slate-800 text-sm uppercase tracking-widest"><i class="fa-solid fa-headset text-amber-500 mr-1"></i> Live IT Helpdesk</h3>
                 </div>
-                <span>SYSTEM ONLINE</span>
+                <a href="{{ route('tickets.index') }}" class="text-[10px] font-black text-blue-600 uppercase hover:underline">View Tickets</a>
             </div>
-            <p class="text-xs text-slate-500 font-bold">Sync: {{ now()->format('d M Y, H:i') }}</p>
-        </div>
-    </div>
-
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8 animate-fade-in-up" style="animation-delay: 0.1s;">
-        <div class="bg-white border-2 border-slate-300 border-l-8 border-l-blue-600 shadow-sm hover:shadow-lg transition-shadow rounded-xl p-5 flex flex-col justify-between">
-            <div class="flex justify-between items-start">
-                <div><p class="text-xs font-black text-slate-500 uppercase tracking-widest mb-1">Fleet Monitored</p><h3 class="text-4xl font-black text-slate-900">{{ $totalVessels }}</h3></div>
-                <div class="p-3 bg-blue-50 text-blue-700 rounded-lg border-2 border-blue-200"><svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg></div>
-            </div>
-            <div class="mt-4 pt-3 border-t-2 border-slate-100 flex items-center text-[10px] font-black text-slate-500">Total Kapal Terdaftar</div>
-        </div>
-        <div class="bg-white border-2 border-slate-300 border-l-8 border-l-orange-500 shadow-sm hover:shadow-lg transition-shadow rounded-xl p-5 flex flex-col justify-between">
-            <div class="flex justify-between items-start">
-                <div><p class="text-xs font-black text-slate-500 uppercase tracking-widest mb-1">Draft Reports</p><h3 class="text-4xl font-black text-slate-900">{{ $draftCount }}</h3></div>
-                <div class="p-3 bg-orange-50 text-orange-700 rounded-lg border-2 border-orange-200"><svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg></div>
-            </div>
-            <div class="mt-4 pt-3 border-t-2 border-slate-100 flex items-center text-[10px] font-black text-slate-500">Menunggu Review Final</div>
-        </div>
-        <div class="bg-white border-2 border-slate-300 border-l-8 border-l-red-600 shadow-sm hover:shadow-lg transition-shadow rounded-xl p-5 flex flex-col justify-between">
-            <div class="flex justify-between items-start">
-                <div><p class="text-xs font-black text-slate-500 uppercase tracking-widest mb-1">Open Incidents</p><h3 class="text-4xl font-black text-red-600">{{ $incidentCount }}</h3></div>
-                <div class="p-3 bg-red-50 text-red-700 rounded-lg border-2 border-red-200"><svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg></div>
-            </div>
-            <div class="mt-4 pt-3 border-t-2 border-slate-100 flex items-center text-[10px] font-black text-red-600">Laporan Bermasalah Minggu Ini</div>
-        </div>
-        <div class="bg-white border-2 border-slate-300 border-l-8 border-l-emerald-500 shadow-sm hover:shadow-lg transition-shadow rounded-xl p-5 flex flex-col justify-between">
-            <div class="flex justify-between items-start">
-                <div><p class="text-xs font-black text-slate-500 uppercase tracking-widest mb-1">Avg System Uptime</p><h3 class="text-4xl font-black text-slate-900">{{ $avgUptime }}<span class="text-xl">%</span></h3></div>
-                <div class="p-3 bg-emerald-50 text-emerald-700 rounded-lg border-2 border-emerald-200"><svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div>
-            </div>
-            <div class="mt-4 pt-3 border-t-2 border-slate-100 flex items-center text-[10px] font-black text-emerald-600">Rata-rata Armada Minggu Ini</div>
-        </div>
-    </div>
-
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8 animate-fade-in-up" style="animation-delay: 0.2s;">
-        <div class="lg:col-span-2 bg-white border-2 border-slate-300 p-6 rounded-xl shadow-sm hover:shadow-lg transition-shadow">
-            <div class="mb-4">
-                <h3 class="font-black text-lg text-slate-900">System Uptime Trend</h3>
-                <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Rata-rata Uptime Armada (4 Minggu Terakhir)</p>
-            </div>
-            <div id="chart-uptime" class="w-full h-64"></div>
-        </div>
-
-        <div class="bg-white border-2 border-slate-300 p-6 rounded-xl shadow-sm hover:shadow-lg transition-shadow flex flex-col justify-between relative overflow-hidden">
-            <div class="absolute top-0 right-0 w-32 h-32 bg-slate-100 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none"></div>
-            <div>
-                <div class="flex justify-between items-center mb-4 relative z-10">
-                    <div>
-                        <h3 class="font-black text-lg text-slate-900">System Audit Trail</h3>
-                        <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Aktivitas Laporan Terbaru</p>
+            <div class="space-y-3 flex-1 overflow-y-auto custom-scrollbar pr-2 max-h-[300px]">
+                @forelse($activeTickets as $ticket)
+                    <a href="{{ route('tickets.show', $ticket->id) }}" class="block p-3 border border-slate-200 rounded-lg hover:border-blue-300 transition-all bg-slate-50">
+                        <div class="flex justify-between items-start mb-1">
+                            <span class="text-[9px] font-black uppercase text-blue-600">{{ $ticket->ticket_number }}</span>
+                            <span class="text-[9px] font-black uppercase px-2 py-0.5 rounded {{ $ticket->status === 'Processing' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700' }}">{{ $ticket->status }}</span>
+                        </div>
+                        <h4 class="font-bold text-slate-800 text-xs mb-2">{{ $ticket->title }}</h4>
+                        <div class="flex items-center justify-between text-[9px] text-slate-500 font-bold">
+                            <span><i class="fa-solid fa-ship mr-1"></i> {{ $ticket->asset->vessel->vessel_name ?? 'Head Office' }}</span>
+                            <span><i class="fa-regular fa-clock mr-1"></i> {{ $ticket->created_at->diffForHumans() }}</span>
+                        </div>
+                    </a>
+                @empty
+                    <div class="text-center py-10 text-slate-400">
+                        <i class="fa-solid fa-check-circle text-4xl mb-2 text-emerald-400"></i>
+                        <p class="text-[10px] font-black uppercase tracking-widest">Tidak ada tiket insiden aktif.</p>
                     </div>
-                </div>
-                <div class="space-y-4 max-h-56 overflow-y-auto custom-scrollbar pr-2 relative z-10">
-                    @forelse($recentActivities as $activity)
-                        @php
-                            $colorClass = $activity->status == 1 ? 'border-orange-500 text-orange-600' : 'border-emerald-500 text-emerald-600';
-                            $actionText = $activity->status == 1 ? 'Draft Auto-Saved' : 'Report Submitted';
-                        @endphp
-                        <div class="border-l-4 {{ $colorClass }} pl-3 bg-slate-50 hover:bg-slate-100 transition-colors p-2 rounded-r-lg">
-                            <p class="text-xs font-black text-slate-800">{{ $actionText }}: {{ $activity->vessel->vessel_name }}</p>
-                            <p class="text-[10px] text-slate-500 font-bold">{{ \Carbon\Carbon::parse($activity->updated_at)->diffForHumans() }}</p>
+                @endforelse
+            </div>
+        </div>
+
+        <div class="xl:col-span-2 bg-white border-2 border-slate-200 rounded-xl shadow-sm p-5">
+            <h3 class="font-black text-slate-800 text-sm uppercase tracking-widest mb-4"><i class="fa-solid fa-ship text-blue-500 mr-1"></i> Real-time Fleet Health</h3>
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-3 max-h-[300px] overflow-y-auto custom-scrollbar pr-2">
+                @foreach($vessels as $vessel)
+                    @php
+                        $isDown = $activeTickets->contains('asset.vessel_id', $vessel->id);
+                    @endphp
+                    <div class="flex items-center justify-between p-3 border rounded-lg {{ $isDown ? 'bg-red-50 border-red-200' : 'bg-emerald-50 border-emerald-200' }}">
+                        <div class="flex items-center gap-3">
+                            <i class="fa-solid {{ $isDown ? 'fa-triangle-exclamation text-red-500' : 'fa-check text-emerald-500' }}"></i>
+                            <div>
+                                <h4 class="font-black text-slate-800 text-xs">{{ $vessel->vessel_name }}</h4>
+                                <span class="text-[8px] font-black uppercase tracking-widest {{ $isDown ? 'text-red-500' : 'text-emerald-600' }}">{{ $isDown ? 'Downtime Detected' : 'Optimal' }}</span>
+                            </div>
                         </div>
-                    @empty
-                        <div class="text-center p-4">
-                            <p class="text-xs font-black text-slate-500 uppercase">Belum ada aktivitas</p>
-                        </div>
-                    @endforelse
-                </div>
+                    </div>
+                @endforeach
             </div>
         </div>
     </div>
 
-    <div class="bg-white border-2 border-slate-300 rounded-xl shadow-sm hover:shadow-lg transition-shadow overflow-hidden animate-fade-in-up" style="animation-delay: 0.3s;">
-        <div class="p-5 border-b-2 border-slate-300 bg-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div>
-                <h3 class="font-black text-lg text-slate-900 flex items-center gap-2">
-                    <span class="w-3 h-3 rounded-full bg-blue-500 animate-pulse border-2 border-blue-700"></span>
-                    Fleet Report Monitor (Read Only)
-                </h3>
+
+    <div class="mb-4 border-t-2 border-slate-200 pt-8 flex items-center gap-3 border-b-2 pb-2">
+        <i class="fa-solid fa-file-signature text-orange-500 text-xl"></i>
+        <h2 class="text-lg font-black text-slate-800 tracking-widest uppercase">Weekly Compliance & Reports</h2>
+        <span class="px-2 py-0.5 bg-orange-100 text-orange-700 text-[9px] font-black rounded uppercase ml-2">Historical Data</span>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-6 animate-fade-in-up" style="animation-delay: 0.3s;">
+        <div class="bg-white border-2 border-slate-200 border-l-4 border-l-blue-600 shadow-sm rounded-xl p-4 flex flex-col justify-between">
+            <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Total Monitored</p>
+            <h3 class="text-3xl font-black text-slate-900">{{ $totalVessels }} <i class="fa-solid fa-ship text-blue-100 float-right mt-1"></i></h3>
+        </div>
+        <div class="bg-white border-2 border-slate-200 border-l-4 border-l-orange-500 shadow-sm rounded-xl p-4 flex flex-col justify-between">
+            <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Draft Reports</p>
+            <h3 class="text-3xl font-black text-slate-900">{{ $draftCount }} <i class="fa-solid fa-file-pen text-orange-100 float-right mt-1"></i></h3>
+        </div>
+        <div class="bg-white border-2 border-slate-200 border-l-4 border-l-red-600 shadow-sm rounded-xl p-4 flex flex-col justify-between">
+            <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Reported Incidents</p>
+            <h3 class="text-3xl font-black text-red-600">{{ $incidentCount }} <i class="fa-solid fa-fire text-red-100 float-right mt-1"></i></h3>
+        </div>
+        <div class="bg-white border-2 border-slate-200 border-l-4 border-l-emerald-500 shadow-sm rounded-xl p-4 flex flex-col justify-between">
+            <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Avg Reported Uptime</p>
+            <h3 class="text-3xl font-black text-slate-900">{{ $avgUptime }}<span class="text-base text-slate-400">%</span> <i class="fa-solid fa-chart-line text-emerald-100 float-right mt-1"></i></h3>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6 animate-fade-in-up" style="animation-delay: 0.4s;">
+        <div class="lg:col-span-2 bg-white border-2 border-slate-200 p-5 rounded-xl shadow-sm">
+            <div class="mb-2">
+                <h3 class="font-black text-sm text-slate-800 uppercase tracking-widest">Reported Uptime Trend (4 Weeks)</h3>
             </div>
-            <a href="{{ route('reports.index') }}" class="px-5 py-2.5 bg-blue-600 text-white hover:bg-blue-700 hover:ring-4 hover:ring-blue-200 border-2 border-blue-800 rounded-lg font-black text-xs uppercase tracking-widest transition-all shadow-sm">
-                Pergi ke Manajemen Laporan
-            </a>
+            <div id="chart-uptime" class="w-full h-56"></div>
         </div>
 
-        <div class="overflow-x-auto min-h-[300px] custom-scrollbar">
+        <div class="bg-white border-2 border-slate-200 p-5 rounded-xl shadow-sm flex flex-col">
+            <h3 class="font-black text-sm text-slate-800 uppercase tracking-widest mb-4">Report Audit Trail</h3>
+            <div class="space-y-3 flex-1 overflow-y-auto custom-scrollbar pr-2 max-h-[220px]">
+                @forelse($recentActivities as $activity)
+                    @php
+                        $colorClass = $activity->status == 1 ? 'border-orange-500 text-orange-600' : 'border-emerald-500 text-emerald-600';
+                        $actionText = $activity->status == 1 ? 'Draft Auto-Saved' : 'Report Submitted';
+                    @endphp
+                    <div class="border-l-4 {{ $colorClass }} pl-3 bg-slate-50 p-2 rounded-r-lg">
+                        <p class="text-xs font-black text-slate-800">{{ $actionText }}: {{ $activity->vessel->vessel_name }}</p>
+                        <p class="text-[9px] text-slate-500 font-bold mt-0.5"><i class="fa-solid fa-clock"></i> {{ \Carbon\Carbon::parse($activity->updated_at)->diffForHumans() }}</p>
+                    </div>
+                @empty
+                    <div class="text-center p-4 text-xs font-black text-slate-400 uppercase">Belum ada aktivitas</div>
+                @endforelse
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white border-2 border-slate-300 rounded-xl shadow-sm overflow-hidden animate-fade-in-up" style="animation-delay: 0.5s;">
+        <div class="p-4 border-b-2 border-slate-200 bg-slate-50 flex justify-between items-center">
+            <h3 class="font-black text-sm text-slate-800 uppercase tracking-widest">Fleet Report Status (This Week)</h3>
+            <a href="{{ route('reports.index') }}" class="px-4 py-1.5 bg-white border border-slate-300 rounded text-[10px] font-black text-slate-600 hover:bg-slate-100 uppercase transition-colors shadow-sm">Manage Reports</a>
+        </div>
+        <div class="overflow-x-auto min-h-[200px] custom-scrollbar">
             <table class="w-full text-xs text-left whitespace-nowrap border-0">
-                <thead class="text-[10px] text-slate-800 uppercase bg-slate-200 border-b-2 border-slate-400 sticky top-0 z-10">
+                <thead class="text-[10px] text-slate-500 uppercase bg-white border-b-2 border-slate-200 sticky top-0 z-10">
                     <tr>
-                        <th class="px-6 py-4 font-black w-10">No</th>
-                        <th class="px-6 py-4 font-black">Detail Kapal</th>
-                        <th class="px-6 py-4 font-black text-center">Progress Laporan</th>
-                        <th class="px-6 py-4 font-black text-center">PIC IT</th>
+                        <th class="px-5 py-3 font-black w-10">No</th>
+                        <th class="px-5 py-3 font-black">Vessel / Company</th>
+                        <th class="px-5 py-3 font-black text-center">Submission Progress</th>
+                        <th class="px-5 py-3 font-black text-center">Assigned PIC</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-300">
+                <tbody class="divide-y divide-slate-100 bg-white">
                     @foreach ($vesselReports as $index => $item)
                     @php
                         $vessel = $item->vessel;
-                        $step = $item->status; // 0 (Belum), 1 (Draft), 3 (Final)
-                        // Logika step visual: Belum=0, Draft=1, Final=3
+                        $step = $item->status;
                     @endphp
-                    <tr class="hover:bg-slate-50 transition-colors group">
-                        <td class="px-6 py-4 font-black text-slate-900">{{ $index + 1 }}</td>
-                        <td class="px-6 py-4">
-                            <div class="font-black text-blue-800 text-sm group-hover:text-blue-600 transition-colors">{{ $vessel->vessel_name }}</div>
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="px-5 py-3 font-black text-slate-900">{{ $index + 1 }}</td>
+                        <td class="px-5 py-3">
+                            <div class="font-black text-blue-800 text-sm">{{ $vessel->vessel_name }}</div>
                             <div class="text-[9px] text-slate-500 font-bold uppercase">{{ $vessel->company_name }}</div>
                         </td>
-                        <td class="px-6 py-4">
-                            <div class="flex items-center justify-center w-full max-w-xs mx-auto opacity-70">
-                                <div class="flex items-center"><div class="flex items-center justify-center w-6 h-6 rounded-full border-2 {{ $step >= 1 ? 'bg-orange-500 border-orange-600 text-white' : 'bg-slate-200 border-slate-300 text-slate-400' }} font-black text-[10px] shadow-sm">1</div></div>
-                                <div class="w-8 h-1 {{ $step >= 3 ? 'bg-orange-500' : 'bg-slate-200' }}"></div>
-                                <div class="flex items-center"><div class="flex items-center justify-center w-6 h-6 rounded-full border-2 {{ $step >= 3 ? 'bg-emerald-500 border-emerald-600 text-white' : 'bg-slate-200 border-slate-300 text-slate-400' }} font-black text-[10px] shadow-sm">
-                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>
+                        <td class="px-5 py-3">
+                            <div class="flex items-center justify-center w-full max-w-[200px] mx-auto opacity-80">
+                                <div class="flex items-center"><div class="flex items-center justify-center w-5 h-5 rounded-full border-2 {{ $step >= 1 ? 'bg-orange-500 border-orange-600 text-white' : 'bg-slate-200 border-slate-300 text-slate-400' }} font-black text-[9px]">1</div></div>
+                                <div class="w-10 h-1 {{ $step >= 3 ? 'bg-orange-500' : 'bg-slate-200' }}"></div>
+                                <div class="flex items-center"><div class="flex items-center justify-center w-5 h-5 rounded-full border-2 {{ $step >= 3 ? 'bg-emerald-500 border-emerald-600 text-white' : 'bg-slate-200 border-slate-300 text-slate-400' }} font-black text-[9px]">
+                                    <i class="fa-solid fa-check text-[8px]"></i>
                                 </div></div>
                             </div>
                         </td>
-                        <td class="px-6 py-4 text-center">
+                        <td class="px-5 py-3 text-center">
                             @php
                                 $isLevi = str_contains(strtolower($vessel->pic_name), 'levi');
-                                $badgeClass = $isLevi ? 'bg-indigo-100 text-indigo-800 border-indigo-300' : 'bg-emerald-100 text-emerald-800 border-emerald-300';
+                                $badgeClass = $isLevi ? 'bg-indigo-100 text-indigo-800 border-indigo-300' : 'bg-slate-100 text-slate-600 border-slate-300';
                             @endphp
-                            <span class="px-2.5 py-1.5 rounded text-[10px] font-black border-2 shadow-sm {{ $badgeClass }}">
-                                {{ strtoupper($vessel->pic_name) }}
+                            <span class="px-2 py-1 rounded text-[9px] font-black border uppercase {{ $badgeClass }}">
+                                {{ $vessel->pic_name }}
                             </span>
                         </td>
                     </tr>
@@ -179,18 +259,18 @@
             </table>
         </div>
     </div>
+
 </div>
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-        // Data dari Controller dilempar ke Javascript
         var chartLabels = {!! json_encode($chartLabels) !!};
         var chartData = {!! json_encode($chartData) !!};
 
         var optionsUptime = {
             series: [{ name: 'Avg Uptime (%)', data: chartData }],
-            chart: { type: 'area', height: 260, toolbar: { show: false }, fontFamily: 'Inter, sans-serif' },
-            colors: ['#3b82f6'],
+            chart: { type: 'area', height: 220, toolbar: { show: false }, fontFamily: 'Inter, sans-serif' },
+            colors: ['#f97316'], // Ubah warna jadi orange agar beda dengan ITSM
             fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.4, opacityTo: 0.05, stops: [0, 100] } },
             dataLabels: { enabled: false }, stroke: { curve: 'smooth', width: 3 },
             xaxis: {
@@ -199,8 +279,7 @@
                 axisBorder: { show: false }, axisTicks: { show: false }
             },
             yaxis: { show: true, min: 90, max: 100, labels: { style: { fontSize: '10px', fontWeight: 800, colors: '#64748b' } } },
-            grid: { borderColor: '#e2e8f0', strokeDashArray: 4, xaxis: { lines: { show: true } }, yaxis: { lines: { show: true } } },
-            legend: { position: 'top', horizontalAlign: 'right', fontSize: '10px', fontWeight: 800 },
+            grid: { borderColor: '#f1f5f9', strokeDashArray: 4, xaxis: { lines: { show: true } }, yaxis: { lines: { show: true } } },
             tooltip: { theme: 'light', y: { formatter: function (val) { return val + "%" } } }
         };
         new ApexCharts(document.querySelector("#chart-uptime"), optionsUptime).render();
@@ -210,8 +289,8 @@
 <style>
     @keyframes fadeInUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
     .animate-fade-in-up { animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-    .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
-    .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 8px; }
+    .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
     .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 </style>
