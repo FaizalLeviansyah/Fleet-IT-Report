@@ -42,4 +42,12 @@ Route::middleware('auth')->group(function () {
     Route::post('/assets', [App\Http\Controllers\AssetController::class, 'store'])->name('assets.store');
     Route::put('/assets/{asset}', [App\Http\Controllers\AssetController::class, 'update'])->name('assets.update');
     Route::delete('/assets/{asset}', [App\Http\Controllers\AssetController::class, 'destroy'])->name('assets.destroy');
+    // RUTE ITSM HELPDESK & TICKETING
+    Route::resource('tickets', App\Http\Controllers\TicketController::class);
+    // Tambahkan rute ini untuk Create dan Store
+    Route::get('/tickets/create', [App\Http\Controllers\TicketController::class, 'create'])->name('tickets.create');
+    Route::post('/tickets', [App\Http\Controllers\TicketController::class, 'store'])->name('tickets.store');
+
+    Route::post('/tickets/{ticket}/thread', [App\Http\Controllers\TicketController::class, 'storeThread'])->name('tickets.thread.store');
+    Route::patch('/tickets/{ticket}/status', [App\Http\Controllers\TicketController::class, 'updateStatus'])->name('tickets.status.update');
 });

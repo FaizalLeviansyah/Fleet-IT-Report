@@ -50,7 +50,7 @@
               <img src="{{ asset('img/Logo_PT_ASM.jpg') }}" alt="Amarin Logo" class="h-10 w-auto object-contain rounded-md shadow-sm border border-slate-200 bg-white group-hover:scale-105 transition-transform">
               <div class="flex flex-col">
                   <span class="text-xl font-black tracking-tight text-slate-800 group-hover:text-blue-700 transition-colors">AMARIN<span class="text-blue-600">IT</span></span>
-                  <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest -mt-0.5">Fleet Reporting</span>
+                  <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest -mt-0.5">Management System</span>
               </div>
             </a>
           </div>
@@ -143,6 +143,36 @@
                         </a>
                     </li>
                     @endforeach
+                </ul>
+            </li>
+            <li class="mt-4">
+                <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-3">Assistance</div>
+
+                <button type="button" onclick="document.getElementById('submenu-tickets').classList.toggle('hidden')" class="w-full group flex items-center justify-between p-3.5 rounded-xl transition-all border {{ request()->routeIs('tickets.*') ? 'bg-blue-50 border-blue-200 text-blue-700 shadow-sm' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 shadow-sm' }}">
+                    <div class="flex items-center">
+                        <svg class="w-5 h-5 transition duration-75 {{ request()->routeIs('tickets.*') ? 'text-blue-600' : 'text-slate-500 group-hover:text-blue-600' }}" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                        <span class="ml-3 font-bold text-[13px]">Tickets</span>
+                    </div>
+                    <svg class="w-4 h-4 {{ request()->routeIs('tickets.*') ? 'text-blue-600' : 'text-slate-400' }}" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path></svg>
+                </button>
+
+                <ul id="submenu-tickets" class="mt-2 space-y-1 pl-11 pr-2 {{ request()->routeIs('tickets.*') ? '' : 'hidden' }}">
+                    <li>
+                        <a href="{{ route('tickets.index') }}" class="flex items-center justify-between p-2.5 rounded-lg transition-all {{ request()->routeIs('tickets.index') ? 'bg-blue-600 text-white shadow-md' : 'text-slate-500 hover:bg-slate-100 hover:text-blue-600' }}">
+                            <div class="flex items-center gap-2">
+                                <i class="fa-solid fa-list w-4 text-center"></i>
+                                <span class="text-[11px] font-black uppercase tracking-wider">All Tickets</span>
+                            </div>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('tickets.create') }}" class="flex items-center justify-between p-2.5 rounded-lg transition-all {{ request()->routeIs('tickets.create') ? 'bg-blue-600 text-white shadow-md' : 'text-slate-500 hover:bg-slate-100 hover:text-blue-600' }}">
+                            <div class="flex items-center gap-2">
+                                <i class="fa-solid fa-plus w-4 text-center"></i>
+                                <span class="text-[11px] font-black uppercase tracking-wider">Create Ticket</span>
+                            </div>
+                        </a>
+                    </li>
                 </ul>
             </li>
           </ul>
