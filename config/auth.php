@@ -64,7 +64,7 @@ return [
     'providers' => [
         'users' => [
             'driver' => 'eloquent',
-            'model' => App\Models\Employee::class, // <-- Ubah baris ini
+            'model' => App\Models\User::class, // <-- KEMBALIKAN KE USER
         ],
 
         // 'users' => [
