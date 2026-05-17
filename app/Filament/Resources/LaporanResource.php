@@ -23,7 +23,64 @@ class LaporanResource extends Resource
     {
         return $form
             ->schema([
-                //
+                // SECTION 1: Informasi Utama
+                \Filament\Forms\Components\Section::make('Informasi Laporan')
+                    ->schema([
+                        // KEAJAIBAN INTEGRASI ADA DI SINI!
+                        // Mengubah input text biasa menjadi Select Dropdown yang mengambil data dari tabel Vessels
+                        \Filament\Forms\Components\Select::make('lokasi')
+                            ->label('Nama Kapal')
+                            ->options(
+                                \App\Models\Vessel::pluck('vessel_name', 'vessel_name')
+                            )
+                            ->searchable()
+                            ->required(),
+
+                        \Filament\Forms\Components\DateTimePicker::make('waktu_kejadian')
+                            ->label('Waktu Laporan')
+                            ->displayFormat('d M Y, H:i')
+                            ->required(),
+
+                        \Filament\Forms\Components\Textarea::make('isi_laporan')
+                            ->label('Keterangan / Isi Laporan')
+                            ->columnSpanFull()
+                            ->rows(4)
+                            ->required(),
+                    ])->columns(2),
+
+                // SECTION 2: Status CCTV
+                \Filament\Forms\Components\Section::make('Status CCTV (Pilih Ceklis/Silang)')
+                    ->schema([
+                        \Filament\Forms\Components\Select::make('status_ccr')
+                            ->label('Kamera CCR')
+                            ->options(['Ceklis' => 'Ceklis', 'Silang' => 'Silang'])
+                            ->default('Ceklis'),
+
+                        \Filament\Forms\Components\Select::make('status_ajg')
+                            ->label('Kamera Anjungan')
+                            ->options(['Ceklis' => 'Ceklis', 'Silang' => 'Silang'])
+                            ->default('Ceklis'),
+
+                        \Filament\Forms\Components\Select::make('status_brt')
+                            ->label('Kamera Buritan')
+                            ->options(['Ceklis' => 'Ceklis', 'Silang' => 'Silang'])
+                            ->default('Ceklis'),
+
+                        \Filament\Forms\Components\Select::make('status_ecr')
+                            ->label('Kamera ECR')
+                            ->options(['Ceklis' => 'Ceklis', 'Silang' => 'Silang'])
+                            ->default('Ceklis'),
+
+                        \Filament\Forms\Components\Select::make('status_wkn')
+                            ->label('Kamera WKN')
+                            ->options(['Ceklis' => 'Ceklis', 'Silang' => 'Silang'])
+                            ->default('Ceklis'),
+
+                        \Filament\Forms\Components\Select::make('status_wkr')
+                            ->label('Kamera WKR')
+                            ->options(['Ceklis' => 'Ceklis', 'Silang' => 'Silang'])
+                            ->default('Ceklis'),
+                    ])->columns(3),
             ]);
     }
 
