@@ -44,6 +44,7 @@ return [
             'transaction_mode' => 'DEFERRED',
         ],
 
+        // === 1. KONEKSI UTAMA (IT Management System) ===
         'mysql' => [
             'driver' => 'mysql',
             'url' => env('DB_URL'),
@@ -64,7 +65,7 @@ return [
             ]) : [],
         ],
 
-        // === TAMBAHAN KONEKSI UNTUK DATABASE MASTER (SSO) ===
+        // === 2. KONEKSI UNTUK DATABASE MASTER (SSO) ===
         'mysql_master' => [
             'driver' => 'mysql',
             'url' => env('DB_URL'),
@@ -84,7 +85,28 @@ return [
                 (PHP_VERSION_ID >= 80500 ? Mysql::ATTR_SSL_CA : PDO::MYSQL_ATTR_SSL_CA) => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],
         ],
-        // ====================================================
+
+        // === 3. KONEKSI UNTUK DATABASE CCTV (Laporan) ===
+        'mysql_cctv' => [
+            'driver' => 'mysql',
+            'url' => env('DB_URL'),
+            'host' => env('DB_CCTV_HOST', '127.0.0.1'),
+            'port' => env('DB_CCTV_PORT', '3306'),
+            'database' => env('DB_CCTV_DATABASE', 'db_cctv2'),
+            'username' => env('DB_CCTV_USERNAME', 'root'),
+            'password' => env('DB_CCTV_PASSWORD', ''),
+            'unix_socket' => env('DB_SOCKET', ''),
+            'charset' => env('DB_CHARSET', 'utf8mb4'),
+            'collation' => env('DB_COLLATION', 'utf8mb4_unicode_ci'),
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'strict' => true,
+            'engine' => null,
+            'options' => extension_loaded('pdo_mysql') ? array_filter([
+                (PHP_VERSION_ID >= 80500 ? Mysql::ATTR_SSL_CA : PDO::MYSQL_ATTR_SSL_CA) => env('MYSQL_ATTR_SSL_CA'),
+            ]) : [],
+        ],
+        // ================================================
 
         'mariadb' => [
             'driver' => 'mariadb',

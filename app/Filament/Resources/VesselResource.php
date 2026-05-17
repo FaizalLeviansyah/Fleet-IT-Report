@@ -12,6 +12,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Filament\Forms\Components\Textarea;
 
 class VesselResource extends Resource
 {
@@ -32,7 +33,12 @@ class VesselResource extends Resource
                 Forms\Components\TextInput::make('pic_name')
                     ->required()
                     ->maxLength(255),
+                Textarea::make('catatan')
+                    ->label('Catatan / Spesifikasi Kapal')
+                    ->columnSpanFull()
+                    ->rows(3),
             ]);
+
     }
 
     public static function table(Table $table): Table
