@@ -6,9 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class Employee extends Model
 {
-    // Arahkan ke koneksi Master HRD (sesuai .env Anda)
+    // Arahkan ke koneksi Master HRD
     protected $connection = 'mysql_master';
-    protected $table = 'employees';
+
+    // NAMA TABEL YANG BENAR:
+    protected $table = 'tbl_employee';
 
     // Beritahu Laravel kalau ID-nya beda
     protected $primaryKey = 'employee_id';

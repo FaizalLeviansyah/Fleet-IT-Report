@@ -15,11 +15,17 @@ class VesselResource extends Resource
 {
     protected static ?string $model = Vessel::class;
 
-    // --- PENGATURAN SIDEBAR ---
-    protected static ?string $navigationIcon = 'heroicon-o-map-pin'; // Ikon Lokasi/Kapal
+    // --- PENGATURAN SIDEBAR (Cukup 1x saja) ---
+    protected static ?string $navigationIcon = 'heroicon-o-map-pin';
     protected static ?string $navigationGroup = 'Master Data';
     protected static ?string $navigationLabel = 'Vessel Management';
     protected static ?int $navigationSort = 1;
+
+    // --- FITUR KEAMANAN: HANYA ADMIN YANG BISA LIHAT MENU INI ---
+    public static function canViewAny(): bool
+    {
+        return auth()->user()->role === 'admin';
+    }
 
     public static function form(Form $form): Form
     {
@@ -37,10 +43,15 @@ class VesselResource extends Resource
                             ->required()
                             ->maxLength(255),
 
-                        Forms\Components\TextInput::make('pic_name')
+                        // DROPDOWN DINAMIS KE DATABASE MASTER HRD
+                        \Filament\Forms\Components\Select::make('pic_name')
                             ->label('Nama PIC Kapal')
-                            ->required()
-                            ->maxLength(255),
+                            ->options(
+                                \App\Models\Employee::where('is_active', 1)->pluck('full_name', 'full_name')
+                            )
+                            ->searchable()
+                            ->preload()
+                            ->required(),
 
                         Textarea::make('catatan')
                             ->label('Catatan / Spesifikasi Kapal')
@@ -73,9 +84,7 @@ class VesselResource extends Resource
                     ->dateTime('d M Y')
                     ->sortable(),
             ])
-            ->filters([
-                //
-            ])
+            ->filters([])
             ->actions([
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\ViewAction::make(),
