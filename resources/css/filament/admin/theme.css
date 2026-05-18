@@ -1,0 +1,20 @@
+/* Warna Sidebar Biru Tua (Navy Blue) */
+.fi-sidebar {
+    background-color: #0F172A !important; /* Biru Navy Gelap */
+}
+
+/* Warna Item Menu saat Aktif */
+.fi-sidebar-item-active {
+    background-color: #1E293B !important;
+}
+
+/* Warna Teks & Ikon Sidebar */
+.fi-sidebar-item-label, .fi-sidebar-item-icon {
+    color: #CBD5E1 !important;
+}
+
+/* Sidebar Header (Logo Area) */
+.fi-sidebar-header {
+    background-color: #0F172A !important;
+    border-bottom: 1px solid #1E293B;
+}

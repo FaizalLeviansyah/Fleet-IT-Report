@@ -153,7 +153,16 @@ class LaporanResource extends Resource
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
+                    // Tombol Hapus Bawaan
                     Tables\Actions\DeleteBulkAction::make(),
+
+                    // --- TAMBAHKAN TOMBOL EKSPOR INI ---
+                    \Filament\Tables\Actions\ExportBulkAction::make()
+                        ->exporter(\App\Filament\Exports\LaporanExporter::class)
+                        ->label('Ekspor ke CSV/Excel')
+                        ->icon('heroicon-o-arrow-down-tray')
+                        ->color('success'),
+                    // ------------------------------------
                 ]),
             ]);
     }
