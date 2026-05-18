@@ -57,6 +57,13 @@ class AssetResource extends Resource
                                     \Filament\Forms\Components\TextInput::make('current_user')->label('Pengguna Terakhir (User)'),
                                     \Filament\Forms\Components\DateTimePicker::make('last_boot_time')->label('Terakhir Dinyalakan (Boot)'),
                                     \Filament\Forms\Components\DateTimePicker::make('last_seen')->label('Terakhir Terdeteksi (Agent)'),
+                                    \Filament\Forms\Components\TextInput::make('ip_address')
+                                        ->label('IP Address')
+                                        ->ipv4(), // Cerdas: Menolak input jika bukan format IP yang benar
+
+                                    \Filament\Forms\Components\TextInput::make('mac_address')
+                                        ->label('MAC Address')
+                                        ->macAddress(), // Cerdas: Menolak input jika bukan format MAC
                                 ]),
                             ]),
 

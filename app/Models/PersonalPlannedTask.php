@@ -2,11 +2,15 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class PersonalPlannedTask extends Model
 {
-    use HasFactory;
-    protected $fillable = ['personal_it_report_id', 'plan_name', 'target', 'priority', 'deadline', 'notes'];
+    protected $guarded = [];
+
+    // Relasi balik ke Report Utama
+    public function report()
+    {
+        return $this->belongsTo(PersonalItReport::class, 'personal_it_report_id');
+    }
 }

@@ -2,25 +2,16 @@
 
 namespace App\Models;
 
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Model;
 
-class Employee extends Authenticatable
+class Employee extends Model
 {
-    use Notifiable;
-
-    // Arahkan ke koneksi database master
+    // Arahkan ke koneksi Master HRD (sesuai .env Anda)
     protected $connection = 'mysql_master';
+    protected $table = 'employees';
 
-    // Arahkan ke tabel pegawai
-    protected $table = 'tbl_employee';
-
-    // Tentukan primary key-nya
+    // Beritahu Laravel kalau ID-nya beda
     protected $primaryKey = 'employee_id';
 
-    // Sembunyikan kolom sensitif saat data ditarik
-    protected $hidden = [
-        'password',
-        'remember_token',
-    ];
+    protected $guarded = [];
 }

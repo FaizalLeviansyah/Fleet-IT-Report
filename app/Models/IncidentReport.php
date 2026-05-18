@@ -13,4 +13,9 @@ class IncidentReport extends Model
     {
         return $this->belongsTo(Asset::class, 'asset_id');
     }
+    // Relasi ke Thread/Diskusi
+    public function threads()
+    {
+        return $this->hasMany(TicketThread::class, 'ticket_id');
+    }
 }

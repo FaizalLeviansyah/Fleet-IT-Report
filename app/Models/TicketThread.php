@@ -6,8 +6,17 @@ use Illuminate\Database\Eloquent\Model;
 
 class TicketThread extends Model
 {
-    protected $fillable = ['ticket_id', 'user_id', 'type', 'content'];
+    protected $guarded = [];
 
-    public function ticket() { return $this->belongsTo(IncidentTicket::class); }
-    public function user() { return $this->belongsTo(User::class); }
+    // Relasi balik ke Laporan Insiden
+    public function incident()
+    {
+        return $this->belongsTo(IncidentReport::class, 'ticket_id');
+    }
+
+    // Relasi ke User (siapa yang membalas)
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
 }

@@ -2,27 +2,24 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class PersonalItReport extends Model
 {
-    use HasFactory;
+    protected $guarded = [];
+    // Ubah group-nya menjadi:
+protected static ?string $navigationGroup = 'Laporan Kinerja IT';
+protected static ?string $navigationLabel = 'Laporan Mingguan';
 
-    protected $fillable = ['user_id', 'start_date', 'end_date', 'status', 'late_remark'];
-
-    // Relasi ke tabel user (Pembuat laporan)
-    public function user() {
-        return $this->belongsTo(User::class);
+    // Relasi ke tabel Planned Task (Rencana Tugas)
+    public function plannedTasks()
+    {
+        return $this->hasMany(PersonalPlannedTask::class, 'personal_it_report_id');
     }
 
-    // Relasi ke tabel Actual Tasks (Pekerjaan Aktual)
-    public function actualTasks() {
-        return $this->hasMany(PersonalActualTask::class);
-    }
-
-    // Relasi ke tabel Planned Tasks (Rencana Minggu Depan)
-    public function plannedTasks() {
-        return $this->hasMany(PersonalPlannedTask::class);
+    // Relasi ke User (Pegawai)
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 }
