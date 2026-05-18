@@ -3,73 +3,82 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\AssetResource\Pages;
-use App\Filament\Resources\AssetResource\RelationManagers;
 use App\Models\Asset;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class AssetResource extends Resource
 {
     protected static ?string $model = Asset::class;
-
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-computer-desktop';
+    protected static ?string $navigationLabel = 'Manajemen Aset (ITAM)';
+    protected static ?string $navigationGroup = 'IT Management';
+    protected static ?int $navigationSort = 2;
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('vessel_id')
-                    ->numeric(),
-                Forms\Components\TextInput::make('category_id')
-                    ->numeric(),
-                Forms\Components\TextInput::make('location_id')
-                    ->numeric(),
-                Forms\Components\TextInput::make('asset_type')
-                    ->required()
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('asset_name')
-                    ->required()
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('company_entity')
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('manufacturer')
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('model')
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('hardware_uuid')
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('ip_address')
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('mac_address')
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('serial_number')
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('status')
-                    ->required()
-                    ->maxLength(255)
-                    ->default('Active'),
-                Forms\Components\TextInput::make('os_version')
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('cpu_model')
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('total_ram')
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('disk_space')
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('current_user')
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('contact_person')
-                    ->maxLength(255),
-                Forms\Components\DateTimePicker::make('last_boot_time'),
-                Forms\Components\TextInput::make('software_list'),
-                Forms\Components\DateTimePicker::make('last_seen'),
-                Forms\Components\TextInput::make('group_name')
-                    ->maxLength(255),
+                \Filament\Forms\Components\Tabs::make('Asset Details')
+                    ->tabs([
+                        // TAB 1: INFORMASI UTAMA & HARDWARE
+                        \Filament\Forms\Components\Tabs\Tab::make('Info & Spesifikasi')
+                            ->icon('heroicon-m-information-circle')
+                            ->schema([
+                                \Filament\Forms\Components\Grid::make(2)->schema([
+                                    \Filament\Forms\Components\TextInput::make('asset_name')->label('Nama Aset (Hostname)')->required()->weight('bold'),
+                                    \Filament\Forms\Components\Select::make('asset_type')->label('Tipe Aset')
+                                        ->options(['PC/Laptop' => 'PC/Laptop', 'Printer' => 'Printer', 'Network/Router' => 'Network/Router', 'Lainnya' => 'Lainnya']),
+                                    \Filament\Forms\Components\Select::make('vessel_id')->label('Lokasi Kapal')
+                                        ->options(\App\Models\Vessel::pluck('vessel_name', 'id'))->searchable(),
+                                    \Filament\Forms\Components\Select::make('status')->label('Status')
+                                        ->options(['Active' => 'Active', 'Inactive' => 'Inactive', 'Maintenance' => 'Maintenance', 'Broken' => 'Broken']),
+
+                                    // Hardware Specs
+                                    \Filament\Forms\Components\TextInput::make('cpu_model')->label('Prosesor (CPU)'),
+                                    \Filament\Forms\Components\TextInput::make('total_ram')->label('Kapasitas RAM'),
+                                    \Filament\Forms\Components\TextInput::make('disk_space')->label('Sisa Penyimpanan'),
+                                    \Filament\Forms\Components\TextInput::make('os_version')->label('Sistem Operasi')->columnSpanFull(),
+                                ]),
+                            ]),
+
+                        // TAB 2: JARINGAN & IDENTITAS
+                        \Filament\Forms\Components\Tabs\Tab::make('Jaringan & Identitas')
+                            ->icon('heroicon-m-wifi')
+                            ->schema([
+                                \Filament\Forms\Components\Grid::make(2)->schema([
+                                    \Filament\Forms\Components\TextInput::make('ip_address')->label('IP Address'),
+                                    \Filament\Forms\Components\TextInput::make('mac_address')->label('MAC Address'),
+                                    \Filament\Forms\Components\TextInput::make('hardware_uuid')->label('Hardware UUID'),
+                                    \Filament\Forms\Components\TextInput::make('serial_number')->label('Serial Number'),
+                                    \Filament\Forms\Components\TextInput::make('current_user')->label('Pengguna Terakhir (User)'),
+                                    \Filament\Forms\Components\DateTimePicker::make('last_boot_time')->label('Terakhir Dinyalakan (Boot)'),
+                                    \Filament\Forms\Components\DateTimePicker::make('last_seen')->label('Terakhir Terdeteksi (Agent)'),
+                                ]),
+                            ]),
+
+                        // TAB 3: DAFTAR SOFTWARE (Otomatis dibaca dari Array/JSON)
+                        \Filament\Forms\Components\Tabs\Tab::make('Daftar Software')
+                            ->icon('heroicon-m-window')
+                            ->schema([
+                                \Filament\Forms\Components\Repeater::make('software_list')
+                                    ->label('Perangkat Lunak Terinstal')
+                                    ->schema([
+                                        \Filament\Forms\Components\TextInput::make('name')->label('Nama Software')->required(),
+                                        \Filament\Forms\Components\TextInput::make('version')->label('Versi'),
+                                        \Filament\Forms\Components\TextInput::make('publisher')->label('Penerbit'),
+                                    ])
+                                    ->columns(3)
+                                    ->defaultItems(0)
+                                    ->reorderable(false)
+                                    // Kita buat readonly karena data ini diinjeksi oleh agent otomatis
+                                    ->disabled(),
+                            ]),
+                    ])
+                    ->columnSpanFull(),
             ]);
     }
 
@@ -77,82 +86,29 @@ class AssetResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('vessel_id')
-                    ->numeric()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('category_id')
-                    ->numeric()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('location_id')
-                    ->numeric()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('asset_type')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('asset_name')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('company_entity')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('manufacturer')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('model')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('hardware_uuid')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('ip_address')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('mac_address')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('serial_number')
-                    ->searchable(),
+                Tables\Columns\TextColumn::make('asset_name')->label('Nama Aset')->searchable()->weight('bold'),
+                Tables\Columns\TextColumn::make('asset_type')->label('Tipe')->searchable(),
+                Tables\Columns\TextColumn::make('ip_address')->label('IP Address')->searchable()->copyable(),
+                Tables\Columns\TextColumn::make('os_version')->label('OS')->limit(30),
                 Tables\Columns\TextColumn::make('status')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('os_version')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('cpu_model')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('total_ram')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('disk_space')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('current_user')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('contact_person')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('last_boot_time')
-                    ->dateTime()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('last_seen')
-                    ->dateTime()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('group_name')
-                    ->searchable(),
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'Active' => 'success',
+                        'Maintenance' => 'warning',
+                        'Broken' => 'danger',
+                        default => 'gray',
+                    }),
+                Tables\Columns\TextColumn::make('last_seen')->label('Last Seen')->dateTime('d M Y, H:i')->sortable(),
             ])
+            ->defaultSort('last_seen', 'desc')
             ->filters([
-                //
+                Tables\Filters\SelectFilter::make('asset_type')->label('Filter Tipe')->options(['PC/Laptop' => 'PC/Laptop', 'Printer' => 'Printer']),
+                Tables\Filters\SelectFilter::make('status')->label('Filter Status')->options(['Active' => 'Active', 'Maintenance' => 'Maintenance', 'Broken' => 'Broken']),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
-            ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
+                Tables\Actions\ViewAction::make(),
             ]);
-    }
-
-    public static function getRelations(): array
-    {
-        return [
-            //
-        ];
     }
 
     public static function getPages(): array

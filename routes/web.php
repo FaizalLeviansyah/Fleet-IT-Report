@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ReportController;
-
+use App\Models\Laporan;
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
@@ -50,4 +50,10 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/tickets/{ticket}/thread', [App\Http\Controllers\TicketController::class, 'storeThread'])->name('tickets.thread.store');
     Route::patch('/tickets/{ticket}/status', [App\Http\Controllers\TicketController::class, 'updateStatus'])->name('tickets.status.update');
+
+    Route::get('/laporan/{id}/cetak', function ($id) {
+    // Cari laporan beserta relasi gambarnya
+        $laporan = Laporan::with('gambars')->findOrFail($id);
+        return view('cetak-laporan', compact('laporan'));
+    })->name('cetak.laporan');
 });
