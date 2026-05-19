@@ -10,42 +10,42 @@ use App\Models\Vessel;
 
 class DashboardStatsWidget extends BaseWidget
 {
-    // Agar tampil di bawah Welcome Widget
     protected static ?int $sort = 1; 
-    
-    // Refresh otomatis setiap 10 detik tanpa perlu reload browser!
-    protected static ?string $pollingInterval = '10s'; 
+    protected static ?string $pollingInterval = '15s'; 
+
+    // 👇 INI KUNCINYA: Memaksa Card Berjejer 4 ke samping (Desktop)
+    protected function getColumns(): int
+    {
+        return 4;
+    }
 
     protected function getStats(): array
     {
-        // 1. Ambil Data Real dari Database
         $totalVessels = Vessel::count();
         $totalAssets = Asset::count();
-        
-        // Menghitung tiket yang belum selesai (Open & In Progress)
         $activeIncidents = IncidentReport::whereIn('status', ['Open', 'In Progress'])->count();
-        
-        // Menghitung persentase SLA (Contoh logika: Jika tiket aktif > 10, itu bahaya)
-        $incidentColor = $activeIncidents > 5 ? 'danger' : 'success';
-        $incidentIcon = $activeIncidents > 5 ? 'heroicon-m-arrow-trending-up' : 'heroicon-m-arrow-trending-down';
+        $resolvedIncidents = IncidentReport::where('status', 'Resolved')->count(); // Tambahan data baru
 
         return [
-            Stat::make('Tiket Insiden Aktif', $activeIncidents)
-                ->description($activeIncidents > 0 ? 'Perlu segera ditangani' : 'Semua sistem aman')
-                ->descriptionIcon($incidentIcon)
-                ->color($incidentColor)
-                ->chart([7, 3, 4, 5, 6, 3, $activeIncidents]), // Grafik mini
+            Stat::make('Tiket Aktif', $activeIncidents)
+                ->description('Menunggu penanganan')
+                ->descriptionIcon('heroicon-m-exclamation-triangle')
+                ->color($activeIncidents > 0 ? 'danger' : 'success'),
 
-            Stat::make('Total Aset IT Terlacak', $totalAssets)
-                ->description('Database inventaris ITAM')
-                ->descriptionIcon('heroicon-m-computer-desktop')
-                ->color('info')
-                ->chart([10, 20, 30, 40, 50, 60, $totalAssets]),
-
-            Stat::make('Total Master Kapal', $totalVessels)
-                ->description('Kapal Amarin yang terdaftar')
-                ->descriptionIcon('heroicon-m-map-pin')
+            Stat::make('Tiket Selesai', $resolvedIncidents)
+                ->description('Telah diselesaikan')
+                ->descriptionIcon('heroicon-m-check-badge')
                 ->color('success'),
+
+            Stat::make('Total Aset IT', $totalAssets)
+                ->description('Terdata di ITAM')
+                ->descriptionIcon('heroicon-m-computer-desktop')
+                ->color('info'),
+
+            Stat::make('Master Kapal', $totalVessels)
+                ->description('Armada aktif')
+                ->descriptionIcon('heroicon-m-map-pin')
+                ->color('primary'),
         ];
     }
 }

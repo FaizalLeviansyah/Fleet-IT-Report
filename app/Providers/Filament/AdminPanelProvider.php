@@ -96,6 +96,10 @@ class AdminPanelProvider extends PanelProvider
                     /* Logika Compact Mode */
                     body.is-compact .fi-ta-cell { padding-top: 0.3rem !important; padding-bottom: 0.3rem !important; }
                     body.is-compact .fi-section { padding: 0.75rem !important; }
+                    /* MENGECILKAN TINGGI CARD STATISTIK */
+                    .fi-wi-stats-overview-stat { padding: 1rem !important; }
+                    .fi-wi-stats-overview-stat .text-3xl { font-size: 1.5rem !important; line-height: 2rem !important; }
+                    .fi-wi-stats-overview-stat .text-sm { font-size: 0.75rem !important; }
                 </style>'
             )
             
