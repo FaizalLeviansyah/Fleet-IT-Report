@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use App\Models\IncidentReport;
+use App\Observers\IncidentReportObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -19,6 +21,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // 👇 Mendaftarkan Observer agar sistem memantau tabel IncidentReport 24/7
+        IncidentReport::observe(IncidentReportObserver::class);
     }
 }
