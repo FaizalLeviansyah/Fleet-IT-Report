@@ -10,8 +10,12 @@ use Illuminate\Support\Carbon;
 
 class RecentIncidentsWidget extends BaseWidget
 {
-    protected static ?int $sort = 2; 
-    protected int | string | array $columnSpan = 'full';
+    protected static ?int $sort = 2;
+    // Memaksa widget hanya mengambil setengah layar (berjejer)
+    protected int | string | array $columnSpan = [
+        'md' => 1,
+        'xl' => 1,
+    ];
     protected static ?string $heading = '🚨 Insiden Terakhir & SLA Monitor (Top 5)';
 
     public function table(Table $table): Table
@@ -42,14 +46,14 @@ class RecentIncidentsWidget extends BaseWidget
                         }
                         return 'gray';
                     }),
-                    
+
                 Tables\Columns\TextColumn::make('vessel_name')
                     ->label('Lokasi / Kapal'),
-                    
+
                 Tables\Columns\TextColumn::make('category')
                     ->label('Kategori')
                     ->badge(),
-                    
+
                 Tables\Columns\TextColumn::make('status')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
@@ -59,11 +63,11 @@ class RecentIncidentsWidget extends BaseWidget
                         'Closed' => 'gray',
                         default => 'primary',
                     }),
-                    
+
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Dilaporkan Pada')
                     ->dateTime('d M Y, H:i'),
             ])
-            ->paginated(false); 
+            ->paginated(false);
     }
 }

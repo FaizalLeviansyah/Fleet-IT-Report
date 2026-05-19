@@ -10,8 +10,12 @@ class VesselNvrStatusWidget extends Widget
 {
     protected static string $view = 'filament.widgets.vessel-nvr-status-widget';
     protected static ?int $sort = 3; // Tampil di paling bawah
-    protected int | string | array $columnSpan = 'full';
-    
+    // Memaksa widget hanya mengambil setengah layar di sebelah tabel
+    protected int | string | array $columnSpan = [
+        'md' => 1,
+        'xl' => 1,
+    ];
+
     // Auto-refresh setiap 15 detik tanpa reload halaman!
     protected static ?string $pollingInterval = '15s';
 
@@ -23,7 +27,7 @@ class VesselNvrStatusWidget extends Widget
             $hasIssue = IncidentReport::where('vessel_name', $vessel->vessel_name)
                 ->whereIn('status', ['Open', 'In Progress'])
                 ->exists();
-                
+
             return [
                 'name' => $vessel->vessel_name,
                 'status' => $hasIssue ? 'OFFLINE' : 'ONLINE',
