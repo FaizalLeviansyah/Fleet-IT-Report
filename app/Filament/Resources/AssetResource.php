@@ -29,7 +29,9 @@ class AssetResource extends Resource
                             ->icon('heroicon-m-information-circle')
                             ->schema([
                                 \Filament\Forms\Components\Grid::make(2)->schema([
-                                    \Filament\Forms\Components\TextInput::make('asset_name')->label('Nama Aset (Hostname)')->required()->weight('bold'),
+                                    \Filament\Forms\Components\TextInput::make('asset_name')
+                                    ->label('Nama Aset (Hostname)')
+                                    ->required(),
                                     \Filament\Forms\Components\Select::make('asset_type')->label('Tipe Aset')
                                         ->options(['PC/Laptop' => 'PC/Laptop', 'Printer' => 'Printer', 'Network/Router' => 'Network/Router', 'Lainnya' => 'Lainnya']),
                                     \Filament\Forms\Components\Select::make('vessel_id')->label('Lokasi Kapal')
