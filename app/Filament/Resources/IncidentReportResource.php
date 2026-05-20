@@ -8,6 +8,8 @@ use App\Models\Vessel;
 use App\Models\Asset;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Forms\Get;
+use Filament\Forms\Set;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -16,6 +18,16 @@ class IncidentReportResource extends Resource
 {
     protected static ?string $model = IncidentReport::class;
     protected static ?string $navigationIcon = 'heroicon-o-exclamation-triangle';
+
+    // 1. Kolom apa yang mau dijadikan Judul saat dicari?
+    protected static ?string $recordTitleAttribute = 'ticket_number';
+
+    // 2. Kolom apa saja yang bisa dicari sistem saat Anda mengetik di Ctrl+K?
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['ticket_number', 'vessel_name', 'category', 'status'];
+    }
+
     protected static ?string $navigationLabel = 'ITSM / Insiden';
     protected static ?string $navigationGroup = 'IT Management';
 
@@ -25,7 +37,71 @@ class IncidentReportResource extends Resource
             ->schema([
                 \Filament\Forms\Components\Group::make()
                     ->schema([
-                        // BAGIAN UTAMA (KIRI) - 2 Kolom
+                        // 👇 SECTION BARU: LOKASI DINAMIS (ANTI DOUBLE-INPUT) 👇
+                        \Filament\Forms\Components\Section::make('Pemilihan Lokasi Insiden')
+                            ->description('Tentukan letak kendala secara spesifik (Armada atau Gedung).')
+                            ->schema([
+                                \Filament\Forms\Components\Radio::make('location_type')
+                                    ->label('Jenis Lokasi')
+                                    ->options([
+                                        'Kapal' => '🚢 Armada Kapal',
+                                        'Kantor' => '🏢 Gedung Kantor',
+                                    ])
+                                    ->inline()
+                                    ->live()
+                                    ->afterStateUpdated(function (Set $set) {
+                                        // RESET DATA JIKA PILIHAN BERUBAH
+                                        $set('vessel_name', null);
+                                        $set('office_name', null);
+                                        $set('floor_level', null);
+                                    })
+                                    ->required()
+                                    ->columnSpanFull(),
+
+                                // MUNCUL JIKA PILIH KAPAL
+                                \Filament\Forms\Components\Select::make('vessel_name')
+                                    ->label('Pilih Armada Kapal')
+                                    ->options(\App\Models\Vessel::pluck('vessel_name', 'vessel_name'))
+                                    ->searchable()
+                                    ->visible(fn (Get $get) => $get('location_type') === 'Kapal')
+                                    ->required(fn (Get $get) => $get('location_type') === 'Kapal'),
+
+                                // MUNCUL JIKA PILIH KANTOR
+                                \Filament\Forms\Components\Select::make('office_name')
+                                    ->label('Pilih Gedung Kantor')
+                                    ->options([
+                                        'ASM' => 'Kantor Pusat (ASM)',
+                                        'CTP' => 'Kantor CTP',
+                                        'ACS' => 'Kantor ACS',
+                                    ])
+                                    ->live()
+                                    ->afterStateUpdated(fn (Set $set) => $set('floor_level', null)) // Reset lantai
+                                    ->visible(fn (Get $get) => $get('location_type') === 'Kantor')
+                                    ->required(fn (Get $get) => $get('location_type') === 'Kantor'),
+
+                                // PILIHAN LANTAI PINTAR (ASM = 1 Lantai, CTP/ACS = 4 Lantai)
+                                \Filament\Forms\Components\Select::make('floor_level')
+                                    ->label('Detail Lantai Ke-')
+                                    ->options(function (Get $get) {
+                                        $office = $get('office_name');
+                                        if ($office === 'ASM') {
+                                            return ['Lantai 1' => 'Lantai 1'];
+                                        }
+                                        if (in_array($office, ['CTP', 'ACS'])) {
+                                            return [
+                                                'Lantai 1' => 'Lantai 1',
+                                                'Lantai 2' => 'Lantai 2',
+                                                'Lantai 3' => 'Lantai 3',
+                                                'Lantai 4' => 'Lantai 4',
+                                            ];
+                                        }
+                                        return [];
+                                    })
+                                    ->visible(fn (Get $get) => filled($get('office_name')) && $get('location_type') === 'Kantor')
+                                    ->required(fn (Get $get) => $get('location_type') === 'Kantor'),
+                            ])->columns(2),
+
+                        // BAGIAN UTAMA
                         \Filament\Forms\Components\Section::make('Karakteristik Tiket')
                             ->schema([
                                 \Filament\Forms\Components\TextInput::make('title')
@@ -50,11 +126,11 @@ class IncidentReportResource extends Resource
                                     ->columnSpanFull()
                                     ->required(),
                             ])->columns(2),
-                    ])->columnSpan(['lg' => 2]), // Mengambil ruang 2/3 layar (Kiri)
+                    ])->columnSpan(['lg' => 2]),
 
                 \Filament\Forms\Components\Group::make()
                     ->schema([
-                        // BAGIAN AKTOR & STATUS (KANAN) - 1 Kolom
+                        // BAGIAN AKTOR & STATUS
                         \Filament\Forms\Components\Section::make('Aktor & Status')
                             ->schema([
                                 \Filament\Forms\Components\TextInput::make('ticket_number')
@@ -62,34 +138,31 @@ class IncidentReportResource extends Resource
                                     ->default('INC-' . strtoupper(uniqid()))
                                     ->readOnly(),
 
-                                // Pada bagian form Status:
-                        \Filament\Forms\Components\Select::make('status')
-                            ->label('Status Penyelesaian')
-                            ->options([
-                                'Open' => 'Open (Baru)',
-                                'In Progress' => 'In Progress (Dikerjakan)',
-                                'Resolved' => 'Resolved (Selesai)',
-                                'Closed' => 'Closed (Ditutup)',
-                            ])
-                            ->default('Open')
-                            ->live() // Jadikan reaktif
-                            ->afterStateUpdated(function ($state) {
-                                if (in_array($state, ['Resolved', 'Closed'])) {
-                                    \Filament\Notifications\Notification::make()
-                                        ->title('Wajib Isi Catatan!')
-                                        ->body('Tiket diselesaikan. Mohon isi Catatan Penyelesaian (Solusi) di bawah.')
-                                        ->warning()
-                                        ->send();
-                                }
-                            })
-                            ->required(),
+                                \Filament\Forms\Components\Select::make('status')
+                                    ->label('Status Penyelesaian')
+                                    ->options([
+                                        'Open' => 'Open (Baru)',
+                                        'In Progress' => 'In Progress (Dikerjakan)',
+                                        'Resolved' => 'Resolved (Selesai)',
+                                        'Closed' => 'Closed (Ditutup)',
+                                    ])
+                                    ->default('Open')
+                                    ->live()
+                                    ->afterStateUpdated(function ($state) {
+                                        if (in_array($state, ['Resolved', 'Closed'])) {
+                                            \Filament\Notifications\Notification::make()
+                                                ->title('Wajib Isi Catatan!')
+                                                ->body('Tiket diselesaikan. Mohon isi Catatan Penyelesaian (Solusi) di bawah.')
+                                                ->warning()
+                                                ->send();
+                                        }
+                                    })
+                                    ->required(),
 
-                        // Pada bagian Resolution Note (di section Deskripsi):
-                        \Filament\Forms\Components\RichEditor::make('resolution_note')
-                            ->label('Catatan Penyelesaian / Solusi')
-                            // WAJIB DIISI JIKA STATUSNYA RESOLVED ATAU CLOSED
-                            ->required(fn (\Filament\Forms\Get $get) => in_array($get('status'), ['Resolved', 'Closed']))
-                            ->visible(fn (\Filament\Forms\Get $get) => in_array($get('status'), ['Resolved', 'Closed'])), // Hanya muncul kalau selesai
+                                \Filament\Forms\Components\RichEditor::make('resolution_note')
+                                    ->label('Catatan Penyelesaian / Solusi')
+                                    ->required(fn (\Filament\Forms\Get $get) => in_array($get('status'), ['Resolved', 'Closed']))
+                                    ->visible(fn (\Filament\Forms\Get $get) => in_array($get('status'), ['Resolved', 'Closed'])),
 
                                 \Filament\Forms\Components\Select::make('priority')
                                     ->label('Prioritas')
@@ -100,13 +173,10 @@ class IncidentReportResource extends Resource
                                     ->label('Requester (Pelapor)')
                                     ->required(),
 
-                                \Filament\Forms\Components\Select::make('vessel_name')
-                                    ->label('Lokasi (Kapal)')
-                                    ->options(\App\Models\Vessel::pluck('vessel_name', 'vessel_name'))
-                                    ->searchable(),
+                                // vessel_name lama di kanan SUDAH DIHAPUS agar tidak double
                             ]),
-                    ])->columnSpan(['lg' => 1]), // Mengambil ruang 1/3 layar (Kanan)
-            ])->columns(3); // Membagi layar jadi 3 bagian
+                    ])->columnSpan(['lg' => 1]),
+            ])->columns(3);
     }
 
     public static function table(Table $table): Table
@@ -115,9 +185,18 @@ class IncidentReportResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('ticket_number')->label('No. Tiket')->searchable()->weight('bold'),
                 Tables\Columns\TextColumn::make('title')->label('Judul')->searchable()->limit(30),
-                Tables\Columns\TextColumn::make('vessel_name')->label('Kapal')->searchable(),
 
-                // Menampilkan nama aset di tabel
+                // Menampilkan lokasi (Bisa Kapal atau Kantor)
+                Tables\Columns\TextColumn::make('vessel_name')
+                    ->label('Lokasi')
+                    ->getStateUsing(function (IncidentReport $record) {
+                        if ($record->location_type === 'Kantor') {
+                            return $record->office_name . ' (' . $record->floor_level . ')';
+                        }
+                        return $record->vessel_name;
+                    })
+                    ->searchable(),
+
                 Tables\Columns\TextColumn::make('asset.asset_name')->label('Aset IT')->searchable(),
 
                 Tables\Columns\TextColumn::make('priority')
@@ -151,7 +230,6 @@ class IncidentReportResource extends Resource
     public static function getRelations(): array
     {
         return [
-            // Menggunakan backslash (\) di awal agar jalurnya absolut/pasti!
             \App\Filament\Resources\IncidentReportResource\RelationManagers\ThreadsRelationManager::class,
         ];
     }

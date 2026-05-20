@@ -1,14 +1,14 @@
-<div class="flex items-center gap-x-2 mr-1" x-data="{ openPreferences: false, isCompact: localStorage.getItem('isCompact') === 'true' }" x-init="if(isCompact) document.body.classList.add('is-compact')">
+<div class="flex items-center mr-1" style="gap: 8px;" x-data="{ openPreferences: false, isCompact: localStorage.getItem('isCompact') === 'true' }" x-init="if(isCompact) document.body.classList.add('is-compact')">
 
-    <div class="relative">
+    <div class="relative" style="display: flex; align-items: center;">
         <button
             x-ref="prefsBtn"
             @click="openPreferences = !openPreferences"
             @click.away="openPreferences = false"
-            class="flex items-center justify-center w-7 h-7 rounded-full bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 border border-gray-200 dark:border-gray-700 text-gray-500 hover:text-indigo-600 dark:text-gray-300 shadow-sm transition-all duration-300 hover:scale-110 hover:shadow-indigo-500/30"
+            style="display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; background-color: #ffffff; border: 1px solid #E5E7EB; color: #6B7280; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05);"
             title="Display Preferences"
         >
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+            <svg style="width: 14px; height: 14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
         </button>
 
         <div
@@ -40,13 +40,15 @@
         </div>
     </div>
 
-    <form method="POST" action="{{ route('filament.admin.auth.logout') }}" class="ml-0.5">
+    <form method="POST" action="{{ route('filament.admin.auth.logout') }}" style="display: flex; align-items: center; margin: 0;">
         @csrf
         <button type="button"
-            onclick="Swal.fire({ title: 'Shutdown System?', text: 'Sesi Anda akan segera diakhiri.', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', cancelButtonColor: '#64748b', confirmButtonText: 'Ya, Shutdown!', cancelButtonText: 'Batal', background: 'rgba(255,255,255,0.9)', backdrop: 'rgba(15,23,42,0.7)' }).then((result) => { if (result.isConfirmed) { this.closest('form').submit(); } })"
-            class="flex items-center justify-center w-7 h-7 rounded-full bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/30 dark:to-red-800/30 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 hover:text-white hover:bg-gradient-to-br hover:from-red-500 hover:to-red-600 shadow-sm transition-all duration-300 hover:scale-110 hover:shadow-red-500/30" title="Shutdown / Logout">
+            onclick="Swal.fire({ title: 'Shutdown System?', text: 'Sesi Anda akan segera diakhiri.', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', cancelButtonColor: '#64748b', confirmButtonText: 'Ya, Shutdown!', cancelButtonText: 'Batal', background: 'rgba(255,255,255,0.95)', backdrop: 'rgba(15,23,42,0.7)' }).then((result) => { if (result.isConfirmed) { this.closest('form').submit(); } })"
+            style="display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; background-color: #fef2f2; border: 1px solid #fca5a5; color: #ef4444; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05);" title="Shutdown / Logout">
 
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5.636 5.636a9 9 0 1 1 12.728 0M12 3v9"></path></svg>
+            <svg style="width: 14px; height: 14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M18.36 6.64a9 9 0 1 1-12.73 0M12 2v10"></path>
+            </svg>
         </button>
     </form>
 </div>
