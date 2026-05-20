@@ -217,7 +217,7 @@ class IncidentReportResource extends Resource
                 //
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\EditAction::make()->slideOver()->modalWidth('4xl'),
                 Tables\Actions\ViewAction::make(),
             ])
             ->bulkActions([
@@ -238,8 +238,8 @@ class IncidentReportResource extends Resource
     {
         return [
             'index' => Pages\ListIncidentReports::route('/'),
-            'create' => Pages\CreateIncidentReport::route('/create'),
-            'edit' => Pages\EditIncidentReport::route('/{record}/edit'),
+            // 'create' => Pages\CreateIncidentReport::route('/create'),
+            // 'edit' => Pages\EditIncidentReport::route('/{record}/edit'),
         ];
     }
 }

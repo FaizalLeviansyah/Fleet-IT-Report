@@ -110,8 +110,8 @@ class EmployeeResource extends Resource
             ])
             ->filters([])
             ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\ViewAction::make()->modalWidth('4xl'),
+                Tables\Actions\EditAction::make()->modalWidth('4xl'),
             ]);
     }
 
@@ -119,8 +119,8 @@ class EmployeeResource extends Resource
     {
         return [
             'index' => Pages\ListEmployees::route('/'),
-            'create' => Pages\CreateEmployee::route('/create'),
-            'edit' => Pages\EditEmployee::route('/{record}/edit'),
+            // 'create' => Pages\CreateEmployee::route('/create'),
+            // 'edit' => Pages\EditEmployee::route('/{record}/edit'),
         ];
     }
 }

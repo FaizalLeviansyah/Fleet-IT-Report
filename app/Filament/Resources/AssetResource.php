@@ -115,8 +115,8 @@ class AssetResource extends Resource
                 Tables\Filters\SelectFilter::make('status')->label('Filter Status')->options(['Active' => 'Active', 'Maintenance' => 'Maintenance', 'Broken' => 'Broken']),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\ViewAction::make(),
+                Tables\Actions\ViewAction::make()->modalWidth('4xl'),
+                Tables\Actions\EditAction::make()->modalWidth('4xl'),
             ]);
     }
 
@@ -124,8 +124,8 @@ class AssetResource extends Resource
     {
         return [
             'index' => Pages\ListAssets::route('/'),
-            'create' => Pages\CreateAsset::route('/create'),
-            'edit' => Pages\EditAsset::route('/{record}/edit'),
+            // 'create' => Pages\CreateAsset::route('/create'),
+            // 'edit' => Pages\EditAsset::route('/{record}/edit'),
         ];
     }
 }

@@ -152,7 +152,8 @@ class PersonalItReportResource extends Resource
                 //
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\ViewAction::make()->modalWidth('4xl'),
+                Tables\Actions\EditAction::make()->modalWidth('4xl'),
             ])
             ->bulkActions([
                 Tables\Actions\DeleteBulkAction::make(),
@@ -163,8 +164,8 @@ class PersonalItReportResource extends Resource
     {
         return [
             'index' => Pages\ListPersonalItReports::route('/'),
-            'create' => Pages\CreatePersonalItReport::route('/create'),
-            'edit' => Pages\EditPersonalItReport::route('/{record}/edit'),
+            // 'create' => Pages\CreatePersonalItReport::route('/create'),
+            // 'edit' => Pages\EditPersonalItReport::route('/{record}/edit'),
         ];
     }
 }

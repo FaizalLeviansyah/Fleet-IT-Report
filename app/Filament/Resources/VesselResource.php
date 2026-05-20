@@ -86,8 +86,8 @@ class VesselResource extends Resource
             ])
             ->filters([])
             ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\ViewAction::make(),
+                Tables\Actions\ViewAction::make()->modalWidth('4xl'),
+                Tables\Actions\EditAction::make()->modalWidth('4xl'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -105,8 +105,8 @@ class VesselResource extends Resource
     {
         return [
             'index' => Pages\ListVessels::route('/'),
-            'create' => Pages\CreateVessel::route('/create'),
-            'edit' => Pages\EditVessel::route('/{record}/edit'),
+            // 'create' => Pages\CreateVessel::route('/create'),
+            // 'edit' => Pages\EditVessel::route('/{record}/edit'),
         ];
     }
 }

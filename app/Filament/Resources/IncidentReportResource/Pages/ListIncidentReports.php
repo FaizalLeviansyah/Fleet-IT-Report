@@ -13,7 +13,10 @@ class ListIncidentReports extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Actions\CreateAction::make(),
+            // 👇 TAMBAHKAN SLIDEOVER & UKURAN DI SINI 👇
+            Actions\CreateAction::make()
+                ->slideOver() // Modal akan meluncur elegan dari sisi kanan layar
+                ->modalWidth('4xl'), // Memperlebar modal agar form Anda muat
         ];
     }
 }

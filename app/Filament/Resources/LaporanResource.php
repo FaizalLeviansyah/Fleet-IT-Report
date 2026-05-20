@@ -141,8 +141,8 @@ class LaporanResource extends Resource
                 //
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\ViewAction::make(),
+                Tables\Actions\EditAction::make()->modalWidth('4xl'),
+                Tables\Actions\ViewAction::make()->modalWidth('4xl'),
                 // TAMBAHAN TOMBOL CETAK
                 Tables\Actions\Action::make('cetak')
                     ->label('Cetak / PDF')
@@ -176,8 +176,8 @@ class LaporanResource extends Resource
     {
         return [
             'index' => Pages\ListLaporans::route('/'),
-            'create' => Pages\CreateLaporan::route('/create'),
-            'edit' => Pages\EditLaporan::route('/{record}/edit'),
+            // 'create' => Pages\CreateLaporan::route('/create'),
+            // 'edit' => Pages\EditLaporan::route('/{record}/edit'),
         ];
     }
 }
