@@ -2,50 +2,42 @@
 
 namespace App\Filament\Widgets;
 
+use App\Models\IncidentReport;
+use App\Models\Vessel;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
-use App\Models\IncidentReport;
-use App\Models\Asset;
-use App\Models\Vessel;
 
 class DashboardStatsWidget extends BaseWidget
 {
-    protected static ?int $sort = 1; 
-    protected static ?string $pollingInterval = '15s'; 
-
-    // 👇 INI KUNCINYA: Memaksa Card Berjejer 4 ke samping (Desktop)
-    protected function getColumns(): int
-    {
-        return 4;
-    }
+    // 👇 SAKLAR AUTO-REFRESH SETIAP 10 DETIK 👇
+    protected static ?string $pollingInterval = '10s';
+    protected static ?int $sort = 1; // Urutan paling atas
 
     protected function getStats(): array
     {
+        // Menghitung data langsung dari Database
+        $openTickets = IncidentReport::whereIn('status', ['Open', 'In Progress'])->count();
+        $resolvedTickets = IncidentReport::whereIn('status', ['Resolved', 'Closed'])->count();
         $totalVessels = Vessel::count();
-        $totalAssets = Asset::count();
-        $activeIncidents = IncidentReport::whereIn('status', ['Open', 'In Progress'])->count();
-        $resolvedIncidents = IncidentReport::where('status', 'Resolved')->count(); // Tambahan data baru
 
         return [
-            Stat::make('Tiket Aktif', $activeIncidents)
-                ->description('Menunggu penanganan')
+            Stat::make('Tiket Aktif (Belum Selesai)', $openTickets)
+                ->description('Menunggu penanganan Tim IT')
                 ->descriptionIcon('heroicon-m-exclamation-triangle')
-                ->color($activeIncidents > 0 ? 'danger' : 'success'),
+                ->color('danger')
+                ->chart([7, 3, 4, 5, 6, 3, 5, 3]), // Garis grafik mini (sparkline)
 
-            Stat::make('Tiket Selesai', $resolvedIncidents)
-                ->description('Telah diselesaikan')
+            Stat::make('Tiket Terselesaikan', $resolvedTickets)
+                ->description('Insiden berhasil ditangani')
                 ->descriptionIcon('heroicon-m-check-badge')
-                ->color('success'),
+                ->color('success')
+                ->chart([1, 3, 4, 7, 8, 9, 10, 12]),
 
-            Stat::make('Total Aset IT', $totalAssets)
-                ->description('Terdata di ITAM')
-                ->descriptionIcon('heroicon-m-computer-desktop')
-                ->color('info'),
-
-            Stat::make('Master Kapal', $totalVessels)
-                ->description('Armada aktif')
+            Stat::make('Total Armada Kapal', $totalVessels)
+                ->description('Kapal terdaftar di sistem')
                 ->descriptionIcon('heroicon-m-map-pin')
-                ->color('primary'),
+                ->color('info')
+                ->chart([2, 2, 2, 2, 2, 2, 2, 2]),
         ];
     }
 }

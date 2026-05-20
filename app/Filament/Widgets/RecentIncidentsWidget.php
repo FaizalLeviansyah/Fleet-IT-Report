@@ -6,55 +6,53 @@ use App\Models\IncidentReport;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
-use Illuminate\Support\Carbon;
 
 class RecentIncidentsWidget extends BaseWidget
 {
-    protected static ?int $sort = 2;
-    // Memaksa widget hanya mengambil setengah layar (berjejer)
-    protected int | string | array $columnSpan = [
-        'md' => 1,
-        'xl' => 1,
-    ];
-    protected static ?string $heading = '🚨 Insiden Terakhir & SLA Monitor (Top 5)';
+    protected static ?int $sort = 3; // Urutan paling bawah
+    protected int | string | array $columnSpan = 'full'; // Mengambil lebar layar penuh
+    protected static ?string $pollingInterval = '10s'; // Auto-refresh 10 detik
 
     public function table(Table $table): Table
     {
         return $table
             ->query(
+                // Mengambil 5 tiket terbaru saja
                 IncidentReport::query()->latest()->limit(5)
             )
+            ->heading('🚨 5 Insiden Terbaru (Live Monitor)')
             ->columns([
                 Tables\Columns\TextColumn::make('ticket_number')
                     ->label('No. Tiket')
                     ->weight('bold')
-                    ->searchable()
-                    // LOGIKA SLA PINTAR:
-                    ->description(function (IncidentReport $record): string {
-                        if (in_array($record->status, ['Open', 'In Progress'])) {
-                            $hours = $record->created_at->diffInHours(now());
-                            if ($hours >= 48) {
-                                return '⚠️ OVERDUE (' . $hours . ' Jam)';
-                            }
-                            return '⏳ SLA Aman (' . $hours . ' Jam)';
-                        }
-                        return '✅ Diselesaikan';
+                    ->searchable(),
+
+                Tables\Columns\TextColumn::make('title')
+                    ->label('Masalah')
+                    ->limit(40),
+
+                Tables\Columns\TextColumn::make('location_type')
+                    ->label('Lokasi')
+                    ->getStateUsing(function (IncidentReport $record) {
+                        return $record->location_type === 'Kantor'
+                            ? $record->office_name
+                            : $record->vessel_name;
                     })
-                    ->color(function (IncidentReport $record): string {
-                        if (in_array($record->status, ['Open', 'In Progress']) && $record->created_at->diffInHours(now()) >= 48) {
-                            return 'danger'; // Merah jika telat!
-                        }
-                        return 'gray';
+                    ->badge()
+                    ->color('info'),
+
+                Tables\Columns\TextColumn::make('priority')
+                    ->label('Prioritas')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'Critical' => 'danger',
+                        'High' => 'warning',
+                        'Medium' => 'info',
+                        default => 'gray',
                     }),
 
-                Tables\Columns\TextColumn::make('vessel_name')
-                    ->label('Lokasi / Kapal'),
-
-                Tables\Columns\TextColumn::make('category')
-                    ->label('Kategori')
-                    ->badge(),
-
                 Tables\Columns\TextColumn::make('status')
+                    ->label('Status')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
                         'Open' => 'danger',
@@ -65,9 +63,16 @@ class RecentIncidentsWidget extends BaseWidget
                     }),
 
                 Tables\Columns\TextColumn::make('created_at')
-                    ->label('Dilaporkan Pada')
-                    ->dateTime('d M Y, H:i'),
+                    ->label('Waktu Lapor')
+                    ->dateTime('d M Y, H:i')
+                    ->sortable(),
             ])
-            ->paginated(false);
+            ->actions([
+                // Tombol pintasan langsung melompat ke halaman ITSM
+                Tables\Actions\Action::make('Lihat Semua')
+                    ->url(fn (): string => url('/admin/incident-reports'))
+                    ->icon('heroicon-o-arrow-top-right-on-square')
+            ])
+            ->paginated(false); // Matikan nomor halaman karena ini cuma Top 5
     }
 }

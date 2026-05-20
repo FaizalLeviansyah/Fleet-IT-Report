@@ -147,17 +147,15 @@ class AdminPanelProvider extends PanelProvider
                 </style>'
             )
 
-            // 👇 HOOK BARU: MENGATUR POSISI SEMPURNA NAVBAR 👇
+
             ->renderHook('panels::sidebar.nav.start', fn (): string => view('filament.components.sidebar-search')->render())
 
-            // TOMBOL CREATE TICKET SEKARANG DI KIRI POL (PASTI MUNCUL)
+
             ->renderHook('panels::topbar.start', fn (): string => view('filament.components.navbar-search')->render())
 
-            // TOMBOL TEMA & SHUTDOWN DI KANAN
+
             ->renderHook('panels::global-search.after', fn (): string => view('filament.components.topbar-actions')->render())
 
-            // 👇 HOOK BARU: INJEKSI NAMA & JABATAN DI DALAM DROPDOWN PROFIL 👇
-            // 👇 HOOK BARU: INJEKSI FOTO & JABATAN DI DALAM DROPDOWN PROFIL 👇
             ->renderHook(
                 'panels::user-menu.profile.before',
                 function (): string {
@@ -182,7 +180,6 @@ class AdminPanelProvider extends PanelProvider
                 }
             )
 
-            // TOMBOL LOGOUT SIDEBAR BAWAH
             ->renderHook(
                 'panels::sidebar.footer',
                 fn (): string => '<div style="padding: 1rem; margin-top: auto;">
