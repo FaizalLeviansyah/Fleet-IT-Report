@@ -45,6 +45,60 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->renderHook('panels::body.end', fn (): string => \Illuminate\Support\Facades\Blade::render('@livewire("edit-profile-modal")'))
 
+            // 👇 HOOK BARU: LOADING SCREEN SPA AMARIN (Pakai Vanilla JS Dijamin Muncul!) 👇
+            // 👇 HOOK BARU: LOADING SCREEN UNIVERSAL (Bisa SPA & Bisa Ctrl+R) 👇
+            // 👇 HOOK BARU: LOADING SCREEN UNIVERSAL (INSTAN & PASTI DI TENGAH!) 👇
+            ->renderHook(
+                'panels::body.start',
+                fn (): string => '
+                <div x-data="{ show: true }"
+                     x-init="
+                        if (document.readyState === \'complete\') { setTimeout(() => show = false, 300); }
+                        else { window.addEventListener(\'load\', () => setTimeout(() => show = false, 300)); }
+                     "
+                     @livewire:navigating.window="show = true"
+                     @livewire:navigated.window="setTimeout(() => show = false, 300)"
+                     @trigger-loader.window="show = true"
+                     x-show="show"
+                     x-transition:leave="transition ease-in duration-300"
+                     x-transition:leave-start="opacity-100"
+                     x-transition:leave-end="opacity-0"
+                     style="position: fixed; inset: 0; z-index: 999999; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);">
+
+                    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100vw; height: 100vh;">
+                        <div class="loader-container">
+                            <div class="spinner-ring"></div>
+                            <div class="spinner-ring-inner"></div>
+                            <div class="logo-text">AMARIN</div>
+                        </div>
+                        <div class="loading-text">MEMUAT SISTEM...</div>
+                    </div>
+                </div>
+
+                <script>
+                    // JAVASCRIPT BYPASS: Menangkap klik H-1 milidetik sebelum Livewire bereaksi!
+                    document.addEventListener("click", function(e) {
+                        let link = e.target.closest("a");
+                        // Pastikan yang diklik adalah menu sungguhan
+                        if(link && link.href && !link.href.includes("javascript:") && link.getAttribute("target") !== "_blank") {
+                            window.dispatchEvent(new CustomEvent("trigger-loader"));
+                        }
+                    });
+                </script>
+
+                <style>
+                    .loader-container { position: relative; display: flex; justify-content: center; align-items: center; width: 120px; height: 120px; }
+                    .spinner-ring { position: absolute; width: 100px; height: 100px; border: 4px solid transparent; border-top-color: #2563EB; border-bottom-color: #06B6D4; border-radius: 50%; animation: spin 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite; }
+                    .spinner-ring-inner { position: absolute; width: 70px; height: 70px; border: 4px solid transparent; border-left-color: #1E3A8A; border-right-color: #3B82F6; border-radius: 50%; animation: spin-reverse 0.8s linear infinite; }
+                    .logo-text { position: absolute; font-size: 15px; font-weight: 900; color: #1E3A8A; letter-spacing: 2px; }
+                    .loading-text { margin-top: 24px; font-size: 13px; font-weight: 800; color: #2563EB; letter-spacing: 2px; animation: pulse 1.5s infinite; }
+                    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+                    @keyframes spin-reverse { 0% { transform: rotate(360deg); } 100% { transform: rotate(0deg); } }
+                    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+                </style>
+                '
+            )
+
             // --- RENDER HOOKS (CSS SUNTIKAN) ---
             ->renderHook(
                 'panels::head.end',
@@ -103,16 +157,29 @@ class AdminPanelProvider extends PanelProvider
             ->renderHook('panels::global-search.after', fn (): string => view('filament.components.topbar-actions')->render())
 
             // 👇 HOOK BARU: INJEKSI NAMA & JABATAN DI DALAM DROPDOWN PROFIL 👇
+            // 👇 HOOK BARU: INJEKSI FOTO & JABATAN DI DALAM DROPDOWN PROFIL 👇
             ->renderHook(
                 'panels::user-menu.profile.before',
-                fn (): string => '
-                <div style="padding: 16px 12px; border-bottom: 1px solid #E5E7EB; display: flex; flex-direction: column; align-items: center; text-align: center;">
-                    <div style="width: 45px; height: 45px; border-radius: 50%; background: linear-gradient(135deg, #2563EB, #06B6D4); color: white; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: bold; margin-bottom: 10px; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3);">
-                        ' . strtoupper(substr(auth()->user()->full_name ?? 'U', 0, 1)) . '
-                    </div>
-                    <div style="font-size: 13px; font-weight: 700; color: #1F2937;">' . (auth()->user()->full_name ?? 'Administrator') . '</div>
-                    <div style="font-size: 10px; font-weight: 800; color: #2563EB; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px;">' . (auth()->user()->jabatan ?? 'IT Support Team') . '</div>
-                </div>'
+                function (): string {
+                    $user = auth()->user();
+                    $jabatan = $user->jabatan ?? 'IT Support Team';
+                    $namaLengkap = $user->full_name ?? 'Administrator';
+
+                    // Logic Cek Foto Profil
+                    if ($user->avatar_url) {
+                        $avatarHtml = '<img src="/storage/' . $user->avatar_url . '" style="width: 55px; height: 55px; border-radius: 50%; object-fit: cover; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3); margin-bottom: 10px; border: 2px solid #2563EB;">';
+                    } else {
+                        $inisial = strtoupper(substr($namaLengkap, 0, 1));
+                        $avatarHtml = '<div style="width: 55px; height: 55px; border-radius: 50%; background: linear-gradient(135deg, #2563EB, #06B6D4); color: white; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: bold; margin-bottom: 10px; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3);">' . $inisial . '</div>';
+                    }
+
+                    return '
+                    <div style="padding: 16px 12px; border-bottom: 1px solid #E5E7EB; display: flex; flex-direction: column; align-items: center; text-align: center;">
+                        ' . $avatarHtml . '
+                        <div style="font-size: 13px; font-weight: 700; color: #1F2937;">' . $namaLengkap . '</div>
+                        <div style="font-size: 10px; font-weight: 800; color: #2563EB; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px;">' . $jabatan . '</div>
+                    </div>';
+                }
             )
 
             // TOMBOL LOGOUT SIDEBAR BAWAH
