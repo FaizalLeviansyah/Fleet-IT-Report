@@ -27,16 +27,22 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
+            // TAB BROWSER & FAVICON
+            ->brandName('ITSM Stack')
+            ->favicon(asset('images/logo-amarin.png'))
             ->login(\App\Filament\Pages\Auth\CustomLogin::class)
             ->spa()
 
-            // --- WARNA & TEMA ---
+            // WARNA & TEMA
             ->colors(['primary' => Color::Blue])
             ->font('Poppins')
             ->brandLogo(fn () => view('filament.components.logo'))
-            ->databaseNotifications()
 
-            // --- MENU PROFIL KUSTOM (Memicu Modal Edit Profile) ---
+            // LONCENG NOTIFIKASI REAL-TIME
+            ->databaseNotifications()
+            ->databaseNotificationsPolling('30s')
+
+            // MENU PROFIL KUSTOM (Memicu Modal Edit Profile)
             ->userMenuItems([
                 'profile' => MenuItem::make()
                     ->label('My Profile Settings')
@@ -45,9 +51,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->renderHook('panels::body.end', fn (): string => \Illuminate\Support\Facades\Blade::render('@livewire("edit-profile-modal")'))
 
-            // 👇 HOOK BARU: LOADING SCREEN SPA AMARIN (Pakai Vanilla JS Dijamin Muncul!) 👇
-            // 👇 HOOK BARU: LOADING SCREEN UNIVERSAL (Bisa SPA & Bisa Ctrl+R) 👇
-            // 👇 HOOK BARU: LOADING SCREEN UNIVERSAL (INSTAN & PASTI DI TENGAH!) 👇
+            // HOOK: LOADING SCREEN UNIVERSAL
             ->renderHook(
                 'panels::body.start',
                 fn (): string => '
@@ -76,10 +80,8 @@ class AdminPanelProvider extends PanelProvider
                 </div>
 
                 <script>
-                    // JAVASCRIPT BYPASS: Menangkap klik H-1 milidetik sebelum Livewire bereaksi!
                     document.addEventListener("click", function(e) {
                         let link = e.target.closest("a");
-                        // Pastikan yang diklik adalah menu sungguhan
                         if(link && link.href && !link.href.includes("javascript:") && link.getAttribute("target") !== "_blank") {
                             window.dispatchEvent(new CustomEvent("trigger-loader"));
                         }
@@ -99,11 +101,43 @@ class AdminPanelProvider extends PanelProvider
                 '
             )
 
-            // --- RENDER HOOKS (CSS SUNTIKAN) ---
+            // HOOK: CSS, SWEETALERT, DAN SCRIPT PWA CHROME APP
             ->renderHook(
                 'panels::head.end',
                 fn (): string => '
+                <link rel="manifest" href="/manifest.json">
                 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+                <script>
+                    // SISTEM PWA INSTALL PROMPT
+                    let deferredPrompt;
+                    window.addEventListener("beforeinstallprompt", (e) => {
+                        e.preventDefault();
+                        deferredPrompt = e;
+
+                        if(!localStorage.getItem("pwa_declined")) {
+                            setTimeout(() => {
+                                Swal.fire({
+                                    title: "📱 Install ITSM Stack",
+                                    text: "Unduh aplikasi ITSM Stack ke Desktop/HP Anda untuk akses super cepat!",
+                                    icon: "info",
+                                    showCancelButton: true,
+                                    confirmButtonColor: "#2563EB",
+                                    cancelButtonColor: "#64748b",
+                                    confirmButtonText: "Install Sekarang",
+                                    cancelButtonText: "Nanti Saja"
+                                }).then((result) => {
+                                    if (result.isConfirmed && deferredPrompt) {
+                                        deferredPrompt.prompt();
+                                    } else {
+                                        localStorage.setItem("pwa_declined", "true");
+                                    }
+                                });
+                            }, 3000); // Muncul 3 detik setelah login
+                        }
+                    });
+                </script>
+
                 <style>
                     /* SIDEBAR */
                     .fi-sidebar { background-color: #0F172A !important; }
@@ -147,15 +181,11 @@ class AdminPanelProvider extends PanelProvider
                 </style>'
             )
 
-
             ->renderHook('panels::sidebar.nav.start', fn (): string => view('filament.components.sidebar-search')->render())
-
-
             ->renderHook('panels::topbar.start', fn (): string => view('filament.components.navbar-search')->render())
-
-
             ->renderHook('panels::global-search.after', fn (): string => view('filament.components.topbar-actions')->render())
 
+            // HOOK: INJEKSI FOTO & JABATAN
             ->renderHook(
                 'panels::user-menu.profile.before',
                 function (): string {
@@ -163,7 +193,6 @@ class AdminPanelProvider extends PanelProvider
                     $jabatan = $user->jabatan ?? 'IT Support Team';
                     $namaLengkap = $user->full_name ?? 'Administrator';
 
-                    // Logic Cek Foto Profil
                     if ($user->avatar_url) {
                         $avatarHtml = '<img src="/storage/' . $user->avatar_url . '" style="width: 55px; height: 55px; border-radius: 50%; object-fit: cover; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3); margin-bottom: 10px; border: 2px solid #2563EB;">';
                     } else {
@@ -180,6 +209,7 @@ class AdminPanelProvider extends PanelProvider
                 }
             )
 
+            // HOOK: TOMBOL LOGOUT SIDEBAR
             ->renderHook(
                 'panels::sidebar.footer',
                 fn (): string => '<div style="padding: 1rem; margin-top: auto;">
@@ -200,16 +230,15 @@ class AdminPanelProvider extends PanelProvider
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([ Pages\Dashboard::class ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
-            // 👇 DAFTARKAN SEMUA WIDGET DENGAN URUTAN YANG BENAR 👇
             ->widgets([
-                \App\Filament\Widgets\DashboardStatsWidget::class, // Paling atas (Kotak Angka)
-                \App\Filament\Widgets\IncidentTrendChart::class,   // Kedua (Grafik)
-                \App\Filament\Widgets\RecentIncidentsWidget::class,// Ketiga (Tabel 5 Insiden)
-                \App\Filament\Widgets\LiveRadarWidget::class,      // Keempat (Radar Militer)
+                \App\Filament\Widgets\DashboardStatsWidget::class,
+                \App\Filament\Widgets\IncidentTrendChart::class,
+                \App\Filament\Widgets\RecentIncidentsWidget::class,
+                \App\Filament\Widgets\LiveRadarWidget::class,
             ])
-            // Kalender otomatis ada di paling bawah karena dibawa oleh Plugin
             ->plugin(\Saade\FilamentFullCalendar\FilamentFullCalendarPlugin::make()->selectable()->editable())
+            // 👇 Middleware untuk mengecek "amarin123" bisa Anda tambahkan di bawah ini nanti 👇
             ->middleware([ EncryptCookies::class, AddQueuedCookiesToResponse::class, StartSession::class, AuthenticateSession::class, ShareErrorsFromSession::class, VerifyCsrfToken::class, SubstituteBindings::class, DisableBladeIconComponents::class, DispatchServingFilamentEvent::class ])
-            ->authMiddleware([ Authenticate::class ]);
+            ->authMiddleware([ Authenticate::class, \App\Http\Middleware\CheckDefaultPassword::class ]);
     }
 }
