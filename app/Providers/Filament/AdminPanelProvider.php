@@ -107,23 +107,37 @@ class AdminPanelProvider extends PanelProvider
                 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
                 <style>
+                    /* 👇 KUNCI RAHASIA SCALING 70% 👇 */
+                    html { zoom: 0.70; }
+
+                    /* 👇 FIX SIDEBAR TERPOTONG: Kalkulasi ulang tinggi layar setelah di-zoom 👇 */
+                    body, .fi-layout, .fi-sidebar { 
+                        min-height: calc(100vh / 0.70) !important; 
+                    }
+                    .fi-sidebar { 
+                        display: flex !important; 
+                        flex-direction: column !important; 
+                    }
+                    .fi-sidebar-nav { 
+                        flex-grow: 1 !important; /* Memaksa menu mengisi ruang kosong sampai bawah */
+                    }
+
                     /* =========================================================
                        ☀️ LIGHT MODE (Tema Biru Korporat)
                        ========================================================= */
-
                     .fi-sidebar { background-color: #031E49 !important; border-right: none !important; box-shadow: 4px 0 15px rgba(0,0,0,0.05) !important; transition: background-color 0.3s ease; }
                     .fi-sidebar-header { background-color: #01122C !important; border-bottom: 2px solid #1D4ED8 !important; padding: 1.2rem 1.5rem !important; box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important; z-index: 20; transition: background-color 0.3s ease; }
-
+                    
                     /* Menu Normal */
                     .fi-sidebar-item-button { transition: all 0.3s ease; border-radius: 0.5rem !important; margin: 0.25rem 0.8rem !important; padding: 0.6rem 1rem !important; }
                     .fi-sidebar-item-label, .fi-sidebar-item-icon { color: #93C5FD !important; font-weight: 500 !important; transition: all 0.3s ease; }
                     .fi-sidebar-item-button:hover { background-color: rgba(37, 99, 235, 0.15) !important; transform: translateX(4px); }
                     .fi-sidebar-item-button:hover .fi-sidebar-item-label, .fi-sidebar-item-button:hover .fi-sidebar-item-icon { color: #ffffff !important; }
-
+                    
                     /* Menu Aktif Light */
-                    .fi-sidebar-item-active .fi-sidebar-item-button {
-                        background: linear-gradient(90deg, #2563EB 0%, #031E49 100%) !important;
-                        border-left: 4px solid #22D3EE !important;
+                    .fi-sidebar-item-active .fi-sidebar-item-button { 
+                        background: linear-gradient(90deg, #2563EB 0%, #031E49 100%) !important; 
+                        border-left: 4px solid #22D3EE !important; 
                         border-radius: 0 0.5rem 0.5rem 0 !important; margin-left: 0 !important; padding-left: 1.55rem !important;
                         box-shadow: inset 15px 0 30px -15px rgba(34, 211, 238, 0.2) !important;
                     }
@@ -139,20 +153,20 @@ class AdminPanelProvider extends PanelProvider
 
 
                     /* =========================================================
-                       🌙 DARK MODE (Tema Elegant Slate - Tidak Biru / Hitam)
+                       🌙 DARK MODE (Tema Elegant Slate)
                        ========================================================= */
                     .dark .fi-sidebar { background-color: #111827 !important; border-right: 1px solid #1F2937 !important; }
                     .dark .fi-sidebar-header { background-color: #030712 !important; border-bottom: 2px solid #38BDF8 !important; box-shadow: 0 4px 15px rgba(0,0,0,0.5) !important; }
-
+                    
                     /* Menu Dark */
                     .dark .fi-sidebar-item-label, .dark .fi-sidebar-item-icon { color: #94A3B8 !important; }
                     .dark .fi-sidebar-item-button:hover { background-color: #1E293B !important; }
                     .dark .fi-sidebar-item-button:hover .fi-sidebar-item-label, .dark .fi-sidebar-item-button:hover .fi-sidebar-item-icon { color: #F8FAFC !important; }
-
+                    
                     /* Menu Aktif Dark */
-                    .dark .fi-sidebar-item-active .fi-sidebar-item-button {
-                        background: linear-gradient(90deg, #1E293B 0%, #111827 100%) !important;
-                        border-left: 4px solid #38BDF8 !important;
+                    .dark .fi-sidebar-item-active .fi-sidebar-item-button { 
+                        background: linear-gradient(90deg, #1E293B 0%, #111827 100%) !important; 
+                        border-left: 4px solid #38BDF8 !important; 
                         box-shadow: inset 15px 0 30px -15px rgba(56, 189, 248, 0.1) !important;
                     }
                     .dark .fi-sidebar-item-active .fi-sidebar-item-label, .dark .fi-sidebar-item-active .fi-sidebar-item-icon { color: #38BDF8 !important; }
@@ -162,9 +176,9 @@ class AdminPanelProvider extends PanelProvider
                     .dark .fi-topbar { background-color: rgba(15, 23, 42, 0.95) !important; border-bottom: 1px solid #1E293B !important; box-shadow: 0 4px 15px -3px rgba(0,0,0,0.5) !important; }
                     .dark .fi-global-search-input { background-color: #1E293B !important; border-color: #334155 !important; color: #F8FAFC !important; }
                     .dark .fi-global-search-input:focus { border-color: #38BDF8 !important; box-shadow: 0 0 0 2px rgba(56,189,248,0.2) !important; background-color: #0F172A !important; }
-
+                    
                     /* Background Konten & Card Dark Mode */
-                    .dark .fi-main { background-color: #0B1120 !important; } /* Deep premium slate background */
+                    .dark .fi-main { background-color: #0B1120 !important; }
                     .dark .fi-section, .dark .fi-ta-ctn, .dark .fi-wi-stats-overview-stat { background-color: #111827 !important; border: 1px solid #1E293B !important; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3) !important; }
 
 
@@ -187,7 +201,7 @@ class AdminPanelProvider extends PanelProvider
                     /* Tombol Primary Global (Selaras Tema) */
                     .fi-btn-color-primary, .fi-modal-footer .fi-btn { background: linear-gradient(135deg, #2563EB, #1D4ED8) !important; border: none !important; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3) !important; color: white !important; font-weight: 600 !important; letter-spacing: 0.025em !important; transition: all 0.3s !important; }
                     .fi-btn-color-primary:hover, .fi-modal-footer .fi-btn:hover { background: linear-gradient(135deg, #3B82F6, #2563EB) !important; box-shadow: 0 6px 12px -2px rgba(37, 99, 235, 0.4) !important; transform: translateY(-2px) !important; }
-
+                    
                     /* Tombol Primary Dark Mode */
                     .dark .fi-btn-color-primary, .dark .fi-modal-footer .fi-btn { background: linear-gradient(135deg, #3B82F6, #2563EB) !important; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5) !important; }
                     .dark .fi-btn-color-primary:hover, .dark .fi-modal-footer .fi-btn:hover { background: linear-gradient(135deg, #60A5FA, #3B82F6) !important; box-shadow: 0 6px 12px -2px rgba(0, 0, 0, 0.6) !important; }
@@ -201,7 +215,6 @@ class AdminPanelProvider extends PanelProvider
 
                     /* Sembunyikan Tema Bawaan */
                     .fi-user-menu .fi-theme-switcher { display: none !important; }
-                    ' . (request()->routeIs('filament.admin.pages.dashboard') ? 'header.fi-header { display: none !important; }' : '') . '
                 </style>'
             )
 

@@ -6,6 +6,8 @@ use Filament\Widgets\ChartWidget;
 
 class IncidentTrendChart extends ChartWidget
 {
+    // 👇 TAMBAHKAN BARIS INI AGAR GRAFIK MENGAMBIL LEBAR PENUH (FIT LAYAR) 👇
+    protected int | string | array $columnSpan = 'full';
     protected static ?string $heading = 'Chart';
 
     protected function getData(): array
