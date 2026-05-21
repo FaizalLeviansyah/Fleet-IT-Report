@@ -5,7 +5,7 @@ namespace App\Providers\Filament;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
-use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Http\Middleware\DispatchServingFilamentEvent; // 👇 SUDAH DIKOREKSI DI SINI! 👇
 use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
@@ -29,16 +29,16 @@ class AdminPanelProvider extends PanelProvider
             ->path('admin')
             // TAB BROWSER & FAVICON
             ->brandName('ITSM Stack')
-            ->favicon(asset('images/logo-amarin.png'))
+            ->favicon(asset('img/Logo_PT_ASM.jpg'))
             ->login(\App\Filament\Pages\Auth\CustomLogin::class)
             ->spa()
 
-            // WARNA & TEMA
+            //👇 WARNA UTAMA TEMA (Kita pakai Biru) 👇
             ->colors(['primary' => Color::Blue])
             ->font('Poppins')
             ->brandLogo(fn () => view('filament.components.logo'))
 
-            // LONCENG NOTIFIKASI REAL-TIME
+            //👇 LONCENG NOTIFIKASI REAL-TIME (Bubble diaktifkan 30 detik) 👇
             ->databaseNotifications()
             ->databaseNotificationsPolling('30s')
 
@@ -49,42 +49,40 @@ class AdminPanelProvider extends PanelProvider
                     ->url('javascript:window.dispatchEvent(new Event(\'open-profile-modal\'))')
                     ->icon('heroicon-o-cog-8-tooth'),
             ])
-            ->renderHook('panels::body.end', fn (): string => \Illuminate\Support\Facades\Blade::render('@livewire("edit-profile-modal")'))
+            // 👇 HOOK: RENDER MODAL PROFIL & CEK PASSWORD DEFAULT 👇
+            // 👇 HOOK: RENDER MODAL PROFIL & LAYAR KUNCI SEJATI 👇
+            ->renderHook('panels::body.end', function (): string {
+                return \Illuminate\Support\Facades\Blade::render('
+                    @livewire("edit-profile-modal")
+                    @livewire("force-change-password")
+                ');
+            })
 
-            // HOOK: LOADING SCREEN UNIVERSAL
+            // HOOK: LOADING SCREEN UNIVERSAL (INSTAN 0 DETIK!)
             ->renderHook(
                 'panels::body.start',
                 fn (): string => '
-                <div x-data="{ show: true }"
-                     x-init="
-                        if (document.readyState === \'complete\') { setTimeout(() => show = false, 300); }
-                        else { window.addEventListener(\'load\', () => setTimeout(() => show = false, 300)); }
-                     "
-                     @livewire:navigating.window="show = true"
-                     @livewire:navigated.window="setTimeout(() => show = false, 300)"
-                     @trigger-loader.window="show = true"
-                     x-show="show"
-                     x-transition:leave="transition ease-in duration-300"
-                     x-transition:leave-start="opacity-100"
-                     x-transition:leave-end="opacity-0"
-                     style="position: fixed; inset: 0; z-index: 999999; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);">
-
-                    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100vw; height: 100vh;">
-                        <div class="loader-container">
-                            <div class="spinner-ring"></div>
-                            <div class="spinner-ring-inner"></div>
-                            <div class="logo-text">AMARIN</div>
-                        </div>
-                        <div class="loading-text">MEMUAT SISTEM...</div>
+                <div id="amarin-global-loader" style="position: fixed; inset: 0; z-index: 999999; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 1; visibility: visible; transition: opacity 0.3s ease, visibility 0.3s ease;">
+                    <div class="loader-container">
+                        <div class="spinner-ring"></div>
+                        <div class="spinner-ring-inner"></div>
+                        <div class="logo-text">AMARIN</div>
                     </div>
+                    <div class="loading-text">MEMUAT SISTEM...</div>
                 </div>
 
                 <script>
-                    document.addEventListener("click", function(e) {
-                        let link = e.target.closest("a");
-                        if(link && link.href && !link.href.includes("javascript:") && link.getAttribute("target") !== "_blank") {
-                            window.dispatchEvent(new CustomEvent("trigger-loader"));
-                        }
+                    window.addEventListener("load", function() {
+                        const loader = document.getElementById("amarin-global-loader");
+                        if(loader) { loader.style.opacity = "0"; setTimeout(() => loader.style.visibility = "hidden", 100); }
+                    });
+                    document.addEventListener("livewire:navigating", function() {
+                        const loader = document.getElementById("amarin-global-loader");
+                        if(loader) { loader.style.visibility = "visible"; loader.style.opacity = "1"; }
+                    });
+                    document.addEventListener("livewire:navigated", function() {
+                        const loader = document.getElementById("amarin-global-loader");
+                        if(loader) { loader.style.opacity = "0"; setTimeout(() => loader.style.visibility = "hidden", 100); }
                     });
                 </script>
 
@@ -101,91 +99,61 @@ class AdminPanelProvider extends PanelProvider
                 '
             )
 
-            // HOOK: CSS, SWEETALERT, DAN SCRIPT PWA CHROME APP
+            // HOOK: CSS & PWA CHROME APP
             ->renderHook(
                 'panels::head.end',
                 fn (): string => '
                 <link rel="manifest" href="/manifest.json">
                 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-                <script>
-                    // SISTEM PWA INSTALL PROMPT
-                    let deferredPrompt;
-                    window.addEventListener("beforeinstallprompt", (e) => {
-                        e.preventDefault();
-                        deferredPrompt = e;
-
-                        if(!localStorage.getItem("pwa_declined")) {
-                            setTimeout(() => {
-                                Swal.fire({
-                                    title: "📱 Install ITSM Stack",
-                                    text: "Unduh aplikasi ITSM Stack ke Desktop/HP Anda untuk akses super cepat!",
-                                    icon: "info",
-                                    showCancelButton: true,
-                                    confirmButtonColor: "#2563EB",
-                                    cancelButtonColor: "#64748b",
-                                    confirmButtonText: "Install Sekarang",
-                                    cancelButtonText: "Nanti Saja"
-                                }).then((result) => {
-                                    if (result.isConfirmed && deferredPrompt) {
-                                        deferredPrompt.prompt();
-                                    } else {
-                                        localStorage.setItem("pwa_declined", "true");
-                                    }
-                                });
-                            }, 3000); // Muncul 3 detik setelah login
-                        }
-                    });
-                </script>
-
                 <style>
-                    /* SIDEBAR */
-                    .fi-sidebar { background-color: #0F172A !important; }
-                    .fi-sidebar-header { background-color: #0F172A !important; border-bottom: 1px solid #1E293B; padding: 1.5rem; }
-                    .fi-sidebar-item-label, .fi-sidebar-item-icon { color: #94A3B8 !important; transition: all 0.3s ease; }
-                    .fi-sidebar-item-button:hover { background-color: #1E293B !important; border-radius: 8px; transform: translateX(6px); }
-                    .fi-sidebar-item-button:hover .fi-sidebar-item-label, .fi-sidebar-item-button:hover .fi-sidebar-item-icon { color: #F8FAFC !important; }
-                    .fi-sidebar-item-active .fi-sidebar-item-button { background: linear-gradient(90deg, #1E3A8A 0%, #0F172A 100%) !important; border-left: 4px solid #06B6D4 !important; border-radius: 0 8px 8px 0 !important; box-shadow: inset 20px 0 30px -20px rgba(6, 182, 212, 0.2) !important; }
-                    .fi-sidebar-item-active .fi-sidebar-item-label, .fi-sidebar-item-active .fi-sidebar-item-icon { color: #ffffff !important; font-weight: bold; }
+                    /* 👇 SIDEBAR: KONSISTEN DENGAN LOGIN LEFT PANEL (DEEP BLUE #031E49) 👇 */
+                    .fi-sidebar { background-color: #031E49 !important; border-right: none !important; box-shadow: 4px 0 15px rgba(0,0,0,0.05) !important; }
+                    .fi-sidebar-header { background-color: #031E49 !important; border-bottom: 1px solid rgba(255,255,255,0.05) !important; padding: 1rem 1.5rem; }
 
-                    /* SHADOW CARD HALUS */
-                    .fi-section, .fi-ta-ctn, .fi-wi-stats-overview-stat { background-color: #ffffff !important; border: 1px solid #E5E7EB !important; border-radius: 16px !important; box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05) !important; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important; }
-                    .fi-section:hover, .fi-ta-ctn:hover, .fi-wi-stats-overview-stat:hover { transform: translateY(-3px); box-shadow: 0 20px 40px -10px rgba(37, 99, 235, 0.15) !important; border-color: rgba(37, 99, 235, 0.3) !important; }
-                    .dark .fi-section, .dark .fi-ta-ctn, .dark .fi-wi-stats-overview-stat { background-color: #111827 !important; border-color: #374151 !important; box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.3) !important; }
+                    /* Sidebar Items Default (Teks Biru Pucat) */
+                    .fi-sidebar-item-button { transition: all 0.3s ease; border-radius: 0.5rem !important; margin: 0.25rem 0.8rem !important; padding: 0.6rem 1rem !important; }
+                    .fi-sidebar-item-label, .fi-sidebar-item-icon { color: #93C5FD !important; font-weight: 500 !important; transition: all 0.3s ease; }
 
-                    /* NAVBAR ATAS GLASSMORPHISM */
-                    .fi-topbar { padding: 0.5rem 1.5rem !important; height: auto !important; background-color: rgba(255, 255, 255, 0.7) !important; backdrop-filter: blur(12px) !important; -webkit-backdrop-filter: blur(12px) !important; border-bottom: 1px solid rgba(229, 231, 235, 0.5) !important; position: sticky !important; top: 0; z-index: 40; transition: all 0.3s ease; }
-                    .dark .fi-topbar { background-color: rgba(15, 23, 42, 0.7) !important; border-bottom: 1px solid rgba(30, 41, 59, 0.5) !important; }
+                    /* Hover Effect */
+                    .fi-sidebar-item-button:hover { background-color: rgba(37, 99, 235, 0.15) !important; transform: translateX(4px); }
+                    .fi-sidebar-item-button:hover .fi-sidebar-item-label, .fi-sidebar-item-button:hover .fi-sidebar-item-icon { color: #ffffff !important; }
+
+                    /* Active Effect (Biru HRIS Menyala) */
+                    .fi-sidebar-item-active .fi-sidebar-item-button {
+                        background: linear-gradient(90deg, #2563EB 0%, #031E49 100%) !important;
+                        border-left: 4px solid #22D3EE !important;
+                        border-radius: 0 0.5rem 0.5rem 0 !important;
+                        margin-left: 0 !important;
+                        padding-left: 1.55rem !important;
+                        box-shadow: inset 15px 0 30px -15px rgba(34, 211, 238, 0.2) !important;
+                    }
+                    .fi-sidebar-item-active .fi-sidebar-item-label, .fi-sidebar-item-active .fi-sidebar-item-icon { color: #ffffff !important; font-weight: 700 !important; }
+
+                    /* 👇 NAVBAR: GLASSMORPHISM PUTIH BERSIH 👇 */
+                    .fi-topbar { background-color: rgba(255, 255, 255, 0.8) !important; border-bottom: 1px solid rgba(0,0,0,0.05) !important; padding: 0.5rem 1.5rem !important; height: auto !important; backdrop-filter: blur(12px) !important; -webkit-backdrop-filter: blur(12px) !important; position: sticky !important; top: 0; z-index: 40; transition: all 0.3s ease; }
+                    .dark .fi-topbar { background-color: rgba(3, 30, 73, 0.8) !important; border-bottom: 1px solid rgba(255,255,255,0.05) !important; }
                     .fi-topbar > nav { background: transparent !important; gap: 0.5rem !important; align-items: center !important; }
 
-                    /* MERAMPINGKAN GLOBAL SEARCH ASLI FILAMENT */
-                    .fi-global-search { max-width: 220px !important; width: 100% !important; margin-right: 10px !important; }
-                    .fi-global-search-input { height: 30px !important; font-size: 11px !important; border-radius: 9999px !important; background-color: #ffffff !important; border: 1px solid #E5E7EB !important; box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important; padding-left: 32px !important; }
-                    .dark .fi-global-search-input { background-color: #1F2937 !important; border-color: #374151 !important; color: #D1D5DB !important; }
+                    /* BUBBLE LONCENG */
+                    .fi-topbar-database-notifications-trigger .fi-icon-btn-badge { display: flex !important; align-items: center; justify-content: center; background-color: #EF4444 !important; color: white !important; font-size: 10px !important; font-weight: 800 !important; width: 18px !important; height: 18px !important; border-radius: 50% !important; top: -5px !important; right: -5px !important; box-shadow: 0 0 10px rgba(239, 68, 68, 0.5) !important; border: 2px solid white !important; }
 
-                    /* SEMBUNYIKAN TEMA BAWAAN DI DALAM PROFIL & TULISAN DASHBOARD */
+                    /* SHADOW CARD DASHBOARD */
+                    .fi-section, .fi-ta-ctn, .fi-wi-stats-overview-stat { background-color: #ffffff !important; border: 1px solid rgba(0,0,0,0.05) !important; border-radius: 1.25rem !important; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01) !important; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important; }
+                    .fi-section:hover, .fi-ta-ctn:hover, .fi-wi-stats-overview-stat:hover { transform: translateY(-3px); box-shadow: 0 20px 40px -10px rgba(3, 30, 73, 0.08) !important; border-color: rgba(3, 30, 73, 0.1) !important; }
+
+                    /* SEMBUNYIKAN TEMA BAWAAN & TULISAN DASHBOARD */
                     .fi-user-menu .fi-theme-switcher { display: none !important; }
                     ' . (request()->routeIs('filament.admin.pages.dashboard') ? 'header.fi-header { display: none !important; }' : '') . '
-
-                    /* Tombol Bawaan Filament Diperkecil */
-                    .fi-topbar .fi-icon-btn { background-color: #ffffff !important; border: 1px solid #E5E7EB !important; border-radius: 50% !important; width: 30px !important; height: 30px !important; box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important; color: #6B7280 !important; transition: all 0.2s ease; }
-                    .fi-topbar .fi-icon-btn:hover { transform: scale(1.1); color: #2563EB !important; }
-                    .fi-user-menu > button { background-color: #ffffff !important; border: 1px solid #E5E7EB !important; border-radius: 9999px !important; padding: 3px 12px 3px 3px !important; box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important; height: 30px !important; transition: all 0.2s ease; }
-                    .fi-user-menu > button:hover { transform: scale(1.05); border-color: #2563EB !important; }
-
-                    /* Compact Mode Logic */
-                    body.is-compact .fi-ta-cell { padding-top: 0.3rem !important; padding-bottom: 0.3rem !important; }
-                    body.is-compact .fi-section { padding: 0.75rem !important; }
-                    .fi-wi-stats-overview-stat { padding: 1rem !important; }
-                    .fi-wi-stats-overview-stat .text-3xl { font-size: 1.5rem !important; line-height: 2rem !important; }
                 </style>'
             )
 
+            // HOOKS LOGO & SEARCH (Seperti sebelumnya)
             ->renderHook('panels::sidebar.nav.start', fn (): string => view('filament.components.sidebar-search')->render())
             ->renderHook('panels::topbar.start', fn (): string => view('filament.components.navbar-search')->render())
             ->renderHook('panels::global-search.after', fn (): string => view('filament.components.topbar-actions')->render())
 
-            // HOOK: INJEKSI FOTO & JABATAN
+            // HOOK: INJEKSI FOTO & JABATAN PROFIL
             ->renderHook(
                 'panels::user-menu.profile.before',
                 function (): string {
@@ -209,7 +177,7 @@ class AdminPanelProvider extends PanelProvider
                 }
             )
 
-            // HOOK: TOMBOL LOGOUT SIDEBAR
+            // HOOK: TOMBOL LOGOUT SIDEBAR BAWAH
             ->renderHook(
                 'panels::sidebar.footer',
                 fn (): string => '<div style="padding: 1rem; margin-top: auto;">
@@ -237,8 +205,8 @@ class AdminPanelProvider extends PanelProvider
                 \App\Filament\Widgets\LiveRadarWidget::class,
             ])
             ->plugin(\Saade\FilamentFullCalendar\FilamentFullCalendarPlugin::make()->selectable()->editable())
-            // 👇 Middleware untuk mengecek "amarin123" bisa Anda tambahkan di bawah ini nanti 👇
+            // 👇 Middleware untuk mengecek "amarin123" 👇
             ->middleware([ EncryptCookies::class, AddQueuedCookiesToResponse::class, StartSession::class, AuthenticateSession::class, ShareErrorsFromSession::class, VerifyCsrfToken::class, SubstituteBindings::class, DisableBladeIconComponents::class, DispatchServingFilamentEvent::class ])
-            ->authMiddleware([ Authenticate::class, \App\Http\Middleware\CheckDefaultPassword::class ]);
+            ->authMiddleware([ Authenticate::class ]);
     }
 }

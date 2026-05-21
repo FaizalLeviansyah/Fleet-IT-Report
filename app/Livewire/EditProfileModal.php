@@ -22,11 +22,18 @@ class EditProfileModal extends Component implements HasForms, HasActions
 
     public function editProfileAction(): Action
     {
+        // Cek apakah user masih menggunakan password default 'amarin123'
+        $isDefaultPassword = auth()->check() && Hash::check('amarin123', auth()->user()->password);
+
         return Action::make('editProfile')
             ->modalHeading('Profil Akun & Keamanan')
             ->modalDescription('Perbarui data identitas dan kredensial login Anda.')
             ->modalSubmitActionLabel('Simpan Perubahan')
             ->modalWidth('2xl')
+            // 👇 FIX: MENGHILANGKAN TOMBOL 'X' DI POJOK KANAN ATAS JIKA PASSWORD DEFAULT 👇
+            ->modalCloseButton(! $isDefaultPassword)
+            ->closeModalByClickingAway(! $isDefaultPassword)
+            ->closeModalByEscaping(! $isDefaultPassword)
             ->fillForm(fn (): array => auth()->user()->toArray())
             ->form([
                 Section::make('Identitas Pekerjaan')
@@ -34,7 +41,7 @@ class EditProfileModal extends Component implements HasForms, HasActions
                         FileUpload::make('avatar_url')
                             ->label('Foto Profil')
                             ->avatar()
-                            ->directory('avatars') // Simpan di storage/app/public/avatars
+                            ->directory('avatars')
                             ->imageEditor()
                             ->circleCropper()
                             ->maxSize(2048)
@@ -49,14 +56,14 @@ class EditProfileModal extends Component implements HasForms, HasActions
                     ]),
                 Section::make('Informasi Pribadi')
                     ->schema([
-                        TextInput::make('full_name')->label('Nama Lengkap')->required(),
+                        TextInput::make('full_name')
+                            ->label('Nama Lengkap')
+                            ->required(),
 
-                        // 👇 KUNCI FIX PARTIAL UPDATE: Kita suruh Laravel mengabaikan email milik user ini sendiri saat divalidasi!
                         TextInput::make('email_work')
                             ->label('Email Kerja')
                             ->email()
                             ->required()
-                            // 👇 UBAH BARIS INI 👇
                             ->unique(
                                 table: \App\Models\User::class,
                                 column: 'email_work',
@@ -64,23 +71,39 @@ class EditProfileModal extends Component implements HasForms, HasActions
                             ),
                     ])->columns(2),
                 Section::make('Keamanan (Ubah Password)')
+                    ->description($isDefaultPassword ? '⚠️ Wajib diisi! Anda harus mengganti password default (amarin123) untuk alasan keamanan.' : '')
                     ->schema([
-                        TextInput::make('password')->label('Password Baru')->password()->revealable()
-                            ->dehydrateStateUsing(fn ($state) => Hash::make($state))
+                        // 👇 FIX DOUBLE HASHING: Tidak ada lagi ->dehydrateStateUsing(fn ($state) => Hash::make($state)) 👇
+                        TextInput::make('password')
+                            ->label('Password Baru')
+                            ->password()
+                            ->revealable()
                             ->dehydrated(fn ($state) => filled($state))
-                            ->required(false), // Tidak wajib diisi
-                        TextInput::make('passwordConfirmation')->label('Konfirmasi Password Baru')->password()->revealable()
-                            ->requiredWith('password')->same('password')->dehydrated(false),
+                            ->required($isDefaultPassword), // Wajib diisi JIKA password saat ini adalah 'amarin123'
+
+                        TextInput::make('passwordConfirmation')
+                            ->label('Konfirmasi Password Baru')
+                            ->password()
+                            ->revealable()
+                            ->requiredWith('password')
+                            ->same('password')
+                            ->dehydrated(false),
                     ])->columns(2),
             ])
             ->action(function (array $data): void {
-                // 1. Simpan ke Database
-                auth()->user()->update($data);
+                $user = auth()->user();
+                $user->update($data);
 
-                // 2. Munculkan Notif Hijau
-                Notification::make()->title('Profil Berhasil Diperbarui!')->success()->send();
+                // 👇 FIX ANTI-LOGOUT SAAT GANTI PASSWORD DARI DALAM PROFIL 👇
+                if (isset($data['password']) && filled($data['password'])) {
+                    session()->put([
+                        'password_hash_' . \Filament\Facades\Filament::auth()->getName() => $user->getAuthPassword()
+                    ]);
+                    \Filament\Facades\Filament::auth()->login($user, true);
+                    session()->regenerate();
+                }
 
-                // 👇 3. KUNCI FIX NAVBAR: Paksa browser me-reload halaman SAAT ITU JUGA agar Navbar Profile merender data terbaru! 👇
+                \Filament\Notifications\Notification::make()->title('Profil Berhasil Diperbarui!')->success()->send();
                 redirect(request()->header('Referer'));
             });
     }

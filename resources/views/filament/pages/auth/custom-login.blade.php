@@ -1,14 +1,18 @@
 <div class="amarin-login-wrapper">
 
-    <div class="amarin-login-left">
+    <div class="amarin-login-left" wire:ignore>
         <div class="amarin-ornament-1"></div>
         <div class="amarin-ornament-2"></div>
         <div class="amarin-ornament-3"></div>
 
         <div class="amarin-logo-top">
-            <span>AMARIN SHIP MANAGEMENT</span>
-            <img src="/img/Logo_PT_ASM.jpg" alt="Amarin Logo" class="h-8 w-auto relative z-10" onerror="this.style.display='none'">
+            <span>PT AMARIN SHIP MANAGEMENT</span>
+            <div class="relative group flex items-center justify-center p-1.5 bg-white/10 backdrop-blur-md rounded-xl border border-white/20 shadow-[0_0_20px_rgba(59,130,246,0.3)]">
+                <div class="absolute inset-0 bg-blue-400 opacity-30 blur-md rounded-xl"></div>
+                <img src="/img/Logo_PT_ASM.jpg" alt="Amarin Logo" class="h-8 w-auto relative z-10 rounded-lg">
+            </div>
         </div>
+
         <div class="amarin-hero-text">
             <h1>Modern ITSM for<br><span class="text-gradient">Global Fleet</span></h1>
             <p>Empowering your IT workforce with secure, intelligent, and seamless access to enterprise tech support tools.</p>
@@ -31,10 +35,10 @@
     </div>
 
     <div class="amarin-login-right">
-        <div class="bg-grid"></div>
+        <div class="bg-grid" wire:ignore></div>
 
         <div class="amarin-login-card">
-            <div class="card-header">
+            <div class="card-header" wire:ignore>
                 <div class="shining-logo">
                     <img src="/img/Logo_PT_ASM.jpg" alt="Amarin Logo">
                 </div>
@@ -44,23 +48,28 @@
             </div>
 
             <form wire:submit="authenticate" class="amarin-form">
+
                 {{ $this->form }}
+
+                <div class="forgot-password-container">
+                    {{ $this->forgotPasswordAction }}
+                </div>
 
                 <button type="submit" class="btn-submit" id="submitBtn">
                     Sign In
-                    <svg class="btn-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                    <svg style="width: 18px; height: 18px; transition: transform 0.3s;" class="btn-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                 </button>
             </form>
         </div>
 
-        <p class="footer-text">&copy; {{ date('Y') }} AMARIN SHIP MANAGEMENT</p>
+        <p class="footer-text" wire:ignore>&copy; {{ date('Y') }} PT AMARIN SHIP MANAGEMENT</p>
     </div>
 
-    <style>
-        /* POSISI ROW-REVERSE AGAR BIRU DI KANAN, PUTIH DI KIRI */
-        .amarin-login-wrapper { display: flex; flex-direction: row-reverse; position: fixed; inset: 0; width: 100vw; height: 100vh; background-color: #fafbfc; z-index: 99999; font-family: 'Poppins', sans-serif; overflow: hidden; }
+    <x-filament-actions::modals />
 
-        /* --- PANEL BIRU (RATA KANAN) --- */
+    <style>
+        .amarin-login-wrapper { display: flex; flex-direction: row-reverse; position: fixed; inset: 0; width: 100vw; height: 100vh; background-color: #FAFBFC; z-index: 99999; font-family: 'Poppins', sans-serif; overflow: hidden; }
+
         .amarin-login-left { display: none; background-color: #031E49; width: 55%; position: relative; flex-direction: column; justify-content: space-between; align-items: flex-end; text-align: right; padding: 4rem; overflow: hidden; color: white; }
         @media (min-width: 1024px) { .amarin-login-left { display: flex; } }
 
@@ -68,7 +77,7 @@
         .amarin-ornament-2 { position: absolute; top: 40%; right: -10%; width: 30rem; height: 30rem; border-radius: 50%; border: 2px solid rgba(34, 211, 238, 0.15); pointer-events: none; }
         .amarin-ornament-3 { position: absolute; top: 45%; right: 5%; width: 20rem; height: 20rem; border-radius: 50%; border: 1px solid rgba(34, 211, 238, 0.1); pointer-events: none; }
 
-        .amarin-logo-top { display: flex; align-items: center; justify-content: flex-end; gap: 0.75rem; position: relative; z-index: 10; }
+        .amarin-logo-top { display: flex; align-items: center; justify-content: flex-end; gap: 1rem; position: relative; z-index: 10; }
         .amarin-logo-top span { font-weight: 600; font-size: 0.875rem; letter-spacing: 0.025em; color: #eff6ff; }
 
         .amarin-hero-text { position: relative; z-index: 10; margin-top: 2.5rem; max-width: 42rem; display: flex; flex-direction: column; align-items: flex-end; }
@@ -89,36 +98,44 @@
         .c-box { width: 2rem; height: 2rem; border-radius: 0.375rem; background-color: #06285c; border: 1px solid rgba(59, 130, 246, 0.3); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.875rem; color: #eff6ff; }
         .amarin-culture p { font-size: 0.625rem; color: rgba(191, 219, 254, 0.5); font-weight: 500; letter-spacing: 0.025em; margin-top: 0.75rem; }
 
-        /* --- PANEL PUTIH (FORM LOGIN) --- */
-        .amarin-login-right { width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; background-color: #fafbfc; }
+        /* AREA KANAN (FORM) */
+        .amarin-login-right { width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; background-color: #FAFBFC; }
         @media (min-width: 1024px) { .amarin-login-right { width: 45%; } }
-
         .bg-grid { position: absolute; inset: 0; opacity: 0.03; background-image: radial-gradient(#000 1px, transparent 1px); background-size: 20px 20px; pointer-events: none; }
 
-        .amarin-login-card { width: 100%; max-width: 420px; background-color: white; padding: 2.5rem 2.5rem; border-radius: 1.5rem; border: 1px solid rgba(243, 244, 246, 0.8); position: relative; z-index: 10; margin: 0 1rem; box-shadow: 0 20px 50px -20px rgba(0, 0, 0, 0.08); }
+      /* SHADOW CARD MEWAH & SUPER TEGAS */
+        .amarin-login-card { width: 100%; max-width: 420px; background-color: white; padding: 2.5rem 2.5rem; border-radius: 1.25rem; border: 1px solid rgba(15, 29, 61, 0.1); position: relative; z-index: 10; margin: 0 1rem; box-shadow: 0 25px 50px -12px rgba(3, 30, 73, 0.35), 0 0 0 1px rgba(3, 30, 73, 0.05) !important; transition: all 0.3s ease; }
+        .amarin-login-card:hover { transform: translateY(-3px); box-shadow: 0 30px 60px -10px rgba(3, 30, 73, 0.45) !important; }
 
-        .card-header { display: flex; flex-direction: column; align-items: center; text-align: center; margin-bottom: 2rem; }
-        .shining-logo { position: relative; display: inline-block; overflow: hidden; border-radius: 0.5rem; margin-bottom: 1.25rem; }
-        .shining-logo img { height: 4.5rem; width: auto; position: relative; z-index: 10; }
+        .card-header { display: flex; flex-direction: column; align-items: center; text-align: center; margin-bottom: 2.5rem; }
+        .shining-logo { position: relative; display: inline-block; overflow: hidden; border-radius: 0.5rem; margin-bottom: 1rem; }
+        .shining-logo img { height: 4rem; width: auto; position: relative; z-index: 10; border-radius: 0.5rem; }
         .shining-logo::after { content: ''; position: absolute; top: 0; left: -150%; width: 100%; height: 100%; background: linear-gradient(to right, transparent, rgba(255,255,255,0.7), transparent); transform: skewX(-25deg); animation: shine 3s infinite ease-in-out; z-index: 20; }
+        .card-header h2 { font-size: 1.75rem; font-weight: 800; color: #111827; margin-bottom: 0.2rem; letter-spacing: -0.025em; }
+        .subtitle { font-size: 0.85rem; color: #4B5563; margin-bottom: 0.75rem; font-weight: 500; }
+        .respect { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.35em; color: #9CA3AF; text-transform: uppercase; }
 
-        .card-header h2 { font-size: 1.625rem; font-weight: 800; color: #111827; margin-bottom: 0.25rem; letter-spacing: -0.025em; }
-        .subtitle { font-size: 0.8125rem; color: #6b7280; margin-bottom: 0.75rem; font-weight: 500; }
-        .respect { font-size: 0.6rem; font-weight: 700; letter-spacing: 0.35em; color: #9ca3af; text-transform: uppercase; }
+        /* FORM & BUTTON */
+        .amarin-form { display: flex; flex-direction: column; width: 100%; gap: 1.25rem; }
 
-        .amarin-form { display: flex; flex-direction: column; gap: 1.5rem; width: 100%; }
+        /* Mengakali Posisi Forgot Password agar sejajar dengan Checkbox */
+        .forgot-password-container { text-align: right; margin-top: -38px; position: relative; z-index: 20; height: 0; overflow: visible; }
+        .forgot-password-container a { font-size: 0.75rem !important; color: #2563EB !important; text-decoration: none !important; font-weight: 600 !important; }
+        .forgot-password-container a:hover { color: #1D4ED8 !important; text-decoration: underline !important; }
 
-        .btn-submit { width: 100%; padding: 0.85rem 1rem; margin-top: 1rem; background-color: #031E49; color: white; font-weight: 600; border-radius: 0.5rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; transition: all 0.3s ease; box-shadow: 0 10px 15px -3px rgba(3, 30, 73, 0.2); border: none; cursor: pointer; font-size: 0.875rem; }
-        .btn-submit:hover { background-color: #1e40af; }
-        .btn-arrow { width: 1rem; height: 1rem; transition: transform 0.3s ease; }
-        .btn-submit:hover .btn-arrow { transform: translateX(0.375rem); }
+        .btn-submit { width: 100%; padding: 0.75rem 1rem; margin-top: 1.5rem; background-color: #0056B3; color: white; font-weight: 600; border-radius: 0.5rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; transition: all 0.3s ease; border: none; cursor: pointer; font-size: 0.875rem; box-shadow: 0 4px 6px -1px rgba(0, 86, 179, 0.2); }
+        .btn-submit:hover { background-color: #004494; box-shadow: 0 6px 8px -1px rgba(0, 86, 179, 0.3); }
+        .btn-submit:hover .btn-arrow { transform: translateX(4px); }
 
-        .footer-text { position: absolute; bottom: 2rem; font-size: 0.7rem; color: #9ca3af; font-weight: 500; }
+        .footer-text { position: absolute; bottom: 2rem; font-size: 0.7rem; color: #9CA3AF; font-weight: 500; }
 
         @keyframes shine { 0% { left: -150%; } 20% { left: 200%; } 100% { left: 200%; } }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 
-        .fi-fo-field-wrp-label { font-size: 0.75rem !important; font-weight: 700 !important; color: #4b5563 !important; letter-spacing: 0.025em; text-transform: uppercase; }
-        .fi-fo-checkbox { margin-top: 1rem !important; }
+        /* 👇 FIX: MERAMPIKAN LABEL FORM FILAMENT AGAR TIDAK BESAR & JELEK 👇 */
+        .fi-fo-field-wrp-label { font-size: 11px !important; font-weight: 700 !important; color: #4B5563 !important; letter-spacing: 0.025em; text-transform: uppercase !important; }
+        .fi-input { border-radius: 0.5rem !important; border-color: #D1D5DB !important; box-shadow: none !important; padding-top: 0.5rem !important; padding-bottom: 0.5rem !important; }
+        .fi-input:focus { border-color: #3B82F6 !important; ring: 2px solid #BFDBFE !important; }
+        .fi-fo-checkbox { margin-top: 0.25rem !important; }
+        .fi-checkbox-input { border-radius: 0.25rem !important; }
     </style>
 </div>

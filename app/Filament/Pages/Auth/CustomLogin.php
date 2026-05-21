@@ -6,12 +6,57 @@ use Filament\Pages\Auth\Login as BaseLogin;
 use Filament\Forms\Form;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Checkbox;
+use Filament\Actions\Action;
+use Filament\Actions\Concerns\InteractsWithActions;
+use Filament\Actions\Contracts\HasActions;
+use Filament\Notifications\Notification;
+use App\Models\User;
 
-class CustomLogin extends BaseLogin
+class CustomLogin extends BaseLogin implements HasActions
 {
+    use InteractsWithActions;
+
     protected static string $view = 'filament.pages.auth.custom-login';
 
-    // 👇 INI KUNCI JAWABANNYA! Menyambungkan input 'email' ke kolom 'email_work' 👇
+    // 👇 FUNGSI POP-UP LIVEWIRE: FORGOT PASSWORD 👇
+    public function forgotPasswordAction(): Action
+    {
+        return Action::make('forgotPassword')
+            ->label('Forgot password?')
+            ->link() // Ubah wujud jadi teks link (bukan tombol kotak)
+            ->color('primary')
+            ->modalHeading('Reset Password Sistem')
+            ->modalDescription('Masukkan email terdaftar Anda. Kami akan mengirimkan instruksi pemulihan ke email tersebut.')
+            ->modalSubmitActionLabel('Kirim Link Reset')
+            ->modalWidth('md')
+            ->form([
+                TextInput::make('email_reset')
+                    ->label('EMAIL KERJA (TERDAFTAR)')
+                    ->email()
+                    ->required()
+                    ->placeholder('contoh@amarin.biz.id')
+                    ->prefixIcon('heroicon-m-envelope'),
+            ])
+            ->action(function (array $data): void {
+                $user = User::where('email_work', $data['email_reset'])->first();
+
+                if (!$user) {
+                    Notification::make()->title('Gagal!')->body('Email tidak ditemukan dalam sistem ITSM.')->danger()->send();
+                    return;
+                }
+
+                try {
+                    // Logic kirim email (Pastikan SMTP di .env sudah disetting)
+                    // \Illuminate\Support\Facades\Password::broker()->sendResetLink(['email_work' => $data['email_reset']]);
+
+                    Notification::make()->title('Berhasil!')->body('Tautan reset password telah dikirim ke email Anda.')->success()->send();
+                } catch (\Exception $e) {
+                    Notification::make()->title('Gagal Mengirim Email')->body('Terjadi kesalahan pada server SMTP.')->danger()->send();
+                }
+            });
+    }
+
+    // Logic Login Asli
     protected function getCredentialsFromFormData(array $data): array
     {
         return [
