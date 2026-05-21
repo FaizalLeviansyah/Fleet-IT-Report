@@ -200,7 +200,14 @@ class AdminPanelProvider extends PanelProvider
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([ Pages\Dashboard::class ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
-            ->widgets([])
+            // 👇 DAFTARKAN SEMUA WIDGET DENGAN URUTAN YANG BENAR 👇
+            ->widgets([
+                \App\Filament\Widgets\DashboardStatsWidget::class, // Paling atas (Kotak Angka)
+                \App\Filament\Widgets\IncidentTrendChart::class,   // Kedua (Grafik)
+                \App\Filament\Widgets\RecentIncidentsWidget::class,// Ketiga (Tabel 5 Insiden)
+                \App\Filament\Widgets\LiveRadarWidget::class,      // Keempat (Radar Militer)
+            ])
+            // Kalender otomatis ada di paling bawah karena dibawa oleh Plugin
             ->plugin(\Saade\FilamentFullCalendar\FilamentFullCalendarPlugin::make()->selectable()->editable())
             ->middleware([ EncryptCookies::class, AddQueuedCookiesToResponse::class, StartSession::class, AuthenticateSession::class, ShareErrorsFromSession::class, VerifyCsrfToken::class, SubstituteBindings::class, DisableBladeIconComponents::class, DispatchServingFilamentEvent::class ])
             ->authMiddleware([ Authenticate::class ]);
