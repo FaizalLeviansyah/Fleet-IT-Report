@@ -40,7 +40,7 @@ class AdminPanelProvider extends PanelProvider
 
             //👇 LONCENG NOTIFIKASI REAL-TIME (Bubble diaktifkan 30 detik) 👇
             ->databaseNotifications()
-            ->databaseNotificationsPolling('30s')
+            ->databaseNotificationsPolling('15s')
 
             // MENU PROFIL KUSTOM (Memicu Modal Edit Profile)
             ->userMenuItems([
@@ -107,42 +107,99 @@ class AdminPanelProvider extends PanelProvider
                 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
                 <style>
-                    /* 👇 SIDEBAR: KONSISTEN DENGAN LOGIN LEFT PANEL (DEEP BLUE #031E49) 👇 */
-                    .fi-sidebar { background-color: #031E49 !important; border-right: none !important; box-shadow: 4px 0 15px rgba(0,0,0,0.05) !important; }
-                    .fi-sidebar-header { background-color: #031E49 !important; border-bottom: 1px solid rgba(255,255,255,0.05) !important; padding: 1rem 1.5rem; }
+                    /* =========================================================
+                       ☀️ LIGHT MODE (Tema Biru Korporat)
+                       ========================================================= */
 
-                    /* Sidebar Items Default (Teks Biru Pucat) */
+                    .fi-sidebar { background-color: #031E49 !important; border-right: none !important; box-shadow: 4px 0 15px rgba(0,0,0,0.05) !important; transition: background-color 0.3s ease; }
+                    .fi-sidebar-header { background-color: #01122C !important; border-bottom: 2px solid #1D4ED8 !important; padding: 1.2rem 1.5rem !important; box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important; z-index: 20; transition: background-color 0.3s ease; }
+
+                    /* Menu Normal */
                     .fi-sidebar-item-button { transition: all 0.3s ease; border-radius: 0.5rem !important; margin: 0.25rem 0.8rem !important; padding: 0.6rem 1rem !important; }
                     .fi-sidebar-item-label, .fi-sidebar-item-icon { color: #93C5FD !important; font-weight: 500 !important; transition: all 0.3s ease; }
-
-                    /* Hover Effect */
                     .fi-sidebar-item-button:hover { background-color: rgba(37, 99, 235, 0.15) !important; transform: translateX(4px); }
                     .fi-sidebar-item-button:hover .fi-sidebar-item-label, .fi-sidebar-item-button:hover .fi-sidebar-item-icon { color: #ffffff !important; }
 
-                    /* Active Effect (Biru HRIS Menyala) */
+                    /* Menu Aktif Light */
                     .fi-sidebar-item-active .fi-sidebar-item-button {
                         background: linear-gradient(90deg, #2563EB 0%, #031E49 100%) !important;
                         border-left: 4px solid #22D3EE !important;
-                        border-radius: 0 0.5rem 0.5rem 0 !important;
-                        margin-left: 0 !important;
-                        padding-left: 1.55rem !important;
+                        border-radius: 0 0.5rem 0.5rem 0 !important; margin-left: 0 !important; padding-left: 1.55rem !important;
                         box-shadow: inset 15px 0 30px -15px rgba(34, 211, 238, 0.2) !important;
                     }
                     .fi-sidebar-item-active .fi-sidebar-item-label, .fi-sidebar-item-active .fi-sidebar-item-icon { color: #ffffff !important; font-weight: 700 !important; }
 
-                    /* 👇 NAVBAR: GLASSMORPHISM PUTIH BERSIH 👇 */
-                    .fi-topbar { background-color: rgba(255, 255, 255, 0.8) !important; border-bottom: 1px solid rgba(0,0,0,0.05) !important; padding: 0.5rem 1.5rem !important; height: auto !important; backdrop-filter: blur(12px) !important; -webkit-backdrop-filter: blur(12px) !important; position: sticky !important; top: 0; z-index: 40; transition: all 0.3s ease; }
-                    .dark .fi-topbar { background-color: rgba(3, 30, 73, 0.8) !important; border-bottom: 1px solid rgba(255,255,255,0.05) !important; }
+                    /* Group Title Light */
+                    .fi-sidebar-group-label { color: #38BDF8 !important; font-weight: 800 !important; font-size: 0.75rem !important; letter-spacing: 0.15em !important; text-transform: uppercase !important; text-shadow: 0 0 10px rgba(56, 189, 248, 0.3) !important; opacity: 1 !important; }
+
+                    /* Navbar & Search Light */
+                    .fi-topbar { background-color: rgba(255, 255, 255, 0.95) !important; border-bottom: 1px solid rgba(0,0,0,0.05) !important; padding: 0.5rem 1.5rem !important; height: auto !important; position: sticky !important; top: 0; z-index: 40; transition: all 0.3s ease; box-shadow: 0 4px 15px -3px rgba(0,0,0,0.05) !important; backdrop-filter: blur(12px) !important; -webkit-backdrop-filter: blur(12px) !important; }
+                    .fi-global-search-input { background-color: #F3F4F6 !important; border: 1px solid #E5E7EB !important; color: #111827 !important; transition: all 0.3s ease; }
+                    .fi-global-search-input:focus { border-color: #2563EB !important; box-shadow: 0 0 0 2px rgba(37,99,235,0.2) !important; background-color: #ffffff !important; }
+
+
+                    /* =========================================================
+                       🌙 DARK MODE (Tema Elegant Slate - Tidak Biru / Hitam)
+                       ========================================================= */
+                    .dark .fi-sidebar { background-color: #111827 !important; border-right: 1px solid #1F2937 !important; }
+                    .dark .fi-sidebar-header { background-color: #030712 !important; border-bottom: 2px solid #38BDF8 !important; box-shadow: 0 4px 15px rgba(0,0,0,0.5) !important; }
+
+                    /* Menu Dark */
+                    .dark .fi-sidebar-item-label, .dark .fi-sidebar-item-icon { color: #94A3B8 !important; }
+                    .dark .fi-sidebar-item-button:hover { background-color: #1E293B !important; }
+                    .dark .fi-sidebar-item-button:hover .fi-sidebar-item-label, .dark .fi-sidebar-item-button:hover .fi-sidebar-item-icon { color: #F8FAFC !important; }
+
+                    /* Menu Aktif Dark */
+                    .dark .fi-sidebar-item-active .fi-sidebar-item-button {
+                        background: linear-gradient(90deg, #1E293B 0%, #111827 100%) !important;
+                        border-left: 4px solid #38BDF8 !important;
+                        box-shadow: inset 15px 0 30px -15px rgba(56, 189, 248, 0.1) !important;
+                    }
+                    .dark .fi-sidebar-item-active .fi-sidebar-item-label, .dark .fi-sidebar-item-active .fi-sidebar-item-icon { color: #38BDF8 !important; }
+                    .dark .fi-sidebar-group-label { color: #475569 !important; text-shadow: none !important; }
+
+                    /* Navbar & Background Area Dark */
+                    .dark .fi-topbar { background-color: rgba(15, 23, 42, 0.95) !important; border-bottom: 1px solid #1E293B !important; box-shadow: 0 4px 15px -3px rgba(0,0,0,0.5) !important; }
+                    .dark .fi-global-search-input { background-color: #1E293B !important; border-color: #334155 !important; color: #F8FAFC !important; }
+                    .dark .fi-global-search-input:focus { border-color: #38BDF8 !important; box-shadow: 0 0 0 2px rgba(56,189,248,0.2) !important; background-color: #0F172A !important; }
+
+                    /* Background Konten & Card Dark Mode */
+                    .dark .fi-main { background-color: #0B1120 !important; } /* Deep premium slate background */
+                    .dark .fi-section, .dark .fi-ta-ctn, .dark .fi-wi-stats-overview-stat { background-color: #111827 !important; border: 1px solid #1E293B !important; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3) !important; }
+
+
+                    /* =========================================================
+                       🔧 SETTING GLOBAL (Light & Dark)
+                       ========================================================= */
                     .fi-topbar > nav { background: transparent !important; gap: 0.5rem !important; align-items: center !important; }
-
-                    /* BUBBLE LONCENG */
                     .fi-topbar-database-notifications-trigger .fi-icon-btn-badge { display: flex !important; align-items: center; justify-content: center; background-color: #EF4444 !important; color: white !important; font-size: 10px !important; font-weight: 800 !important; width: 18px !important; height: 18px !important; border-radius: 50% !important; top: -5px !important; right: -5px !important; box-shadow: 0 0 10px rgba(239, 68, 68, 0.5) !important; border: 2px solid white !important; }
+                    .dark .fi-topbar-database-notifications-trigger .fi-icon-btn-badge { border-color: #0F172A !important; }
 
-                    /* SHADOW CARD DASHBOARD */
-                    .fi-section, .fi-ta-ctn, .fi-wi-stats-overview-stat { background-color: #ffffff !important; border: 1px solid rgba(0,0,0,0.05) !important; border-radius: 1.25rem !important; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01) !important; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important; }
-                    .fi-section:hover, .fi-ta-ctn:hover, .fi-wi-stats-overview-stat:hover { transform: translateY(-3px); box-shadow: 0 20px 40px -10px rgba(3, 30, 73, 0.08) !important; border-color: rgba(3, 30, 73, 0.1) !important; }
+                    /* Scrollbar Modern */
+                    .fi-sidebar-nav { scrollbar-width: thin; scrollbar-color: transparent transparent; transition: scrollbar-color 0.3s; }
+                    .fi-sidebar-nav:hover { scrollbar-color: #1D4ED8 transparent; }
+                    .fi-sidebar-nav::-webkit-scrollbar { width: 5px; background-color: transparent; }
+                    .fi-sidebar-nav::-webkit-scrollbar-track { background-color: transparent; }
+                    .fi-sidebar-nav::-webkit-scrollbar-thumb { background-color: transparent; border-radius: 10px; transition: background-color 0.3s; }
+                    .fi-sidebar-nav:hover::-webkit-scrollbar-thumb { background-color: rgba(37, 99, 235, 0.5); }
+                    .fi-sidebar-nav::-webkit-scrollbar-thumb:hover { background-color: rgba(59, 130, 246, 0.8); }
 
-                    /* SEMBUNYIKAN TEMA BAWAAN & TULISAN DASHBOARD */
+                    /* Tombol Primary Global (Selaras Tema) */
+                    .fi-btn-color-primary, .fi-modal-footer .fi-btn { background: linear-gradient(135deg, #2563EB, #1D4ED8) !important; border: none !important; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3) !important; color: white !important; font-weight: 600 !important; letter-spacing: 0.025em !important; transition: all 0.3s !important; }
+                    .fi-btn-color-primary:hover, .fi-modal-footer .fi-btn:hover { background: linear-gradient(135deg, #3B82F6, #2563EB) !important; box-shadow: 0 6px 12px -2px rgba(37, 99, 235, 0.4) !important; transform: translateY(-2px) !important; }
+
+                    /* Tombol Primary Dark Mode */
+                    .dark .fi-btn-color-primary, .dark .fi-modal-footer .fi-btn { background: linear-gradient(135deg, #3B82F6, #2563EB) !important; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5) !important; }
+                    .dark .fi-btn-color-primary:hover, .dark .fi-modal-footer .fi-btn:hover { background: linear-gradient(135deg, #60A5FA, #3B82F6) !important; box-shadow: 0 6px 12px -2px rgba(0, 0, 0, 0.6) !important; }
+
+                    /* Compact Mode Settings */
+                    body.is-compact .fi-ta-cell { padding-top: 0.25rem !important; padding-bottom: 0.25rem !important; font-size: 0.8rem !important; }
+                    body.is-compact .fi-ta-header { padding: 0.5rem 1rem !important; }
+                    body.is-compact .fi-section { padding: 0.75rem !important; }
+                    body.is-compact .fi-wi-stats-overview-stat { padding: 0.75rem !important; }
+                    body.is-compact .fi-ta-record-checkbox { transform: scale(0.85); }
+
+                    /* Sembunyikan Tema Bawaan */
                     .fi-user-menu .fi-theme-switcher { display: none !important; }
                     ' . (request()->routeIs('filament.admin.pages.dashboard') ? 'header.fi-header { display: none !important; }' : '') . '
                 </style>'
@@ -178,15 +235,18 @@ class AdminPanelProvider extends PanelProvider
             )
 
             // HOOK: TOMBOL LOGOUT SIDEBAR BAWAH
+            // HOOK: TOMBOL LOGOUT SIDEBAR BAWAH (DENGAN BEZEL TEGAS)
             ->renderHook(
                 'panels::sidebar.footer',
-                fn (): string => '<div style="padding: 1rem; margin-top: auto;">
+                fn (): string => '<div style="padding: 1.2rem 1.5rem; background-color: #01122C; border-top: 2px solid #1D4ED8; box-shadow: 0 -4px 15px rgba(0,0,0,0.3); z-index: 20; position: relative;">
                     <form method="POST" action="'.route('filament.admin.auth.logout').'" style="margin: 0;">
                         <input type="hidden" name="_token" value="'.csrf_token().'">
                         <button type="button"
                             onclick="Swal.fire({ title: \'Shutdown System?\', text: \'Sesi Anda akan diakhiri.\', icon: \'warning\', showCancelButton: true, confirmButtonColor: \'#ef4444\', cancelButtonColor: \'#64748b\', confirmButtonText: \'Ya, Shutdown!\', background: \'rgba(255,255,255,0.95)\', backdrop: \'rgba(15,23,42,0.7)\' }).then((result) => { if (result.isConfirmed) { this.closest(\'form\').submit(); } })"
-                            style="display: flex; align-items: center; justify-content: center; width: 100%; gap: 8px; padding: 8px 16px; font-size: 12px; font-weight: bold; color: white; background: linear-gradient(to right, #dc2626, #e11d48); border-radius: 8px; border: 1px solid #f87171; cursor: pointer; box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.4);">
-                            <svg style="width: 16px; height: 16px;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M18.36 6.64a9 9 0 1 1-12.73 0M12 2v10"></path></svg>
+                            style="display: flex; align-items: center; justify-content: center; width: 100%; gap: 8px; padding: 10px 16px; font-size: 13px; font-weight: 800; letter-spacing: 0.5px; color: white; background: linear-gradient(to right, #dc2626, #e11d48); border-radius: 8px; border: 1px solid #f87171; cursor: pointer; box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.4); transition: all 0.3s ease;"
+                            onmouseover="this.style.transform=\'translateY(-2px)\'; this.style.boxShadow=\'0 6px 12px rgba(239,68,68,0.5)\';"
+                            onmouseout="this.style.transform=\'translateY(0)\'; this.style.boxShadow=\'0 4px 6px -1px rgba(239,68,68,0.4)\';">
+                            <svg style="width: 18px; height: 18px;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M18.36 6.64a9 9 0 1 1-12.73 0M12 2v10"></path></svg>
                             SHUTDOWN
                         </button>
                     </form>

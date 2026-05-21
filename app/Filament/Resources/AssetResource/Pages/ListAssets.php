@@ -13,10 +13,10 @@ class ListAssets extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            // Pop-Up akan muncul DI TENGAH (karena tidak ada slideOver)
-            // '4xl' adalah ukurannya agar form 2 kolom tidak berantakan
             \Filament\Actions\CreateAction::make()
-                ->modalWidth('4xl'),
+                ->label('Tambah Aset')
+                ->icon('heroicon-o-plus-circle')
+                ->color('success'),
         ];
     }
 }

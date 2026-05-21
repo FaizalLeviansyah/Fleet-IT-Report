@@ -1,19 +1,15 @@
 <div class="flex items-center mr-3 pl-1" style="gap: 8px;">
-    <div x-data="{ isHovered: false }" style="display: flex; align-items: center;">
-        <a href="javascript:void(0)"
-           @mouseenter="isHovered = true"
-           @mouseleave="isHovered = false"
-           onclick="Swal.fire({ title: 'Buat Tiket Laporan?', text: 'Anda akan dialihkan ke halaman Formulir Pelaporan Insiden ITSM.', icon: 'info', showCancelButton: true, confirmButtonColor: '#2563EB', cancelButtonColor: '#64748b', confirmButtonText: 'Ya, Buat Tiket', cancelButtonText: 'Batal', background: 'rgba(255,255,255,0.95)', backdrop: 'rgba(15,23,42,0.7)' }).then((result) => { if(result.isConfirmed) window.location.href='/admin/incident-reports/create' })"
-           style="display: flex; align-items: center; height: 30px; border-radius: 9999px; background-color: #2563EB; border: 1px solid #1D4ED8; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); overflow: hidden; box-shadow: 0 2px 4px rgba(37,99,235,0.3); text-decoration: none;"
-           :style="isHovered ? 'width: 110px; justify-content: flex-start; padding-left: 8px;' : 'width: 30px; justify-content: center; padding: 0;'">
+    <a href="/admin/incident-reports/create"
+       class="group relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-full px-4 py-1.5 text-xs font-bold text-white shadow-lg transition-all duration-300"
+       style="background: linear-gradient(135deg, #2563EB, #1D4ED8); border: 1px solid rgba(255,255,255,0.2);"
+       onmouseover="this.style.boxShadow='0 0 15px rgba(37,99,235,0.6)'; this.style.transform='scale(1.05)';"
+       onmouseout="this.style.boxShadow='0 4px 6px -1px rgba(0,0,0,0.1)'; this.style.transform='scale(1)';">
 
-            <svg style="width: 14px; height: 14px; color: #ffffff; flex-shrink: 0;" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path>
-            </svg>
-            <span style="color: #ffffff; font-size: 10px; font-weight: bold; margin-left: 6px; white-space: nowrap; transition: opacity 0.2s ease-in-out;"
-                  :style="isHovered ? 'opacity: 1;' : 'opacity: 0;'">
-                Create Ticket
-            </span>
-        </a>
-    </div>
+        <span class="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/30 to-transparent transition-transform duration-700 ease-in-out group-hover:translate-x-full"></span>
+
+        <svg style="width: 14px; height: 14px;" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path>
+        </svg>
+        <span style="letter-spacing: 0.5px;">CREATE TICKET</span>
+    </a>
 </div>

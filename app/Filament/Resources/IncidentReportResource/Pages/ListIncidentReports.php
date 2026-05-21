@@ -10,13 +10,13 @@ class ListIncidentReports extends ListRecords
 {
     protected static string $resource = IncidentReportResource::class;
 
+    // 👇 TAMBAHKAN BLOK INI UNTUK MENGEMBALIKAN TOMBOL "CREATE" 👇
     protected function getHeaderActions(): array
     {
         return [
-            // 👇 TAMBAHKAN SLIDEOVER & UKURAN DI SINI 👇
             Actions\CreateAction::make()
-                ->slideOver() // Modal akan meluncur elegan dari sisi kanan layar
-                ->modalWidth('4xl'), // Memperlebar modal agar form Anda muat
+                ->label('Buat Tiket Baru')
+                ->icon('heroicon-o-plus-circle'),
         ];
     }
 }
