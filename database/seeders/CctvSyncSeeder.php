@@ -12,47 +12,52 @@ class CctvSyncSeeder extends Seeder
     public function run(): void
     {
         $basePath = public_path('storage/laporan-images');
-
+        
         if (!File::exists($basePath)) {
             $this->command->warn('Folder laporan-images tidak ditemukan, skip sinkronisasi.');
             return;
         }
 
-        $directories = File::directories($basePath);
+        $vesselDirs = File::directories($basePath);
         $insertedCount = 0;
 
-        foreach ($directories as $dir) {
-            $vesselFolderName = basename($dir);
-            // Kembalikan nama MT._Queen_Majesty menjadi MT. Queen Majesty
-            $vesselName = str_replace('_', ' ', $vesselFolderName);
+        foreach ($vesselDirs as $vesselDir) {
+            $vesselFolderName = basename($vesselDir);
+            $vesselName = str_replace('_', ' ', $vesselFolderName); // MT._Queen -> MT. Queen
+            
+            // Masuk ke tingkat 2 (Folder Tanggal)
+            $dateDirs = File::directories($vesselDir);
+            foreach ($dateDirs as $dateDir) {
+                $dateFolderName = basename($dateDir); // Misal: 2026-04-16
+                
+                // MASUK KE TINGKAT 3 (Folder Channel: AJG, BRT) -> INI YANG TERLEWAT SEBELUMNYA!
+                $channelDirs = File::directories($dateDir);
+                foreach ($channelDirs as $channelDir) {
+                    $channelName = basename($channelDir); // Akan terbaca 'AJG', 'BRT', dll
+                    
+                    // Akhirnya ambil file fotonya!
+                    $files = File::files($channelDir);
+                    foreach ($files as $file) {
+                        $filename = $file->getFilename();
+                        $relativePath = "laporan-images/{$vesselFolderName}/{$dateFolderName}/{$channelName}/{$filename}";
+                        
+                        // Gabungkan Tanggal dari Folder + Jam dari waktu file dibuat
+                        $timeString = date('H:i:s', $file->getMTime());
+                        $fileTime = Carbon::parse($dateFolderName . ' ' . $timeString);
 
-            $dateFolders = File::directories($dir);
-            foreach ($dateFolders as $dateDir) {
-                $files = File::files($dateDir);
-                foreach ($files as $file) {
-                    $filename = $file->getFilename();
-
-                    // Asumsi nama file dari Python: temp_CH-01_20260522.jpg atau mirip
-                    // Kita buat channel random untuk testing jika formatnya tidak ketahuan
-                    $channel = 'CH-0' . rand(1, 6);
-
-                    $relativePath = 'laporan-images/' . $vesselFolderName . '/' . basename($dateDir) . '/' . $filename;
-
-                    // Ambil waktu modifikasi file asli sebagai captured_at
-                    $fileTime = Carbon::createFromTimestamp($file->getMTime());
-
-                    DB::table('cctv_reports')->insert([
-                        'vessel_name' => $vesselName,
-                        'channel' => $channel,
-                        'image_path' => $relativePath,
-                        'captured_at' => $fileTime,
-                        'created_at' => $fileTime,
-                        'updated_at' => $fileTime,
-                    ]);
-                    $insertedCount++;
+                        DB::table('cctv_reports')->insert([
+                            'vessel_name' => $vesselName,
+                            'channel' => $channelName, // Murni terbaca dari folder (AJG/BRT)
+                            'image_path' => $relativePath,
+                            'captured_at' => $fileTime,
+                            'created_at' => $fileTime,
+                            'updated_at' => $fileTime,
+                        ]);
+                        $insertedCount++;
+                    }
                 }
             }
         }
-        $this->command->info("✅ Berhasil mensinkronkan $insertedCount foto lama ke Database!");
+        $this->command->info("✅ JENIUS! Berhasil mensinkronkan $insertedCount foto lama ke Database!");
     }
 }

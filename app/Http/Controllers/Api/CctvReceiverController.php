@@ -21,24 +21,25 @@ class CctvReceiverController extends Controller
             $file = $request->file('snapshot');
             $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
 
-            // 1. FORMAT NAMA KAPAL SEPERTI FARHAN (MT. Queen Majesty -> MT._Queen_Majesty)
+            // 1. FORMAT FOLDER (Persis Milik Farhan)
             $vesselFolder = str_replace(' ', '_', $request->lokasi);
-            $tanggal = date('Y-m-d');
+            $tanggal = $request->folder_target ?? date('Y-m-d');
+            $channel = $request->label; // AJG, BRT, dll
 
-            // 2. SIMPAN KE FOLDER LAPORAN-IMAGES
-            $path = $file->storeAs('laporan-images/' . $vesselFolder . '/' . $tanggal, $filename, 'public');
+            // 2. SIMPAN KE FOLDER 3 TINGKAT: laporan-images/Kapal/Tanggal/Channel/
+            $path = $file->storeAs("laporan-images/{$vesselFolder}/{$tanggal}/{$channel}", $filename, 'public');
 
             // 3. CATAT KE DATABASE
             DB::table('cctv_reports')->insert([
                 'vessel_name' => $request->lokasi,
-                'channel' => $request->label,
-                'image_path' => $path, // Menyimpan path: laporan-images/MT._Queen_Majesty/...
+                'channel' => $channel,
+                'image_path' => $path,
                 'captured_at' => now(),
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
 
-            return response()->json(['message' => '✅ Snapshot sukses masuk ke Laporan-Images!'], 200);
+            return response()->json(['message' => '✅ Snapshot sukses masuk ke Folder & Database!'], 200);
 
         } catch (\Exception $e) {
             Log::error('CCTV API Error: ' . $e->getMessage());
