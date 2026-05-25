@@ -131,7 +131,7 @@
                 <div><div class="stat-label">Last Synchronization</div><div class="stat-value text-green-600 dark:text-green-400">{{ $last_sync }}</div></div>
             </div>
             <div class="stat-card">
-                <div><div class="stat-label">CCTV Online Status</div><div class="stat-value">{{ $total_active_cams }} / {{ count($channels) }} Kamera Aktif</div></div>
+                <div><div class="stat-label">CCTV Snapshoot Status</div><div class="stat-value">{{ $total_active_cams }} / {{ count($channels) }} Kamera Aktif</div></div>
             </div>
         </div>
 
@@ -139,9 +139,9 @@
             <h5 class="mb-4 font-bold text-slate-800 dark:text-slate-200">Monitoring Filter</h5>
             <form wire:submit="applyFilter" class="filter-form">
                 <div class="f-group">
-                    <label class="f-label">Pilih Vessel</label>
+                    <label class="f-label">Choose Vessels</label>
                     <select wire:model.live="selected_vessel" class="f-input" required>
-                        <option value="">Pilih Kapal...</option>
+                        <option value="">Choose Vessels..</option>
                         @foreach($daftar_kapal as $k)
                             <option value="{{ $k->vessel_name }}">{{ $k->vessel_name }}</option>
                         @endforeach
@@ -151,7 +151,7 @@
                 <div class="f-group"><label class="f-label">End Date</label><input type="date" wire:model="end_date" class="f-input" required></div>
                 <div class="f-group"><label class="f-label">Start Time</label><input type="time" wire:model="start_time" class="f-input"></div>
                 <div class="f-group"><label class="f-label">End Time</label><input type="time" wire:model="end_time" class="f-input"></div>
-                <button type="submit" class="btn-apply">TAMPILKAN</button>
+                <button type="submit" class="btn-apply">Apply</button>
             </form>
         </div>
 
@@ -166,20 +166,20 @@
                         GLOBAL AUTO-SYNC
                         <span x-show="globalSync" class="flex h-2.5 w-2.5 relative"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span><span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span></span>
                     </h6>
-                    <p class="text-[11px] text-slate-500 font-medium tracking-wide">Putar semua kamera serentak (7.5 Detik)</p>
+                    <p class="text-[11px] text-slate-500 font-medium tracking-wide">Play All Cameras Together (7.5 Second)</p>
                 </div>
             </div>
 
             <div class="flex items-center gap-3 mt-4 md:mt-0 bg-slate-50 dark:bg-slate-900 p-2 px-4 rounded-lg border border-slate-100 dark:border-slate-800">
                 <label class="text-xs font-bold text-slate-500 uppercase flex items-center gap-1">
                     <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    Jarak Frame:
+                    Frame Distance
                 </label>
                 <select wire:model.live="frame_interval" class="f-input !py-1.5 !px-2 !w-auto !border-none !shadow-none !bg-transparent text-sm font-bold text-slate-700 dark:text-slate-200 cursor-pointer">
-                    <option value="all">Realtime (Semua Frame)</option>
-                    <option value="hourly">Per 1 Jam</option>
-                    <option value="half_day">Per 12 Jam (AM / PM)</option>
-                    <option value="daily">Per 1 Hari</option>
+                    <option value="all">Realtime (All Frame)</option>
+                    <option value="hourly">Per 1 Hour</option>
+                    <option value="half_day">Per 12 Hour</option>
+                    <option value="daily">Per 1 Day</option>
                 </select>
             </div>
 
@@ -228,7 +228,7 @@
 
                     <div class="cam-footer">
                         <div class="footer-row border-b border-gray-100 dark:border-slate-700 pb-1.5">
-                            <div class="info-label">Frame Time:</div>
+                            <div class="info-label">Updated Frame At = </div>
                             <div class="info-value text-[10px]">
                                 @if($totalImages > 0)
                                     @foreach($images as $index => $img)
@@ -241,10 +241,10 @@
                                 @endif
                             </div>
                         </div>
-                        <div class="footer-row">
-                            <div class="info-label">Frame Ditemukan:</div>
-                            <div class="info-value">{{ $totalImages }} Foto</div>
-                        </div>
+                        {{-- <div class="footer-row">
+                            <div class="info-label">Frame Found:</div>
+                            <div class="info-value">{{ $totalImages }} Photos</div>
+                        </div> --}}
                     </div>
                 </div>
             @endforeach

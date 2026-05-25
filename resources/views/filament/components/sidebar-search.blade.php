@@ -22,7 +22,7 @@
                     group.style.display = hasVisible ? '' : 'none';
                 });
             "
-            placeholder="Cari Menu..."
+            placeholder="Find the menu.."
             style="width: 100%; background-color: #06285c; border: 1px solid #1e3a8a; border-radius: 8px; padding: 10px 10px 10px 36px; color: #ffffff; font-size: 13px; font-family: 'Poppins', sans-serif; outline: none; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);"
             onfocus="this.style.borderColor='#3b82f6'; this.style.backgroundColor='#031E49'; this.style.boxShadow='0 0 0 3px rgba(59,130,246,0.2)';"
             onblur="this.style.borderColor='#1e3a8a'; this.style.backgroundColor='#06285c'; this.style.boxShadow='inset 0 2px 4px rgba(0,0,0,0.1)';"

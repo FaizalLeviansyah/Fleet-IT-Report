@@ -28,7 +28,7 @@ class IncidentReportResource extends Resource
         return ['ticket_number', 'vessel_name', 'category', 'status'];
     }
 
-    protected static ?string $navigationLabel = 'ITSM / Insiden';
+    protected static ?string $navigationLabel = 'ITSM / Insident';
     protected static ?string $navigationGroup = 'IT Management';
 
     public static function form(Form $form): Form

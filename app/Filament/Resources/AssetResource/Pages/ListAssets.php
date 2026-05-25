@@ -14,7 +14,7 @@ class ListAssets extends ListRecords
     {
         return [
             \Filament\Actions\CreateAction::make()
-                ->label('Tambah Aset')
+                ->label('Tambah Assets')
                 ->icon('heroicon-o-plus-circle')
                 ->color('success'),
         ];

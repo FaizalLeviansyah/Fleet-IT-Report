@@ -12,7 +12,7 @@ class LiveMonitoring extends Page
     protected static ?string $navigationIcon = 'heroicon-o-video-camera';
     protected static ?string $navigationGroup = 'IT Management';
     protected static ?int $navigationSort = 10;
-    protected static ?string $title = 'Live CCTV Monitoring';
+    protected static ?string $title = 'CCTV Monitoring';
     protected static string $view = 'filament.pages.live-monitoring';
 
     public $selected_vessel = '';
