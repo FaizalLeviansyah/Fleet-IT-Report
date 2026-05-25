@@ -21,27 +21,19 @@ class LiveMonitoring extends Page
     public $start_time = '';
     public $end_time = '';
 
+    // 🔥 FITUR BARU: PILIHAN INTERVAL FRAME SLIDESHOW
+    public $frame_interval = 'all';
+
     public $last_sync = '-';
     public $total_active_cams = 0;
 
     public $channel_labels = [
-        'AJG' => 'AJG (Anjungan)',
-        'BRT' => 'BRT (Buritan)',
-        'CCR' => 'CCR (Cargo Control Room)',
-        'ECR' => 'ECR (Engine Control Room)',
-        'WKN' => 'WKN (Wing Kanan)',
-        'WKR' => 'WKR (Wing Kiri)',
-    ];
-
-    // 🔥 FITUR BARU: SOFTWARE REMAPPER (Memperbaiki kabel DVR yang tertukar di Kapal)
-    public $camera_remapper = [
-        'MT. Queen Protocol' => [
-            // Format: 'Label_Dari_Python' => 'Seharusnya_Tampil_Sebagai_Apa'
-            'WKN' => 'BRT', // Python kirim WKN, tapi kita tahu fisiknya itu Buritan
-            'BRT' => 'WKN', // Kita tukar posisinya
-        ],
-        // Tambahkan kapal lain di sini jika ada yang tertukar kabelnya
-        // 'MT. Soviana' => ['AJG' => 'CCR', 'CCR' => 'AJG'],
+        'AJG' => 'CCTV 1 (Cam A)',
+        'BRT' => 'CCTV 2 (Cam B)',
+        'CCR' => 'CCTV 3 (Cam C)',
+        'ECR' => 'CCTV 4 (Cam D)',
+        'WKN' => 'CCTV 5 (Cam E)',
+        'WKR' => 'CCTV 6 (Cam F)',
     ];
 
     public function mount()
@@ -62,6 +54,18 @@ class LiveMonitoring extends Page
                 Notification::make()->title('Kapal Offline 🔴')->body("Belum ada data untuk {$value}.")->danger()->send();
             }
         }
+    }
+
+    // Notifikasi saat Transisi / Interval diubah
+    public function updatedFrameInterval($value)
+    {
+        $labels = [
+            'all' => 'Semua Frame (Realtime)',
+            'hourly' => 'Per 1 Jam',
+            'half_day' => 'Per 12 Jam (AM/PM)',
+            'daily' => 'Per Hari'
+        ];
+        Notification::make()->title('Kecepatan Frame Diubah')->body("Menampilkan interval: " . $labels[$value])->success()->send();
     }
 
     public function applyFilter()
@@ -93,26 +97,32 @@ class LiveMonitoring extends Page
             ->orderBy('captured_at', 'asc')
             ->get();
 
+        // 🔥 LOGIKA PENYARINGAN INTERVAL (JAM/HARI)
+        if ($this->frame_interval !== 'all') {
+            $raw_data = $raw_data->groupBy(function($item) {
+                $time = Carbon::parse($item->captured_at);
+                $intervalKey = $time->format('Y-m-d H'); // default Per Jam
+                if ($this->frame_interval === 'half_day') $intervalKey = $time->format('Y-m-d A'); // AM / PM
+                if ($this->frame_interval === 'daily') $intervalKey = $time->format('Y-m-d'); // Per Hari
+
+                // Pisahkan berdasarkan Channel agar kamera tidak saling tertukar
+                return $item->channel . '_' . $intervalKey;
+            })->map(function($group) {
+                return $group->first(); // Ambil 1 foto pertama dari rentang waktu tersebut
+            })->values();
+        }
+
         $latest = DB::table('cctv_reports')->where('vessel_name', $this->selected_vessel)->orderBy('captured_at', 'desc')->first();
-        $this->last_sync = $latest ? Carbon::parse($latest->captured_at)->format('d-m-Y H:i') : 'Tidak Ada Data';
+        $this->last_sync = $latest ? Carbon::parse($latest->captured_at)->format('d M Y - h:i A') : 'Tidak Ada Data';
         $this->total_active_cams = $raw_data->unique('channel')->count();
 
-        // LOGIKA PENUKARAN (REMAPPER) EKSKUSI
         $grouped = $raw_data->groupBy('channel');
         foreach ($grouped as $channel => $data) {
-
-            // Cek apakah kapal ini punya aturan remapper?
-            $actual_channel = $channel;
-            if (isset($this->camera_remapper[$this->selected_vessel][$channel])) {
-                $actual_channel = $this->camera_remapper[$this->selected_vessel][$channel];
-            }
-
-            if (in_array($actual_channel, $standard_channels)) {
-                // Jika data sudah ada, gabungkan (merge) untuk jaga-jaga
-                $data_per_channel[$actual_channel] = $data_per_channel[$actual_channel]->merge($data)->sortBy('captured_at')->values();
+            if (in_array($channel, $standard_channels)) {
+                $data_per_channel[$channel] = $data->sortBy('captured_at')->values();
             } else {
-                $standard_channels[] = $actual_channel;
-                $data_per_channel[$actual_channel] = $data->sortBy('captured_at')->values();
+                $standard_channels[] = $channel;
+                $data_per_channel[$channel] = $data->sortBy('captured_at')->values();
             }
         }
 
