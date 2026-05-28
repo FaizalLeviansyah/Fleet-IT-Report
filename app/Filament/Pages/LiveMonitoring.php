@@ -10,8 +10,8 @@ use Carbon\Carbon;
 class LiveMonitoring extends Page
 {
     protected static ?string $navigationIcon = 'heroicon-o-video-camera';
-    protected static ?string $navigationGroup = 'IT Management';
-    protected static ?int $navigationSort = 10;
+    protected static ?string $navigationGroup = 'CCTV Monitoring';
+    protected static ?int $navigationSort = 1;
     protected static ?string $title = 'CCTV Monitoring';
     protected static string $view = 'filament.pages.live-monitoring';
 
