@@ -13,10 +13,11 @@ class ListPersonalItReports extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            // Pop-Up akan muncul DI TENGAH (karena tidak ada slideOver)
-            // '4xl' adalah ukurannya agar form 2 kolom tidak berantakan
-            \Filament\Actions\CreateAction::make()
-                ->modalWidth('4xl'),
+            Actions\CreateAction::make()
+                ->modalWidth('7xl')
+                ->label('Buat Laporan Baru')
+                ->icon('heroicon-o-document-plus')
+                ->successNotificationTitle('Laporan Berhasil Disimpan! 🟢'),
         ];
     }
 }
