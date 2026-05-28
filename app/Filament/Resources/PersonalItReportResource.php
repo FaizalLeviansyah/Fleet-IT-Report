@@ -27,19 +27,18 @@ class PersonalItReportResource extends Resource
     {
         return $form
             ->schema([
+                // 🚨 PERBAIKAN: MENGGUNAKAN ALPINE.JS NATIVE AGAR JALAN DI DALAM MODAL 🚨
                 Forms\Components\Placeholder::make('ux_and_logic')
                     ->hiddenLabel()
-                    ->content(new HtmlString("
+                    ->content(new HtmlString(<<<'HTML'
                         <style>
                             .glass-repeater .fi-rep-item {
                                 background: rgba(239, 246, 255, 0.4) !important;
                                 backdrop-filter: blur(12px) !important;
-                                -webkit-backdrop-filter: blur(12px) !important;
                                 border: 1px solid rgba(37, 99, 235, 0.1) !important;
                                 border-left: 6px solid #2563EB !important;
                                 border-radius: 12px !important;
                                 box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05) !important;
-                                overflow: hidden;
                                 transition: all 0.3s ease;
                             }
                             .glass-repeater .fi-rep-item-header {
@@ -49,7 +48,6 @@ class PersonalItReportResource extends Resource
                             }
                             .dark .glass-repeater .fi-rep-item {
                                 background: rgba(15, 23, 42, 0.6) !important;
-                                border-color: rgba(56, 189, 248, 0.1) !important;
                                 border-left-color: #38BDF8 !important;
                             }
                             .dark .glass-repeater .fi-rep-item-header {
@@ -57,31 +55,63 @@ class PersonalItReportResource extends Resource
                             }
                         </style>
 
-                        <div x-data=\"{
-                            init() {
-                                window.addEventListener('swal-confirm-late-turnoff', (e) => {
-                                    Swal.fire({
-                                        title: 'Kembalikan ke Minggu Ini?',
-                                        text: 'Reset tanggal ke minggu ini atau biarkan tetap di minggu lalu?',
-                                        icon: 'warning',
-                                        showCancelButton: true,
-                                        confirmButtonColor: '#3085d6',
-                                        cancelButtonColor: '#d33',
-                                        confirmButtonText: 'Ya, Reset ke Minggu Ini',
-                                        cancelButtonText: 'Batal'
-                                    }).then((result) => {
-                                        if (result.isConfirmed) {
-                                            \$wire.set('data.start_date', '".now()->startOfWeek()->format('Y-m-d')."');
-                                            \$wire.set('data.end_date', '".now()->startOfWeek()->addDays(4)->format('Y-m-d')."');
-                                            \$wire.set('data.is_late', false);
-                                        } else {
-                                            \$wire.set('data.is_late', true);
-                                        }
-                                    });
+                        <div x-data
+                             x-on:swal-confirm-late-turnoff.window="
+                                let evtData = $event.detail;
+                                if (Array.isArray(evtData)) evtData = evtData[0];
+                                if (!evtData || !evtData.statePath) return;
+
+                                let statePath = evtData.statePath;
+                                let livewireId = evtData.livewireId;
+                                let basePath = statePath.substring(0, statePath.lastIndexOf('.'));
+
+                                Swal.fire({
+                                    title: 'Kembalikan ke Minggu Ini?',
+                                    text: 'Reset tanggal ke minggu ini atau biarkan tetap di minggu lalu?',
+                                    icon: 'warning',
+                                    showCancelButton: true,
+                                    confirmButtonColor: '#3085d6',
+                                    cancelButtonColor: '#d33',
+                                    confirmButtonText: 'Ya, Reset',
+                                    cancelButtonText: 'Tetap Minggu Lalu'
+                                }).then((result) => {
+                                    let component = window.Livewire.find(livewireId);
+                                    if (result.isConfirmed) {
+                                        component.$set(basePath + '.force_reset_trigger', Date.now());
+                                    } else {
+                                        component.$set(statePath, true);
+                                    }
                                 });
-                            }
-                        }\"></div>
-                    ")),
+                             "
+                        ></div>
+                    HTML)),
+
+                Forms\Components\Hidden::make('force_reset_trigger')
+                    ->live()
+                    ->afterStateUpdated(function (Set $set, Get $get) {
+                        $set('is_late', false);
+                        $newStart = Carbon::now()->startOfWeek();
+                        $set('start_date', $newStart->format('Y-m-d'));
+                        $set('end_date', $newStart->copy()->addDays(4)->format('Y-m-d'));
+
+                        // Reset Actual Tasks
+                        $actualTasks = $get('actualTasks') ?? [];
+                        $daysMap = ['Senin'=>0, 'Selasa'=>1, 'Rabu'=>2, 'Kamis'=>3, 'Jumat'=>4];
+                        foreach($actualTasks as $k => $t) {
+                            if(isset($daysMap[$t['day']])) $actualTasks[$k]['task_date'] = $newStart->copy()->addDays($daysMap[$t['day']])->format('Y-m-d');
+                        }
+                        $set('actualTasks', $actualTasks);
+
+                        // Reset Planned Tasks
+                        $plannedTasks = $get('plannedTasks') ?? [];
+                        $planDaysMap = ['Senin'=>7, 'Selasa'=>8, 'Rabu'=>9, 'Kamis'=>10, 'Jumat'=>11];
+                        foreach($plannedTasks as $k => $t) {
+                            if(isset($planDaysMap[$t['day']])) $plannedTasks[$k]['deadline'] = $newStart->copy()->addDays($planDaysMap[$t['day']])->format('Y-m-d');
+                        }
+                        $set('plannedTasks', $plannedTasks);
+
+                        Notification::make()->title('Jadwal Direset ke Minggu Ini')->success()->send();
+                    }),
 
                 Forms\Components\Section::make('Periode Laporan & Status')
                     ->description('Waktu terkunci pada Senin-Jumat minggu ini. Gunakan toggle merah jika terlambat.')
@@ -111,11 +141,11 @@ class PersonalItReportResource extends Resource
                             ->onColor('danger')
                             ->live()
                             ->dehydrated(false)
-                            ->afterStateUpdated(function ($state, Get $get, \Livewire\Component $livewire) {
+                            ->afterStateUpdated(function ($state, Get $get, \Livewire\Component $livewire, Forms\Components\Toggle $component) {
                                 if (!$state) {
                                     $startDate = Carbon::parse($get('start_date'));
                                     if ($startDate->isBefore(Carbon::now()->startOfWeek())) {
-                                        $livewire->dispatch('swal-confirm-late-turnoff');
+                                        $livewire->dispatch('swal-confirm-late-turnoff', statePath: $component->getStatePath(), livewireId: $livewire->getId());
                                     }
                                 } else {
                                     Notification::make()->title('Kunci Terbuka 🔓')->warning()->send();
@@ -142,10 +172,17 @@ class PersonalItReportResource extends Resource
                                             $actualTasks = $get('actualTasks') ?? [];
                                             $daysMap = ['Senin'=>0, 'Selasa'=>1, 'Rabu'=>2, 'Kamis'=>3, 'Jumat'=>4];
                                             foreach($actualTasks as $k => $t) {
-                                                // 🚨 MENGUBAH DATE MENJADI TASK_DATE SESUAI DATABASE 🚨
                                                 if(isset($daysMap[$t['day']])) $actualTasks[$k]['task_date'] = $date->copy()->addDays($daysMap[$t['day']])->format('Y-m-d');
                                             }
                                             $set('actualTasks', $actualTasks);
+
+                                            $plannedTasks = $get('plannedTasks') ?? [];
+                                            $planDaysMap = ['Senin'=>7, 'Selasa'=>8, 'Rabu'=>9, 'Kamis'=>10, 'Jumat'=>11];
+                                            foreach($plannedTasks as $k => $t) {
+                                                if(isset($planDaysMap[$t['day']])) $plannedTasks[$k]['deadline'] = $date->copy()->addDays($planDaysMap[$t['day']])->format('Y-m-d');
+                                            }
+                                            $set('plannedTasks', $plannedTasks);
+
                                             Notification::make()->title('Periode Valid')->success()->send();
                                         }
                                     }
@@ -159,7 +196,6 @@ class PersonalItReportResource extends Resource
                         ]),
                     ])->columns(2),
 
-                // --- SECTION 2: ACTUAL TASKS ---
                 Forms\Components\Section::make('Pekerjaan Yang Dilakukan (Actual Tasks)')
                     ->description('Bisa dikosongkan (Draft) untuk dicicil besok hari.')
                     ->schema([
@@ -169,7 +205,7 @@ class PersonalItReportResource extends Resource
                             ->label('')
                             ->schema([
                                 Forms\Components\Hidden::make('day'),
-                                Forms\Components\Hidden::make('task_date'), // 👈 MENGGUNAKAN TASK_DATE
+                                Forms\Components\Hidden::make('task_date'),
 
                                 Forms\Components\Repeater::make('tasks')
                                     ->label('Daftar Tugas')
@@ -215,9 +251,6 @@ class PersonalItReportResource extends Resource
                             ->columnSpanFull()
                     ]),
 
-                // --- SECTION 3: PLANNED TASKS ---
-                // --- SECTION 3: PLANNED TASKS ---
-                // --- SECTION 3: PLANNED TASKS ---
                 Forms\Components\Section::make('Rencana Pekerjaan Minggu Depan')
                     ->schema([
                         Forms\Components\Repeater::make('plannedTasks')
@@ -226,8 +259,6 @@ class PersonalItReportResource extends Resource
                             ->label('')
                             ->schema([
                                 Forms\Components\Hidden::make('day'),
-
-                                // 🚨 PERBAIKAN: SESUAIKAN DENGAN NAMA KOLOM DI DATABASE (deadline) 🚨
                                 Forms\Components\Hidden::make('deadline'),
 
                                 Forms\Components\Repeater::make('tasks')
@@ -241,7 +272,6 @@ class PersonalItReportResource extends Resource
                                     ->defaultItems(1)
                                     ->addActionLabel('+ Add More Plan')
                             ])
-                            // 🚨 PERBAIKAN: UBAH task_date MENJADI deadline DI SINI JUGA 🚨
                             ->default([
                                 ['day' => 'Senin', 'deadline' => Carbon::now()->startOfWeek()->addDays(7)->format('Y-m-d'), 'tasks' => [['task_description' => null]]],
                                 ['day' => 'Selasa', 'deadline' => Carbon::now()->startOfWeek()->addDays(8)->format('Y-m-d'), 'tasks' => [['task_description' => null]]],
@@ -263,7 +293,6 @@ class PersonalItReportResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Dibuat Pada')
-                    // 👇 FORMAT BARU: Zona Jakarta + Jam AM/PM 👇
                     ->formatStateUsing(fn ($state) => \Carbon\Carbon::parse($state)->timezone('Asia/Jakarta')->translatedFormat('l, d M Y - h:i A'))
                     ->badge()
                     ->color('info')
@@ -286,6 +315,10 @@ class PersonalItReportResource extends Resource
             ])
             ->bulkActions([
                 Tables\Actions\DeleteBulkAction::make(),
+                Tables\Actions\ExportBulkAction::make()
+                    ->exporter(\App\Filament\Exports\PersonalItReportExporter::class)
+                    ->label('Export to Excel (CSV)')
+                    ->icon('heroicon-o-document-arrow-down')
             ]);
     }
 
