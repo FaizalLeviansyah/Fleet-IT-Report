@@ -216,6 +216,8 @@ class PersonalItReportResource extends Resource
                     ]),
 
                 // --- SECTION 3: PLANNED TASKS ---
+                // --- SECTION 3: PLANNED TASKS ---
+                // --- SECTION 3: PLANNED TASKS ---
                 Forms\Components\Section::make('Rencana Pekerjaan Minggu Depan')
                     ->schema([
                         Forms\Components\Repeater::make('plannedTasks')
@@ -224,7 +226,9 @@ class PersonalItReportResource extends Resource
                             ->label('')
                             ->schema([
                                 Forms\Components\Hidden::make('day'),
-                                Forms\Components\Hidden::make('task_date'), // 👈 MENGGUNAKAN TASK_DATE
+
+                                // 🚨 PERBAIKAN: SESUAIKAN DENGAN NAMA KOLOM DI DATABASE (deadline) 🚨
+                                Forms\Components\Hidden::make('deadline'),
 
                                 Forms\Components\Repeater::make('tasks')
                                     ->label('Daftar Rencana')
@@ -237,12 +241,13 @@ class PersonalItReportResource extends Resource
                                     ->defaultItems(1)
                                     ->addActionLabel('+ Add More Plan')
                             ])
+                            // 🚨 PERBAIKAN: UBAH task_date MENJADI deadline DI SINI JUGA 🚨
                             ->default([
-                                ['day' => 'Senin', 'task_date' => Carbon::now()->startOfWeek()->addDays(7)->format('Y-m-d'), 'tasks' => [['task_description' => null]]],
-                                ['day' => 'Selasa', 'task_date' => Carbon::now()->startOfWeek()->addDays(8)->format('Y-m-d'), 'tasks' => [['task_description' => null]]],
-                                ['day' => 'Rabu', 'task_date' => Carbon::now()->startOfWeek()->addDays(9)->format('Y-m-d'), 'tasks' => [['task_description' => null]]],
-                                ['day' => 'Kamis', 'task_date' => Carbon::now()->startOfWeek()->addDays(10)->format('Y-m-d'), 'tasks' => [['task_description' => null]]],
-                                ['day' => 'Jumat', 'task_date' => Carbon::now()->startOfWeek()->addDays(11)->format('Y-m-d'), 'tasks' => [['task_description' => null]]],
+                                ['day' => 'Senin', 'deadline' => Carbon::now()->startOfWeek()->addDays(7)->format('Y-m-d'), 'tasks' => [['task_description' => null]]],
+                                ['day' => 'Selasa', 'deadline' => Carbon::now()->startOfWeek()->addDays(8)->format('Y-m-d'), 'tasks' => [['task_description' => null]]],
+                                ['day' => 'Rabu', 'deadline' => Carbon::now()->startOfWeek()->addDays(9)->format('Y-m-d'), 'tasks' => [['task_description' => null]]],
+                                ['day' => 'Kamis', 'deadline' => Carbon::now()->startOfWeek()->addDays(10)->format('Y-m-d'), 'tasks' => [['task_description' => null]]],
+                                ['day' => 'Jumat', 'deadline' => Carbon::now()->startOfWeek()->addDays(11)->format('Y-m-d'), 'tasks' => [['task_description' => null]]],
                             ])
                             ->addable(false)->deletable(false)
                             ->itemLabel(fn (array $state): ?string => "🎯 RENCANA " . strtoupper($state['day'] ?? ''))
@@ -258,7 +263,8 @@ class PersonalItReportResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Dibuat Pada')
-                    ->formatStateUsing(fn ($state) => \Carbon\Carbon::parse($state)->translatedFormat('l, d M Y'))
+                    // 👇 FORMAT BARU: Zona Jakarta + Jam AM/PM 👇
+                    ->formatStateUsing(fn ($state) => \Carbon\Carbon::parse($state)->timezone('Asia/Jakarta')->translatedFormat('l, d M Y - h:i A'))
                     ->badge()
                     ->color('info')
                     ->sortable(),
