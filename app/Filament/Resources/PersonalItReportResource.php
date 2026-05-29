@@ -27,7 +27,6 @@ class PersonalItReportResource extends Resource
     {
         return $form
             ->schema([
-                // 🚨 PERBAIKAN: MENGGUNAKAN ALPINE.JS NATIVE AGAR JALAN DI DALAM MODAL 🚨
                 Forms\Components\Placeholder::make('ux_and_logic')
                     ->hiddenLabel()
                     ->content(new HtmlString(<<<'HTML'
@@ -86,7 +85,9 @@ class PersonalItReportResource extends Resource
                         ></div>
                     HTML)),
 
+                // 🚨 PERBAIKAN: Tambahkan dehydrated(false) agar tidak disimpan ke database 🚨
                 Forms\Components\Hidden::make('force_reset_trigger')
+                    ->dehydrated(false)
                     ->live()
                     ->afterStateUpdated(function (Set $set, Get $get) {
                         $set('is_late', false);
@@ -94,7 +95,6 @@ class PersonalItReportResource extends Resource
                         $set('start_date', $newStart->format('Y-m-d'));
                         $set('end_date', $newStart->copy()->addDays(4)->format('Y-m-d'));
 
-                        // Reset Actual Tasks
                         $actualTasks = $get('actualTasks') ?? [];
                         $daysMap = ['Senin'=>0, 'Selasa'=>1, 'Rabu'=>2, 'Kamis'=>3, 'Jumat'=>4];
                         foreach($actualTasks as $k => $t) {
@@ -102,7 +102,6 @@ class PersonalItReportResource extends Resource
                         }
                         $set('actualTasks', $actualTasks);
 
-                        // Reset Planned Tasks
                         $plannedTasks = $get('plannedTasks') ?? [];
                         $planDaysMap = ['Senin'=>7, 'Selasa'=>8, 'Rabu'=>9, 'Kamis'=>10, 'Jumat'=>11];
                         foreach($plannedTasks as $k => $t) {
@@ -264,23 +263,46 @@ class PersonalItReportResource extends Resource
                                 Forms\Components\Repeater::make('tasks')
                                     ->label('Daftar Rencana')
                                     ->schema([
-                                        Forms\Components\Textarea::make('task_description')
-                                            ->label('Rencana Pekerjaan')
-                                            ->placeholder('Rencana minggu depan...')
-                                            ->rows(2)
+                                        Forms\Components\Grid::make(12)->schema([
+                                            Forms\Components\Textarea::make('plan_name')
+                                                ->label('Rencana Pekerjaan')
+                                                ->placeholder('Rencana minggu depan...')
+                                                ->rows(2)
+                                                ->columnSpan(4),
+
+                                            Forms\Components\TextInput::make('target')
+                                                ->label('Target')
+                                                ->placeholder('Target penyelesaian...')
+                                                ->columnSpan(3),
+
+                                            Forms\Components\Select::make('priority')
+                                                ->label('Prioritas')
+                                                ->options([
+                                                    'High' => '🔴 High',
+                                                    'Medium' => '🟡 Medium',
+                                                    'Low' => '🟢 Low',
+                                                ])
+                                                ->default('Medium')
+                                                ->columnSpan(2),
+
+                                            Forms\Components\Textarea::make('notes')
+                                                ->label('Catatan')
+                                                ->rows(2)
+                                                ->columnSpan(3),
+                                        ])
                                     ])
                                     ->defaultItems(1)
                                     ->addActionLabel('+ Add More Plan')
                             ])
                             ->default([
-                                ['day' => 'Senin', 'deadline' => Carbon::now()->startOfWeek()->addDays(7)->format('Y-m-d'), 'tasks' => [['task_description' => null]]],
-                                ['day' => 'Selasa', 'deadline' => Carbon::now()->startOfWeek()->addDays(8)->format('Y-m-d'), 'tasks' => [['task_description' => null]]],
-                                ['day' => 'Rabu', 'deadline' => Carbon::now()->startOfWeek()->addDays(9)->format('Y-m-d'), 'tasks' => [['task_description' => null]]],
-                                ['day' => 'Kamis', 'deadline' => Carbon::now()->startOfWeek()->addDays(10)->format('Y-m-d'), 'tasks' => [['task_description' => null]]],
-                                ['day' => 'Jumat', 'deadline' => Carbon::now()->startOfWeek()->addDays(11)->format('Y-m-d'), 'tasks' => [['task_description' => null]]],
+                                ['day' => 'Senin', 'deadline' => Carbon::now()->startOfWeek()->addDays(7)->format('Y-m-d'), 'tasks' => [['plan_name' => null, 'target' => null, 'priority' => 'Medium', 'notes' => null]]],
+                                ['day' => 'Selasa', 'deadline' => Carbon::now()->startOfWeek()->addDays(8)->format('Y-m-d'), 'tasks' => [['plan_name' => null, 'target' => null, 'priority' => 'Medium', 'notes' => null]]],
+                                ['day' => 'Rabu', 'deadline' => Carbon::now()->startOfWeek()->addDays(9)->format('Y-m-d'), 'tasks' => [['plan_name' => null, 'target' => null, 'priority' => 'Medium', 'notes' => null]]],
+                                ['day' => 'Kamis', 'deadline' => Carbon::now()->startOfWeek()->addDays(10)->format('Y-m-d'), 'tasks' => [['plan_name' => null, 'target' => null, 'priority' => 'Medium', 'notes' => null]]],
+                                ['day' => 'Jumat', 'deadline' => Carbon::now()->startOfWeek()->addDays(11)->format('Y-m-d'), 'tasks' => [['plan_name' => null, 'target' => null, 'priority' => 'Medium', 'notes' => null]]],
                             ])
                             ->addable(false)->deletable(false)
-                            ->itemLabel(fn (array $state): ?string => "🎯 RENCANA " . strtoupper($state['day'] ?? ''))
+                            ->itemLabel(fn (array $state): ?string => "🎯 RENCANA " . strtoupper($state['day'] ?? '') . " - " . (\Carbon\Carbon::parse($state['deadline'] ?? null)->translatedFormat('d M Y')))
                             ->collapsible()
                             ->columnSpanFull()
                     ]),
