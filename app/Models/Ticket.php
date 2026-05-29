@@ -33,17 +33,24 @@ class Ticket extends Model
     // ========================================================
     public function requester()
     {
-        return $this->belongsTo(User::class, 'requester_id');
+        // Parameter ke-3 adalah 'owner_key' di tabel referensi (tbl_employee)
+        return $this->belongsTo(User::class, 'requester_id', 'employee_id');
     }
 
     public function assignedTo()
     {
-        return $this->belongsTo(User::class, 'assigned_to_id');
+        return $this->belongsTo(User::class, 'assigned_to_id', 'employee_id');
     }
 
     public function observer()
     {
-        return $this->belongsTo(User::class, 'observer_id');
+        return $this->belongsTo(User::class, 'observer_id', 'employee_id');
+    }
+
+    // Relasi ke Solusi (1 Tiket hanya punya 1 Solusi Aktif)
+    public function solution()
+    {
+        return $this->hasOne(TicketSolution::class, 'ticket_id');
     }
 
     // ========================================================

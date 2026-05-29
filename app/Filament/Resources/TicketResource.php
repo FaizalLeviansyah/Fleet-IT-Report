@@ -267,6 +267,13 @@ class TicketResource extends Resource
                 ]),
             ]);
     }
+    public static function getRelations(): array
+    {
+        return [
+            \App\Filament\Resources\TicketResource\RelationManagers\FollowupsRelationManager::class,
+            \App\Filament\Resources\TicketResource\RelationManagers\TasksRelationManager::class,
+        ];
+    }
 
     public static function getPages(): array
     {
