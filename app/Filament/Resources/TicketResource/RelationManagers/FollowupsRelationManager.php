@@ -65,11 +65,12 @@ class FollowupsRelationManager extends RelationManager
             ])
             ->defaultSort('created_at', 'desc')
             ->headerActions([
-                Tables\Actions\CreateAction::make()->label('Tambah Balasan')->icon('heroicon-o-plus'),
+                Tables\Actions\CreateAction::make()->label('Tambah Balasan')->icon('heroicon-o-plus')
+                    ->successNotificationTitle('Komentar berhasil dikirim!'),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\EditAction::make()->successNotificationTitle('Komentar diperbarui!'),
+                Tables\Actions\DeleteAction::make()->successNotificationTitle('Komentar dihapus!'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

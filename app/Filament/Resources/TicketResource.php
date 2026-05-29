@@ -126,12 +126,11 @@ class TicketResource extends Resource
 
                 ])->columnSpan(['lg' => 2]),
 
-                // --- GROUP KANAN (LEBAR 1 KOLOM) ---
                 Forms\Components\Group::make()->schema([
 
                     Forms\Components\Section::make('Aktor (Pelaku)')
                         ->icon('heroicon-o-users')
-                        ->extraAttributes(['class' => 'panel-glass'])
+                        ->extraAttributes(['class' => 'panel-glass', 'style' => 'position: relative; z-index: 30;'])
                         ->schema([
                             Forms\Components\Hidden::make('requester_id')
                                 ->default(fn () => auth()->id() ?? 1),
@@ -146,7 +145,12 @@ class TicketResource extends Resource
 
                             Forms\Components\Select::make('assigned_to_id')
                                 ->label('Ditugaskan (Teknisi)')
-                                ->options(User::pluck('full_name', 'employee_id'))
+                                // 👇 KUNCI HANYA UNTUK 3 ORANG INI 👇
+                                ->options(User::whereIn('full_name', [
+                                    'FAIZAL LEVIANSYAH',
+                                    'FARHAN ARIF INDIARTO',
+                                    'HENDRI SETIO PRAKOSO'
+                                ])->pluck('full_name', 'employee_id'))
                                 ->searchable()
                                 ->prefixIcon('heroicon-m-wrench-screwdriver'),
 

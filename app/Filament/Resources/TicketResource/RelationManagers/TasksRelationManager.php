@@ -54,51 +54,32 @@ class TasksRelationManager extends RelationManager
 
     public function table(Table $table): Table
     {
+        // Variabel untuk mengecek apakah user login adalah tim IT
+        $isIT = in_array(auth()->user()->full_name, [
+            'FAIZAL LEVIANSYAH', 'FARHAN ARIF INDIARTO', 'HENDRI SETIO PRAKOSO'
+        ]);
+
         return $table
             ->recordTitleAttribute('content')
             ->columns([
-                Tables\Columns\TextColumn::make('user.full_name')
-                    ->label('Teknisi')
-                    ->icon('heroicon-m-wrench-screwdriver')
-                    ->weight('bold'),
-
-                Tables\Columns\TextColumn::make('content')
-                    ->label('Pekerjaan')
-                    ->html()
-                    ->limit(50),
-
-                Tables\Columns\TextColumn::make('actiontime')
-                    ->label('Durasi')
-                    ->formatStateUsing(fn ($state) => $state . ' Menit')
-                    ->badge()
-                    ->color('info'),
-
-                Tables\Columns\BadgeColumn::make('state')
-                    ->label('Status')
-                    ->formatStateUsing(fn (string $state): string => match ($state) {
-                        '1' => 'To Do',
-                        '2' => 'Doing',
-                        '3' => 'Done',
-                        default => 'Unknown',
-                    })
-                    ->color(fn (string $state): string => match ($state) {
-                        '1' => 'danger',
-                        '2' => 'warning',
-                        '3' => 'success',
-                        default => 'gray',
-                    }),
-
-                Tables\Columns\TextColumn::make('created_at')
-                    ->label('Waktu')
-                    ->dateTime('d M Y, H:i'),
+                Tables\Columns\TextColumn::make('user.full_name')->label('Teknisi')->icon('heroicon-m-wrench-screwdriver')->weight('bold'),
+                Tables\Columns\TextColumn::make('content')->label('Pekerjaan')->html()->limit(50),
+                Tables\Columns\TextColumn::make('actiontime')->label('Durasi')->formatStateUsing(fn ($state) => $state . ' Menit')->badge()->color('info'),
+                Tables\Columns\BadgeColumn::make('state')->label('Status')
+                    ->formatStateUsing(fn (string $state): string => match ($state) { '1' => 'To Do', '2' => 'Doing', '3' => 'Done', default => 'Unknown' })
+                    ->color(fn (string $state): string => match ($state) { '1' => 'danger', '2' => 'warning', '3' => 'success', default => 'gray' }),
+                Tables\Columns\TextColumn::make('created_at')->label('Waktu')->dateTime('d M Y, H:i'),
             ])
             ->defaultSort('created_at', 'desc')
             ->headerActions([
-                Tables\Actions\CreateAction::make()->label('Tambah Pekerjaan')->icon('heroicon-o-plus'),
+                // Hanya IT yang bisa melihat tombol ini
+                Tables\Actions\CreateAction::make()->label('Tambah Pekerjaan')->icon('heroicon-o-plus')
+                    ->visible($isIT)
+                    ->successNotificationTitle('Pekerjaan berhasil ditambahkan!'),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\EditAction::make()->visible($isIT)->successNotificationTitle('Pekerjaan diperbarui!'),
+                Tables\Actions\DeleteAction::make()->visible($isIT)->successNotificationTitle('Pekerjaan dihapus!'),
             ]);
     }
 }

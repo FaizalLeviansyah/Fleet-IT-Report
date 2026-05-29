@@ -16,4 +16,10 @@ class EditTicket extends EditRecord
             Actions\DeleteAction::make(),
         ];
     }
+
+    // 👇 INI ADALAH MAGIC TABS ALA ENTERPRISE 👇
+    public function hasCombinedRelationManagerTabsWithContent(): bool
+    {
+        return true;
+    }
 }

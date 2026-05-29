@@ -47,7 +47,23 @@ class Ticket extends Model
         return $this->belongsTo(User::class, 'observer_id', 'employee_id');
     }
 
-    // Relasi ke Solusi (1 Tiket hanya punya 1 Solusi Aktif)
+    // ========================================================
+    // RELASI KE TABEL ANAK (FOLLOWUPS, TASKS, SOLUTION)
+    // ========================================================
+
+    // 1. Relasi ke Followups (Komentar/Tindak Lanjut)
+    public function followups()
+    {
+        return $this->hasMany(TicketFollowup::class, 'ticket_id');
+    }
+
+    // 2. Relasi ke Tasks (Tugas Teknisi)
+    public function tasks()
+    {
+        return $this->hasMany(TicketTask::class, 'ticket_id');
+    }
+
+    // 3. Relasi ke Solusi (Opsi A yang baru saja kita buat)
     public function solution()
     {
         return $this->hasOne(TicketSolution::class, 'ticket_id');
