@@ -70,6 +70,16 @@ class EmployeeResource extends Resource
                         Forms\Components\Toggle::make('is_active')
                             ->label('Status Akun (Aktif/Non-Aktif)')
                             ->default(true),
+                        // Tambahkan ini di dalam array schema() form User Anda
+                        Forms\Components\Section::make('Hak Akses ITSM')
+                            ->description('Atur apakah pegawai ini adalah bagian dari Tim IT.')
+                            ->schema([
+                                Forms\Components\Toggle::make('is_it_team')
+                                    ->label('Jadikan sebagai Teknisi IT (Super Admin ITSM)')
+                                    ->onColor('success')
+                                    ->offColor('gray')
+                                    ->default(false),
+                            ]),
                     ])->columns(2),
             ]);
     }
