@@ -69,6 +69,12 @@ class Ticket extends Model
         return $this->hasOne(TicketSolution::class, 'ticket_id');
     }
 
+    // Relasi ke Problem (Jika tiket ini bagian dari masalah besar)
+    public function problem()
+    {
+        return $this->belongsTo(Problem::class, 'problem_id');
+    }
+
     // ========================================================
     // OTAK GLPI: AUTO-CALCULATE PRIORITY MATRIX
     // ========================================================
