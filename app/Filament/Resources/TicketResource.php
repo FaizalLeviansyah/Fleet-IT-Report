@@ -145,7 +145,6 @@ class TicketResource extends Resource
 
                             Forms\Components\Select::make('assigned_to_id')
                                 ->label('Ditugaskan (Teknisi)')
-                                // 👇 KUNCI HANYA UNTUK 3 ORANG INI 👇
                                 ->options(User::whereIn('full_name', [
                                     'FAIZAL LEVIANSYAH',
                                     'FARHAN ARIF INDIARTO',
@@ -276,6 +275,7 @@ class TicketResource extends Resource
         return [
             \App\Filament\Resources\TicketResource\RelationManagers\FollowupsRelationManager::class,
             \App\Filament\Resources\TicketResource\RelationManagers\TasksRelationManager::class,
+            \App\Filament\Resources\TicketResource\RelationManagers\SolutionRelationManager::class,
         ];
     }
 
