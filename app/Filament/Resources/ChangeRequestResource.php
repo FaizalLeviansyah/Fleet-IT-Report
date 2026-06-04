@@ -1,64 +1,32 @@
 <?php
 
-namespace App\Filament\Resources;
+namespace App\Models;
 
-use App\Filament\Resources\ChangeRequestResource\Pages;
-use App\Filament\Resources\ChangeRequestResource\RelationManagers;
-use App\Models\ChangeRequest;
-use Filament\Forms;
-use Filament\Forms\Form;
-use Filament\Resources\Resource;
-use Filament\Tables;
-use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
-class ChangeRequestResource extends Resource
+class ChangeRequest extends Model
 {
-    protected static ?string $model = ChangeRequest::class;
+    use HasFactory;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    // Buka gembok mass-assignment
+    protected $guarded = [];
 
-    public static function form(Form $form): Form
+    // Cast tanggal agar otomatis menjadi format Carbon datetime
+    protected $casts = [
+        'planned_start_date' => 'datetime',
+        'planned_end_date' => 'datetime',
+    ];
+
+    // Relasi ke Teknisi yang Mengajukan
+    public function requester()
     {
-        return $form
-            ->schema([
-                //
-            ]);
+        return $this->belongsTo(User::class, 'requester_id', 'employee_id');
     }
 
-    public static function table(Table $table): Table
+    // Relasi ke IT Manager yang Menyetujui
+    public function manager()
     {
-        return $table
-            ->columns([
-                //
-            ])
-            ->filters([
-                //
-            ])
-            ->actions([
-                Tables\Actions\EditAction::make(),
-            ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
-            ]);
-    }
-
-    public static function getRelations(): array
-    {
-        return [
-            //
-        ];
-    }
-
-    public static function getPages(): array
-    {
-        return [
-            'index' => Pages\ListChangeRequests::route('/'),
-            'create' => Pages\CreateChangeRequest::route('/create'),
-            'edit' => Pages\EditChangeRequest::route('/{record}/edit'),
-        ];
+        return $this->belongsTo(User::class, 'manager_id', 'employee_id');
     }
 }
