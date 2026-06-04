@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Providers\Filament;
+
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -32,24 +33,24 @@ class AdminPanelProvider extends PanelProvider
             ->login(\App\Filament\Pages\Auth\CustomLogin::class)
             ->spa()
 
-            //👇 WARNA UTAMA TEMA (Kita pakai Biru) 👇
+            //👇 WARNA UTAMA TEMA
             ->colors(['primary' => Color::Blue])
             ->font('Poppins')
             ->brandLogo(fn () => view('filament.components.logo'))
 
-            //👇 LONCENG NOTIFIKASI REAL-TIME (Bubble diaktifkan 30 detik) 👇
+            //👇 LONCENG NOTIFIKASI REAL-TIME
             ->databaseNotifications()
             ->databaseNotificationsPolling('15s')
 
-            // MENU PROFIL KUSTOM (Memicu Modal Edit Profile)
+            // MENU PROFIL KUSTOM
             ->userMenuItems([
                 'profile' => MenuItem::make()
                     ->label('My Profile Settings')
                     ->url('javascript:window.dispatchEvent(new Event(\'open-profile-modal\'))')
                     ->icon('heroicon-o-cog-8-tooth'),
             ])
-            // 👇 HOOK: RENDER MODAL PROFIL & CEK PASSWORD DEFAULT 👇
-            // 👇 HOOK: RENDER MODAL PROFIL & LAYAR KUNCI SEJATI 👇
+
+            // 👇 HOOK: RENDER MODAL PROFIL & LAYAR KUNCI
             ->renderHook('panels::body.end', function (): string {
                 return \Illuminate\Support\Facades\Blade::render('
                     @livewire("edit-profile-modal")
@@ -57,7 +58,7 @@ class AdminPanelProvider extends PanelProvider
                 ');
             })
 
-            // HOOK: LOADING SCREEN UNIVERSAL (INSTAN 0 DETIK!)
+            // HOOK: LOADING SCREEN UNIVERSAL
             ->renderHook(
                 'panels::body.start',
                 fn (): string => '
@@ -98,7 +99,7 @@ class AdminPanelProvider extends PanelProvider
                 '
             )
 
-            // HOOK: CSS & PWA CHROME APP
+            // HOOK: CSS & PWA
             ->renderHook(
                 'panels::head.end',
                 fn (): string => '
@@ -106,8 +107,6 @@ class AdminPanelProvider extends PanelProvider
                 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
                 <style>
-
-
                     /* =========================================================
                        ☀️ LIGHT MODE (Tema Biru Korporat)
                        ========================================================= */
@@ -137,19 +136,16 @@ class AdminPanelProvider extends PanelProvider
                     .fi-global-search-input { background-color: #F3F4F6 !important; border: 1px solid #E5E7EB !important; color: #111827 !important; transition: all 0.3s ease; }
                     .fi-global-search-input:focus { border-color: #2563EB !important; box-shadow: 0 0 0 2px rgba(37,99,235,0.2) !important; background-color: #ffffff !important; }
 
-
                     /* =========================================================
                        🌙 DARK MODE (Tema Elegant Slate)
                        ========================================================= */
                     .dark .fi-sidebar { background-color: #111827 !important; border-right: 1px solid #1F2937 !important; }
                     .dark .fi-sidebar-header { background-color: #030712 !important; border-bottom: 2px solid #38BDF8 !important; box-shadow: 0 4px 15px rgba(0,0,0,0.5) !important; }
 
-                    /* Menu Dark */
                     .dark .fi-sidebar-item-label, .dark .fi-sidebar-item-icon { color: #94A3B8 !important; }
                     .dark .fi-sidebar-item-button:hover { background-color: #1E293B !important; }
                     .dark .fi-sidebar-item-button:hover .fi-sidebar-item-label, .dark .fi-sidebar-item-button:hover .fi-sidebar-item-icon { color: #F8FAFC !important; }
 
-                    /* Menu Aktif Dark */
                     .dark .fi-sidebar-item-active .fi-sidebar-item-button {
                         background: linear-gradient(90deg, #1E293B 0%, #111827 100%) !important;
                         border-left: 4px solid #38BDF8 !important;
@@ -158,24 +154,19 @@ class AdminPanelProvider extends PanelProvider
                     .dark .fi-sidebar-item-active .fi-sidebar-item-label, .dark .fi-sidebar-item-active .fi-sidebar-item-icon { color: #38BDF8 !important; }
                     .dark .fi-sidebar-group-label { color: #475569 !important; text-shadow: none !important; }
 
-                    /* Navbar & Background Area Dark */
                     .dark .fi-topbar { background-color: rgba(15, 23, 42, 0.95) !important; border-bottom: 1px solid #1E293B !important; box-shadow: 0 4px 15px -3px rgba(0,0,0,0.5) !important; }
                     .dark .fi-global-search-input { background-color: #1E293B !important; border-color: #334155 !important; color: #F8FAFC !important; }
                     .dark .fi-global-search-input:focus { border-color: #38BDF8 !important; box-shadow: 0 0 0 2px rgba(56,189,248,0.2) !important; background-color: #0F172A !important; }
-
-                    /* Background Konten & Card Dark Mode */
                     .dark .fi-main { background-color: #0B1120 !important; }
                     .dark .fi-section, .dark .fi-ta-ctn, .dark .fi-wi-stats-overview-stat { background-color: #111827 !important; border: 1px solid #1E293B !important; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3) !important; }
 
-
                     /* =========================================================
-                       🔧 SETTING GLOBAL (Light & Dark)
+                       🔧 SETTING GLOBAL
                        ========================================================= */
                     .fi-topbar > nav { background: transparent !important; gap: 0.5rem !important; align-items: center !important; }
                     .fi-topbar-database-notifications-trigger .fi-icon-btn-badge { display: flex !important; align-items: center; justify-content: center; background-color: #EF4444 !important; color: white !important; font-size: 10px !important; font-weight: 800 !important; width: 18px !important; height: 18px !important; border-radius: 50% !important; top: -5px !important; right: -5px !important; box-shadow: 0 0 10px rgba(239, 68, 68, 0.5) !important; border: 2px solid white !important; }
                     .dark .fi-topbar-database-notifications-trigger .fi-icon-btn-badge { border-color: #0F172A !important; }
 
-                    /* Scrollbar Modern */
                     .fi-sidebar-nav { scrollbar-width: thin; scrollbar-color: transparent transparent; transition: scrollbar-color 0.3s; }
                     .fi-sidebar-nav:hover { scrollbar-color: #1D4ED8 transparent; }
                     .fi-sidebar-nav::-webkit-scrollbar { width: 5px; background-color: transparent; }
@@ -184,32 +175,23 @@ class AdminPanelProvider extends PanelProvider
                     .fi-sidebar-nav:hover::-webkit-scrollbar-thumb { background-color: rgba(37, 99, 235, 0.5); }
                     .fi-sidebar-nav::-webkit-scrollbar-thumb:hover { background-color: rgba(59, 130, 246, 0.8); }
 
-                    /* Tombol Primary Global (Selaras Tema) */
                     .fi-btn-color-primary, .fi-modal-footer .fi-btn { background: linear-gradient(135deg, #2563EB, #1D4ED8) !important; border: none !important; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3) !important; color: white !important; font-weight: 600 !important; letter-spacing: 0.025em !important; transition: all 0.3s !important; }
                     .fi-btn-color-primary:hover, .fi-modal-footer .fi-btn:hover { background: linear-gradient(135deg, #3B82F6, #2563EB) !important; box-shadow: 0 6px 12px -2px rgba(37, 99, 235, 0.4) !important; transform: translateY(-2px) !important; }
 
-                    /* Tombol Primary Dark Mode */
                     .dark .fi-btn-color-primary, .dark .fi-modal-footer .fi-btn { background: linear-gradient(135deg, #3B82F6, #2563EB) !important; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5) !important; }
                     .dark .fi-btn-color-primary:hover, .dark .fi-modal-footer .fi-btn:hover { background: linear-gradient(135deg, #60A5FA, #3B82F6) !important; box-shadow: 0 6px 12px -2px rgba(0, 0, 0, 0.6) !important; }
 
-                    /* Compact Mode Settings */
                     body.is-compact .fi-ta-cell { padding-top: 0.25rem !important; padding-bottom: 0.25rem !important; font-size: 0.8rem !important; }
                     body.is-compact .fi-ta-header { padding: 0.5rem 1rem !important; }
                     body.is-compact .fi-section { padding: 0.75rem !important; }
                     body.is-compact .fi-wi-stats-overview-stat { padding: 0.75rem !important; }
                     body.is-compact .fi-ta-record-checkbox { transform: scale(0.85); }
-
-                    /* Sembunyikan Tema Bawaan */
                     .fi-user-menu .fi-theme-switcher { display: none !important; }
                 </style>'
             )
-
-            // HOOKS LOGO & SEARCH (Seperti sebelumnya)
             ->renderHook('panels::sidebar.nav.start', fn (): string => view('filament.components.sidebar-search')->render())
             ->renderHook('panels::topbar.start', fn (): string => view('filament.components.navbar-search')->render())
             ->renderHook('panels::global-search.after', fn (): string => view('filament.components.topbar-actions')->render())
-
-            // HOOK: INJEKSI FOTO & JABATAN PROFIL
             ->renderHook(
                 'panels::user-menu.profile.before',
                 function (): string {
@@ -232,9 +214,6 @@ class AdminPanelProvider extends PanelProvider
                     </div>';
                 }
             )
-
-            // HOOK: TOMBOL LOGOUT SIDEBAR BAWAH
-            // HOOK: TOMBOL LOGOUT SIDEBAR BAWAH (DENGAN BEZEL TEGAS)
             ->renderHook(
                 'panels::sidebar.footer',
                 fn (): string => '<div style="padding: 1.2rem 1.5rem; background-color: #01122C; border-top: 2px solid #1D4ED8; box-shadow: 0 -4px 15px rgba(0,0,0,0.3); z-index: 20; position: relative;">
@@ -257,14 +236,11 @@ class AdminPanelProvider extends PanelProvider
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([ Pages\Dashboard::class ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
-            ->widgets([
-                \App\Filament\Widgets\DashboardStatsWidget::class,
-                \App\Filament\Widgets\IncidentTrendChart::class,
-                \App\Filament\Widgets\RecentIncidentsWidget::class,
-                \App\Filament\Widgets\LiveRadarWidget::class,
-            ])
+
+            // 👇 SAYA KOSONGKAN WIDGET MANUALNYA KARENA SUDAH DI-DISCOVER OTOMATIS OLEH BARIS DI ATAS 👇
+            ->widgets([])
+
             ->plugin(\Saade\FilamentFullCalendar\FilamentFullCalendarPlugin::make()->selectable()->editable())
-            // 👇 Middleware untuk mengecek "amarin123" 👇
             ->middleware([ EncryptCookies::class, AddQueuedCookiesToResponse::class, StartSession::class, AuthenticateSession::class, ShareErrorsFromSession::class, VerifyCsrfToken::class, SubstituteBindings::class, DisableBladeIconComponents::class, DispatchServingFilamentEvent::class ])
             ->authMiddleware([ Authenticate::class ]);
     }

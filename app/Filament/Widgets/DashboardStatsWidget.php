@@ -2,42 +2,49 @@
 
 namespace App\Filament\Widgets;
 
-use App\Models\IncidentReport;
+use App\Models\Ticket;
 use App\Models\Vessel;
+use App\Models\Laporan;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
+use Carbon\Carbon;
 
 class DashboardStatsWidget extends BaseWidget
 {
-    // 👇 SAKLAR AUTO-REFRESH SETIAP 10 DETIK 👇
+    // Auto-refresh setiap 10 detik agar terpantau real-time
     protected static ?string $pollingInterval = '10s';
-    protected static ?int $sort = 1; // Urutan paling atas
+    protected static ?int $sort = 1;
+
+    // 👇 INI KUNCI AGAR 4 CARD SEJAJAR DALAM 1 BARIS 👇
+    protected function getColumns(): int
+    {
+        return 4;
+    }
 
     protected function getStats(): array
     {
-        // Menghitung data langsung dari Database
-        $openTickets = IncidentReport::whereIn('status', ['Open', 'In Progress'])->count();
-        $resolvedTickets = IncidentReport::whereIn('status', ['Resolved', 'Closed'])->count();
-        $totalVessels = Vessel::count();
-
         return [
-            Stat::make('Tiket Aktif (Belum Selesai)', $openTickets)
-                ->description('Menunggu penanganan Tim IT')
+            Stat::make('Tiket Aktif', Ticket::whereIn('status', [1, 2, 3, 4])->count())
+                ->description('Menunggu penanganan')
                 ->descriptionIcon('heroicon-m-exclamation-triangle')
                 ->color('danger')
-                ->chart([7, 3, 4, 5, 6, 3, 5, 3]), // Garis grafik mini (sparkline)
+                ->chart([7, 3, 4, 5, 6, 3, 5, 3]),
 
-            Stat::make('Tiket Terselesaikan', $resolvedTickets)
-                ->description('Insiden berhasil ditangani')
+            Stat::make('Tiket Selesai', Ticket::whereIn('status', [5, 6])->count())
+                ->description('Performa penyelesaian')
                 ->descriptionIcon('heroicon-m-check-badge')
                 ->color('success')
-                ->chart([1, 3, 4, 7, 8, 9, 10, 12]),
+                ->chart([1, 3, 4, 7, 8, 9, 12, 15]),
 
-            Stat::make('Total Armada Kapal', $totalVessels)
-                ->description('Kapal terdaftar di sistem')
-                ->descriptionIcon('heroicon-m-map-pin')
-                ->color('info')
-                ->chart([2, 2, 2, 2, 2, 2, 2, 2]),
+            Stat::make('Master Kapal', Vessel::count())
+                ->description('Armada di sistem')
+                ->descriptionIcon('heroicon-m-globe-asia-australia')
+                ->color('info'),
+
+            Stat::make('Laporan CCTV Bulan Ini', Laporan::whereMonth('waktu_kejadian', Carbon::now()->month)->whereYear('waktu_kejadian', Carbon::now()->year)->count())
+                ->description('Masuk di bulan berjalan')
+                ->descriptionIcon('heroicon-m-calendar-days')
+                ->color('primary'),
         ];
     }
 }
