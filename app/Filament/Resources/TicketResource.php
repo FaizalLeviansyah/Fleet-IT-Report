@@ -145,11 +145,8 @@ class TicketResource extends Resource
 
                             Forms\Components\Select::make('assigned_to_id')
                                 ->label('Ditugaskan (Teknisi)')
-                                ->options(User::whereIn('full_name', [
-                                    'FAIZAL LEVIANSYAH',
-                                    'FARHAN ARIF INDIARTO',
-                                    'HENDRI SETIO PRAKOSO'
-                                ])->pluck('full_name', 'employee_id'))
+                                // 👇 LOGIC BARU: Mengambil dari Master User yang is_it_team = 1 👇
+                                ->options(\App\Models\User::where('is_it_team', 1)->pluck('full_name', 'employee_id'))
                                 ->searchable()
                                 ->prefixIcon('heroicon-m-wrench-screwdriver'),
 
