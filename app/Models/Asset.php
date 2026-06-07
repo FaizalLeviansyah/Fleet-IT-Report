@@ -8,6 +8,7 @@ class Asset extends Model
 {
     // Asumsi tabel berada di database default (bukan cctv)
     protected $table = 'assets';
+    // Buka gembok agar API bisa menyimpan semua kolom dari Script PowerShell
     protected $guarded = [];
 
     // KUNCI SIHIR: Mengubah data text menjadi Array otomatis

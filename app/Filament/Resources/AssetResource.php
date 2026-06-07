@@ -92,33 +92,56 @@ class AssetResource extends Resource
     }
 
     public static function table(Table $table): Table
-    {
-        return $table
-            ->columns([
-                Tables\Columns\TextColumn::make('asset_name')->label('Nama Aset')->searchable()->weight('bold'),
-                Tables\Columns\TextColumn::make('asset_type')->label('Tipe')->searchable(),
-                Tables\Columns\TextColumn::make('ip_address')->label('IP Address')->searchable()->copyable(),
-                Tables\Columns\TextColumn::make('os_version')->label('OS')->limit(30),
-                Tables\Columns\TextColumn::make('status')
-                    ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'Active' => 'success',
-                        'Maintenance' => 'warning',
-                        'Broken' => 'danger',
-                        default => 'gray',
-                    }),
-                Tables\Columns\TextColumn::make('last_seen')->label('Last Seen')->dateTime('d M Y, H:i')->sortable(),
-            ])
-            ->defaultSort('last_seen', 'desc')
-            ->filters([
-                Tables\Filters\SelectFilter::make('asset_type')->label('Filter Tipe')->options(['PC/Laptop' => 'PC/Laptop', 'Printer' => 'Printer']),
-                Tables\Filters\SelectFilter::make('status')->label('Filter Status')->options(['Active' => 'Active', 'Maintenance' => 'Maintenance', 'Broken' => 'Broken']),
-            ])
-            ->actions([
-                Tables\Actions\ViewAction::make()->modalWidth('4xl'),
-                Tables\Actions\EditAction::make()->modalWidth('4xl'),
+{
+    return $table
+        ->columns([
+            Tables\Columns\TextColumn::make('asset_name')
+                ->label('Nama Komputer')
+                ->searchable()
+                ->weight('bold'),
+
+            Tables\Columns\TextColumn::make('current_user')
+                ->label('User Terakhir')
+                ->searchable()
+                ->icon('heroicon-m-user'),
+
+            Tables\Columns\TextColumn::make('ip_address')
+                ->label('IP Address')
+                ->copyable(),
+
+            Tables\Columns\TextColumn::make('model')
+                ->label('Merek / Model')
+                ->description(fn ($record) => $record->manufacturer)
+                ->limit(20),
+
+            Tables\Columns\TextColumn::make('total_ram')
+                ->label('Kapasitas RAM')
+                ->badge()
+                ->color('info'),
+
+            Tables\Columns\TextColumn::make('last_seen')
+                ->label('Terakhir Online')
+                ->since() // Otomatis menjadi "2 minutes ago"
+                ->badge()
+                ->color('success'),
+
+            Tables\Columns\TextColumn::make('status')
+                ->badge()
+                ->color(fn (string $state): string => match ($state) {
+                    'Active' => 'success',
+                    default => 'gray',
+                }),
+        ])
+
+
+        ->filters([
+            // ... biarkan filter yang sudah ada ...
+        ])
+        ->actions([
+                Tables\Actions\ViewAction::make(), // 👈 Tambahkan ini agar bisa melihat detail
+                Tables\Actions\EditAction::make(),
             ]);
-    }
+}
 
     public static function getPages(): array
     {
