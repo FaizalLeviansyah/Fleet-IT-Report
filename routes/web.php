@@ -4,7 +4,16 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\UserPortalController;
 use App\Models\Laporan;
+
+// Rute khusus Portal Pegawai (Dilindungi sistem Login)
+Route::middleware(['auth'])->prefix('portal')->name('portal.')->group(function () {
+    Route::get('/dashboard', [UserPortalController::class, 'dashboard'])->name('dashboard');
+    Route::get('/ticket/create', [UserPortalController::class, 'createTicket'])->name('create-ticket');
+    Route::post('/ticket/store', [UserPortalController::class, 'storeTicket'])->name('store-ticket');
+    Route::get('/kb', [UserPortalController::class, 'kb'])->name('kb');
+});
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
@@ -56,4 +65,9 @@ Route::middleware('auth')->group(function () {
         $laporan = Laporan::with('gambars')->findOrFail($id);
         return view('cetak-laporan', compact('laporan'));
     })->name('cetak.laporan');
+
+    // Pintu Masuk Portal Karyawan & Kapal
+Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
+Route::post('/login', [AuthController::class, 'login'])->name('login.post');
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 });
