@@ -19,6 +19,8 @@ class UserPortalController extends Controller
         $solvedCount = $tickets->whereIn('status', [5, 6])->count();
 
         return view('portal.dashboard', compact('tickets', 'activeCount', 'solvedCount'));
+
+        dd('Pintu Terbuka!');
     }
 
     // 2. Halaman Form Buat Tiket

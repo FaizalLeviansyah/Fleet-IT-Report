@@ -20,29 +20,25 @@ class AuthController extends Controller
     // Proses Pengecekan Kredensial
     public function login(Request $request)
     {
-        // Validasi input dari form HTML Anda (memakai email_work)
         $request->validate([
             'email_work' => 'required|email',
             'password' => 'required'
         ]);
 
-        // Mapping ke kolom 'email' di tabel users
-        $credentials = [
-            'email' => $request->email_work,
-            'password' => $request->password,
-        ];
+        // 1. Cari user secara manual berdasarkan email_work
+        $user = \App\Models\User::where('email_work', $request->email_work)->first();
 
-        // Jika Login BERHASIL
-        if (Auth::attempt($credentials)) {
+        // 2. Jika user ketemu DAN passwordnya cocok
+        if ($user && \Illuminate\Support\Facades\Hash::check($request->password, $user->password)) {
+            // Login paksa menggunakan ID User tersebut
+            Auth::login($user);
             $request->session()->regenerate();
-
-            // Panggil fungsi Pengatur Lalu Lintas
-            return $this->redirectBasedOnRole(Auth::user());
+            
+            return $this->redirectBasedOnRole($user);
         }
 
-        // Jika GAGAL
         return back()->withErrors([
-            'email_work' => 'Email atau Password salah, silakan coba lagi.',
+            'email_work' => 'Email atau Password salah / Akun tidak terdaftar.',
         ]);
     }
 
