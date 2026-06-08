@@ -64,6 +64,20 @@ class CustomLogin extends BaseLogin implements HasActions
             'password'  => $data['password'],
         ];
     }
+    // app/Filament/Pages/Auth/CustomLogin.php
+
+protected function getRedirectPath(): string
+{
+    $user = \Illuminate\Support\Facades\Auth::user();
+
+    // Jika admin, tetap di panel Filament
+    if ($user->role === 'admin') {
+        return '/admin';
+    }
+
+    // Jika employee atau vessel, lempar keluar ke route portal Blade
+    return '/portal/dashboard';
+}
 
     public function form(Form $form): Form
     {

@@ -10,6 +10,7 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Hash;
+use Filament\Forms\Get;
 
 class EmployeeResource extends Resource
 {
@@ -52,11 +53,20 @@ class EmployeeResource extends Resource
                             ->required(fn (string $context): bool => $context === 'create'),
 
                         // TOGGLE AKSES
-                        Forms\Components\Toggle::make('access_app_IT_Management_System')
-                            ->label('Izinkan Akses IT Management System?')
-                            ->onColor('success')
-                            ->offColor('danger')
-                            ->required(),
+                        \Filament\Forms\Components\Toggle::make('access_app_IT_Management_System')
+                            ->label('Beri Akses ITSM Stack')
+                            ->live(), // 👈 WAJIB PAKAI LIVE agar form di bawahnya merespon
+
+                        \Filament\Forms\Components\Select::make('role')
+                            ->label('Role Akses Sistem')
+                            ->options([
+                                'admin' => '👑 Admin (Tim IT)',
+                                'employee' => '💼 Employee (Requester)',
+                                'vessel' => '🚢 Vessel (Kapal)',
+                            ])
+                            ->native(false)
+                            ->required(fn (Get $get) => $get('access_app_IT_Management_System') === true) // Wajib diisi jika toggle nyala
+                            ->visible(fn (Get $get) => $get('access_app_IT_Management_System') === true), // Muncul hanya jika toggle nyala
                     ])->columns(2),
 
                 \Filament\Forms\Components\Section::make('Informasi Tambahan')

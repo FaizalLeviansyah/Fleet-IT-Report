@@ -20,10 +20,7 @@ class LiveMonitoring extends Page
     public $end_date = '';
     public $start_time = '';
     public $end_time = '';
-
-    // 🔥 FITUR BARU: PILIHAN INTERVAL FRAME SLIDESHOW
     public $frame_interval = 'all';
-
     public $last_sync = '-';
     public $total_active_cams = 0;
 
@@ -38,25 +35,59 @@ class LiveMonitoring extends Page
 
     public function mount()
     {
-        $this->start_date = Carbon::now()->startOfMonth()->toDateString();
-        $this->end_date = Carbon::now()->toDateString();
+        // 🚨 FIX 1: Set rentang waktu penuh tahun 2026 secara default 
+        // Agar semua data seeder (Feb-Apr) otomatis langsung ter-load tanpa harus di-adjust manual
+        $this->start_date = '2026-01-01';
+        $this->end_date = '2026-12-31';
         $this->start_time = '00:00';
         $this->end_time = '23:59';
+    }
+
+    /**
+     * Generator Variasi Nama Kapal untuk Mengatasi Inkonsistensi Database vs Folder
+     */
+    private function getVesselVariants($vesselName): array
+    {
+        if (empty($vesselName)) return [];
+
+        return array_filter(array_unique([
+            $vesselName,
+            str_replace(' ', '_', $vesselName),
+            str_replace([' ', '.'], ['_', ''], $vesselName),
+            // Mengatasi konversi Romawi ke Angka Biasa (II -> 2, I -> 1)
+            str_replace([' II', ' I'], [' 2', ' 1'], $vesselName),
+            str_replace([' ', '.'], ['_', ''], str_replace([' II', ' I'], [' 2', ' 1'], $vesselName)),
+            str_replace(' ', '_', str_replace([' II', ' I'], [' 2', ' 1'], $vesselName)),
+            // Ambil kata kunci murni (misal: "Caine", "Eternal", "Soviana")
+            preg_replace('/[^A-Za-z0-9]/', '', $vesselName)
+        ]), function($v) {
+            return strlen($v) > 2 && !in_array(strtoupper($v), ['MT', 'MV', 'MT.', 'MV.']);
+        });
     }
 
     public function updatedSelectedVessel($value)
     {
         if (!empty($value)) {
-            $latest = DB::table('cctv_reports')->where('vessel_name', $value)->latest('captured_at')->first();
+            $variants = $this->getVesselVariants($value);
+
+            $latest = DB::table('cctv_reports')
+                ->where(function($q) use ($value, $variants) {
+                    $q->where('vessel_name', $value);
+                    foreach ($variants as $variant) {
+                        $q->orWhere('image_path', 'LIKE', "%{$variant}%");
+                    }
+                })
+                ->latest('captured_at')
+                ->first();
+
             if ($latest) {
-                Notification::make()->title('Sistem Terhubung 🟢')->body("Mengambil data {$value}.")->success()->send();
+                Notification::make()->title('Sistem Terhubung 🟢')->body("Mengambil data lintasan CCTV {$value}.")->success()->send();
             } else {
-                Notification::make()->title('Kapal Offline 🔴')->body("Belum ada data untuk {$value}.")->danger()->send();
+                Notification::make()->title('Kapal Offline 🔴')->body("Belum ada rekaman fisik untuk {$value}.")->danger()->send();
             }
         }
     }
 
-    // Notifikasi saat Transisi / Interval diubah
     public function updatedFrameInterval($value)
     {
         $labels = [
@@ -70,7 +101,7 @@ class LiveMonitoring extends Page
 
     public function applyFilter()
     {
-        Notification::make()->title('Filter Diterapkan')->body('Mensinkronkan timeline CCTV...')->info()->send();
+        Notification::make()->title('Filter Diterapkan').body('Mensinkronkan timeline CCTV...')->info()->send();
     }
 
     protected function getViewData(): array
@@ -91,28 +122,43 @@ class LiveMonitoring extends Page
         $start = Carbon::parse($this->start_date . ' ' . $this->start_time)->format('Y-m-d H:i:s');
         $end = Carbon::parse($this->end_date . ' ' . $this->end_time)->format('Y-m-d H:i:s');
 
+        $variants = $this->getVesselVariants($this->selected_vessel);
+
+        // 🚨 FIX 2: Query Multi-Variant Matching untuk menjaring data terlepas dari ketidaksesuaian nama seeder
         $raw_data = DB::table('cctv_reports')
-            ->where('vessel_name', $this->selected_vessel)
+            ->where(function($q) use ($variants) {
+                $q->where('vessel_name', $this->selected_vessel);
+                foreach ($variants as $variant) {
+                    $q->orWhere('vessel_name', 'LIKE', "%{$variant}%")
+                      ->orWhere('image_path', 'LIKE', "%{$variant}%");
+                }
+            })
             ->whereBetween('captured_at', [$start, $end])
             ->orderBy('captured_at', 'asc')
             ->get();
 
-        // 🔥 LOGIKA PENYARINGAN INTERVAL (JAM/HARI)
         if ($this->frame_interval !== 'all') {
             $raw_data = $raw_data->groupBy(function($item) {
                 $time = Carbon::parse($item->captured_at);
-                $intervalKey = $time->format('Y-m-d H'); // default Per Jam
-                if ($this->frame_interval === 'half_day') $intervalKey = $time->format('Y-m-d A'); // AM / PM
-                if ($this->frame_interval === 'daily') $intervalKey = $time->format('Y-m-d'); // Per Hari
-
-                // Pisahkan berdasarkan Channel agar kamera tidak saling tertukar
+                $intervalKey = $time->format('Y-m-d H'); 
+                if ($this->frame_interval === 'half_day') $intervalKey = $time->format('Y-m-d A'); 
+                if ($this->frame_interval === 'daily') $intervalKey = $time->format('Y-m-d'); 
                 return $item->channel . '_' . $intervalKey;
             })->map(function($group) {
-                return $group->first(); // Ambil 1 foto pertama dari rentang waktu tersebut
+                return $group->first(); 
             })->values();
         }
 
-        $latest = DB::table('cctv_reports')->where('vessel_name', $this->selected_vessel)->orderBy('captured_at', 'desc')->first();
+        $latest = DB::table('cctv_reports')
+            ->where(function($q) use ($variants) {
+                $q->where('vessel_name', $this->selected_vessel);
+                foreach ($variants as $variant) {
+                    $q->orWhere('image_path', 'LIKE', "%{$variant}%");
+                }
+            })
+            ->orderBy('captured_at', 'desc')
+            ->first();
+            
         $this->last_sync = $latest ? Carbon::parse($latest->captured_at)->format('d M Y - h:i A') : 'Tidak Ada Data';
         $this->total_active_cams = $raw_data->unique('channel')->count();
 

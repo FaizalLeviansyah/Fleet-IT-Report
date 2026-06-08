@@ -26,10 +26,10 @@ class DummyUserSeeder extends Seeder
         User::updateOrCreate(
             ['email_work' => 'staff.office@amarin.com'],
             [
-                'employee_code' => 'DUMMY-EMP', // 👈 WAJIB DIISI
-                'company_id'    => 1,           // 👈 WAJIB DIISI
+                'employee_code' => 'DUMMY-EMP', 
+                'company_id'    => 1,           
                 'full_name'     => 'Budi (Karyawan Darat)',
-                'password'      => Hash::make('password123'),
+                'password'      => 'password123',
                 'role'          => 'employee'
             ]
         );
@@ -38,10 +38,10 @@ class DummyUserSeeder extends Seeder
         User::updateOrCreate(
             ['email_work' => 'kapal.katarina@amarin.com'],
             [
-                'employee_code' => 'DUMMY-VSL', // 👈 WAJIB DIISI
-                'company_id'    => 1,           // 👈 WAJIB DIISI
+                'employee_code' => 'DUMMY-VSL', 
+                'company_id'    => 1,           
                 'full_name'     => 'Kapal MV. Amarin Katarina',
-                'password'      => Hash::make('password123'),
+                'password'      => 'password123',
                 'role'          => 'vessel'
             ]
         );

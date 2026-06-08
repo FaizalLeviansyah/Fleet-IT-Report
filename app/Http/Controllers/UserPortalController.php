@@ -59,4 +59,11 @@ class UserPortalController extends Controller
         $articles = KnowledgeBase::latest()->get();
         return view('portal.kb', compact('articles'));
     }
+
+    public function profile()
+{
+    $user = Auth::user();
+    // Menampilkan profil karyawan dari tbl_employee
+    return view('portal.profile', compact('user'));
+}
 }
