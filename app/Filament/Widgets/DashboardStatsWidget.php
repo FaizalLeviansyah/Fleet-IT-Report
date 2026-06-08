@@ -45,6 +45,7 @@ class DashboardStatsWidget extends BaseWidget
                 ->description('Masuk di bulan berjalan')
                 ->descriptionIcon('heroicon-m-calendar-days')
                 ->color('primary'),
+            \Filament\Widgets\StatsOverviewWidget\Stat::make('Total Laporan CCTV (All Time)', \DB::connection('mysql_cctv')->table('laporan')->count())
         ];
     }
 }

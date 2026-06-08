@@ -10,7 +10,7 @@ class CctvReport extends Model
     protected $connection = 'mysql_cctv';
 
     // 🚨 KOREKSI: Arahkan ke tabel yang benar yaitu 'laporan'
-    protected $table = 'laporan'; 
+    protected $table = 'cctv_reports';
     
     protected $guarded = [];
 }
