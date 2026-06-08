@@ -54,6 +54,15 @@
                 <div class="forgot-password-container">
                     {{ $this->forgotPasswordAction }}
                 </div>
+                <!-- Tambahkan ini di atas input email -->
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Masuk sebagai:</label>
+                    <select name="role_selection" class="w-full p-2 border border-gray-300 rounded-lg shadow-sm">
+                        <option value="employee">💼 Karyawan (Employee)</option>
+                        <option value="vessel">🚢 Kapal (Vessel)</option>
+                        <option value="admin">👑 Admin (IT Team)</option>
+                    </select>
+                </div>
 
                 <button type="submit" class="btn-submit" id="submitBtn">
                     Sign In

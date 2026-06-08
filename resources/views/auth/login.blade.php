@@ -31,6 +31,9 @@
     </style>
 </head>
 <body class="animated-bg min-h-screen flex items-center justify-center relative overflow-hidden px-4">
+<div class="absolute top-6 left-1/2 transform -translate-x-1/2 bg-white/80 backdrop-blur-md border border-white text-slate-700 px-6 py-2 rounded-full shadow-xl shadow-cyan-500/20 text-xs font-black tracking-widest uppercase animate-bounce z-50 flex items-center gap-2">
+        <span class="text-xl">👋</span> Ingin login sebagai siapa hari ini?
+    </div>
     <div class="absolute inset-0 overflow-hidden pointer-events-none">
         <div class="absolute top-0 left-10 w-96 h-96 bg-cyan-400/40 rounded-full blur-[90px] animate-blob mix-blend-multiply"></div>
         <div class="absolute bottom-0 right-10 w-96 h-96 bg-blue-500/40 rounded-full blur-[90px] animate-blob animation-delay-2000 mix-blend-multiply" style="animation-delay: 2s"></div>
@@ -53,6 +56,20 @@
             </div>
 
             <form action="{{ route('login') }}" method="POST" class="space-y-5 relative z-10">
+            <div>
+                    <label class="block mb-2 text-[10px] font-extrabold uppercase text-slate-500 tracking-widest ml-2">Pilih Peran (Aktor)</label>
+                    <div class="relative group">
+                        <select name="role_visual" class="glass-input w-full px-5 py-3.5 rounded-2xl text-sm text-slate-600 font-bold outline-none appearance-none cursor-pointer">
+                            <option value="auto">🤖 Auto-Detect (Otomatis dari Email)</option>
+                            <option value="admin">👑 Admin (Tim IT)</option>
+                            <option value="employee">💼 Karyawan (Darat)</option>
+                            <option value="vessel">🚢 Vessel (Kapal)</option>
+                        </select>
+                        <div class="absolute inset-y-0 right-4 flex items-center pointer-events-none text-slate-400">
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                    </div>
+                </div>
                 @csrf
                 @if($errors->any())
                     <div class="p-3 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center gap-3 text-red-600 text-xs font-bold backdrop-blur-md shadow-sm">
