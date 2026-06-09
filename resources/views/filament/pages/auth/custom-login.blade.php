@@ -47,6 +47,23 @@
                 <p class="respect">R.E.S.P.E.C.T</p>
             </div>
 
+            <!-- 👇 TAMBAHAN DROPDOWN ALA GLPI 👇 -->
+            <div class="login-destination-wrapper" wire:ignore>
+                <label class="destination-label">Login Destination </label>
+                <div class="destination-select-container">
+                    <select class="destination-select">
+                        <option value="auto">🤖 Auto-Detect Route (Recomennded)</option>
+                        <option value="admin">👑 IT Admin Panel</option>
+                        <option value="portal">💼 Employee or Vessel Crew</option>
+                    </select>
+                    <div class="select-icon">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </div>
+                </div>
+                <p class="destination-hint">*Sistem akan mengarahkan Anda otomatis berdasarkan hak akses.</p>
+            </div>
+            <!-- 👆 AKHIR TAMBAHAN 👆 -->
+
             <form wire:submit="authenticate" class="amarin-form">
 
                 {{ $this->form }}
@@ -54,16 +71,7 @@
                 <div class="forgot-password-container">
                     {{ $this->forgotPasswordAction }}
                 </div>
-                <!-- Tambahkan ini di atas input email -->
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Masuk sebagai:</label>
-                    <select name="role_selection" class="w-full p-2 border border-gray-300 rounded-lg shadow-sm">
-                        <option value="employee">💼 Karyawan (Employee)</option>
-                        <option value="vessel">🚢 Kapal (Vessel)</option>
-                        <option value="admin">👑 Admin (IT Team)</option>
-                    </select>
-                </div>
-
+                
                 <button type="submit" class="btn-submit" id="submitBtn">
                     Sign In
                     <svg style="width: 18px; height: 18px; transition: transform 0.3s;" class="btn-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
@@ -116,13 +124,23 @@
         .amarin-login-card { width: 100%; max-width: 420px; background-color: white; padding: 2.5rem 2.5rem; border-radius: 1.25rem; border: 1px solid rgba(15, 29, 61, 0.1); position: relative; z-index: 10; margin: 0 1rem; box-shadow: 0 25px 50px -12px rgba(3, 30, 73, 0.35), 0 0 0 1px rgba(3, 30, 73, 0.05) !important; transition: all 0.3s ease; }
         .amarin-login-card:hover { transform: translateY(-3px); box-shadow: 0 30px 60px -10px rgba(3, 30, 73, 0.45) !important; }
 
-        .card-header { display: flex; flex-direction: column; align-items: center; text-align: center; margin-bottom: 2.5rem; }
+        .card-header { display: flex; flex-direction: column; align-items: center; text-align: center; margin-bottom: 2rem; }
         .shining-logo { position: relative; display: inline-block; overflow: hidden; border-radius: 0.5rem; margin-bottom: 1rem; }
         .shining-logo img { height: 4rem; width: auto; position: relative; z-index: 10; border-radius: 0.5rem; }
         .shining-logo::after { content: ''; position: absolute; top: 0; left: -150%; width: 100%; height: 100%; background: linear-gradient(to right, transparent, rgba(255,255,255,0.7), transparent); transform: skewX(-25deg); animation: shine 3s infinite ease-in-out; z-index: 20; }
         .card-header h2 { font-size: 1.75rem; font-weight: 800; color: #111827; margin-bottom: 0.2rem; letter-spacing: -0.025em; }
         .subtitle { font-size: 0.85rem; color: #4B5563; margin-bottom: 0.75rem; font-weight: 500; }
         .respect { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.35em; color: #9CA3AF; text-transform: uppercase; }
+
+        /* STYLING DROPDOWN */
+        .login-destination-wrapper { margin-bottom: 1.25rem; width: 100%; }
+        .destination-label { display: block; font-size: 11px; font-weight: 700; color: #4B5563; letter-spacing: 0.025em; text-transform: uppercase; margin-bottom: 0.5rem; }
+        .destination-select-container { position: relative; width: 100%; }
+        .destination-select { appearance: none; -webkit-appearance: none; width: 100%; border-radius: 0.5rem; border: 1px solid #D1D5DB; padding: 0.5rem 2.5rem 0.5rem 1rem; font-size: 0.875rem; color: #374151; background-color: #F9FAFB; font-weight: 600; cursor: pointer; transition: all 0.2s ease; outline: none; }
+        .destination-select:focus { border-color: #3B82F6; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2); background-color: white; }
+        .select-icon { position: absolute; inset-y: 0; right: 0; display: flex; align-items: center; padding-right: 0.75rem; pointer-events: none; color: #6B7280; }
+        .select-icon svg { width: 1.25rem; height: 1.25rem; }
+        .destination-hint { font-size: 0.65rem; color: #9CA3AF; margin-top: 0.375rem; font-weight: 500; }
 
         /* FORM & BUTTON */
         .amarin-form { display: flex; flex-direction: column; width: 100%; gap: 1.25rem; }

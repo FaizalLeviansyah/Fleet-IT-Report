@@ -9,11 +9,12 @@ use App\Models\Laporan;
 
 // Rute khusus Portal Pegawai (Dilindungi sistem Login)
 Route::middleware(['auth'])->prefix('portal')->name('portal.')->group(function () {
-    Route::get('/dashboard', [UserPortalController::class, 'dashboard'])->name('dashboard');
+    Route::get('/dashboard', [\App\Http\Controllers\UserPortalController::class, 'dashboard'])->name('dashboard');
     Route::get('/ticket/create', [UserPortalController::class, 'createTicket'])->name('create-ticket');
     Route::post('/ticket/store', [UserPortalController::class, 'storeTicket'])->name('store-ticket');
-    Route::get('/profile', [UserPortalController::class, 'profile'])->name('profile'); // Tambahan
+    Route::get('/profile', [\App\Http\Controllers\UserPortalController::class, 'profile'])->name('profile');
     Route::get('/kb', [UserPortalController::class, 'kb'])->name('kb');
+    Route::get('/support', [\App\Http\Controllers\UserPortalController::class, 'support'])->name('support');
 });
 
 Route::middleware('guest')->group(function () {

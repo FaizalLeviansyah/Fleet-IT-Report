@@ -107,4 +107,21 @@ protected function getRedirectPath(): string
                     ->inline(false),
             ]);
     }
+    public function authenticate(): ?\Filament\Http\Responses\Auth\Contracts\LoginResponse
+    {
+        // 1. Jalankan proses login bawaan Filament
+        $response = parent::authenticate();
+
+        // 2. Cek siapa yang baru saja login
+        $user = \Illuminate\Support\Facades\Auth::user();
+
+        // 3. Jika dia Employee atau Vessel, LEMPAR PAKSA ke Portal HRIS-Style
+        if ($user && in_array($user->role, ['employee', 'vessel'])) {
+            redirect()->intended(route('portal.dashboard'))->send();
+            exit;
+        }
+
+        // 4. Jika Admin, biarkan masuk ke Filament
+        return $response;
+    }
 }
