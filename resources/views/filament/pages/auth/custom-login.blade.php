@@ -53,7 +53,7 @@
                 <div class="destination-select-container">
                     <select class="destination-select">
                         <option value="auto">🤖 Auto-Detect Route (Recomennded)</option>
-                        <option value="admin">👑 IT Admin Panel</option>
+                        <option value="admin">👑 Admin Panel</option>
                         <option value="portal">💼 Employee or Vessel Crew</option>
                     </select>
                     <div class="select-icon">
@@ -78,7 +78,6 @@
                 </button>
             </form>
         </div>
-
         <p class="footer-text" wire:ignore>&copy; {{ date('Y') }} PT AMARIN SHIP MANAGEMENT</p>
     </div>
 
@@ -165,4 +164,33 @@
         .fi-fo-checkbox { margin-top: 0.25rem !important; }
         .fi-checkbox-input { border-radius: 0.25rem !important; }
     </style>
+    <!-- 👇 TAMBAHKAN SCRIPT INI DI BAWAH <style> 👇 -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const selectDest = document.querySelector('.destination-select');
+            const submitBtn = document.getElementById('submitBtn');
+            const originalBtnContent = submitBtn.innerHTML;
+
+            selectDest.addEventListener('change', function(e) {
+                const val = e.target.value;
+                
+                if (val === 'portal') {
+                    // Berubah jadi Hijau untuk Portal Karyawan
+                    submitBtn.style.backgroundColor = '#059669'; 
+                    submitBtn.style.boxShadow = '0 4px 6px -1px rgba(5, 150, 105, 0.3)';
+                    submitBtn.innerHTML = `Masuk ke Portal Karyawan <svg style="width: 18px; height: 18px; transition: transform 0.3s;" class="btn-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>`;
+                } else if (val === 'admin') {
+                    // Berubah jadi Biru Gelap untuk Admin
+                    submitBtn.style.backgroundColor = '#1E3A8A';
+                    submitBtn.style.boxShadow = '0 4px 6px -1px rgba(30, 58, 138, 0.3)';
+                    submitBtn.innerHTML = `Masuk ke IT Admin <svg style="width: 18px; height: 18px; transition: transform 0.3s;" class="btn-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>`;
+                } else {
+                    // Kembali ke Biru Standar untuk Auto-Detect
+                    submitBtn.style.backgroundColor = '#0056B3';
+                    submitBtn.style.boxShadow = '0 4px 6px -1px rgba(0, 86, 179, 0.2)';
+                    submitBtn.innerHTML = originalBtnContent;
+                }
+            });
+        });
+    </script>
 </div>

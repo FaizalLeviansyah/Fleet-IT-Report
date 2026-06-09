@@ -14,14 +14,14 @@ class UserPortalController extends Controller
     {
         $user = Auth::user();
         
-        // Ambil tiket milik user ini
-        $myTickets = Ticket::where('requestor_id', $user->employee_id)->get();
+        // 🚨 FIX 1: Ubah employee_id menjadi id agar sesuai dengan User Biasa
+        $myTickets = Ticket::where('requestor_id', $user->id)->get();
         
         $activeTickets = $myTickets->whereIn('status', [1, 2, 3, 4])->count();
         $resolvedTickets = $myTickets->whereIn('status', [5, 6])->count();
         $myAssets = 0; // Ganti dengan logic count Asset jika tabel sudah terhubung
         
-        $recentTickets = Ticket::where('requestor_id', $user->employee_id)
+        $recentTickets = Ticket::where('requestor_id', $user->id)
                                ->latest()
                                ->take(5)
                                ->get();
@@ -36,7 +36,8 @@ class UserPortalController extends Controller
 
     public function support()
     {
-        $tickets = Ticket::where('requestor_id', Auth::user()->employee_id)->latest()->get();
+        // 🚨 FIX 2: Ubah employee_id menjadi id
+        $tickets = Ticket::where('requestor_id', Auth::user()->id)->latest()->get();
         return view('portal.support', compact('tickets'));
     }
 
@@ -57,7 +58,8 @@ class UserPortalController extends Controller
 
         Ticket::create([
             'ticket_number' => 'INC-' . date('Ymd') . '-' . rand(1000, 9999),
-            'requester_id' => Auth::id(),
+            // 🚨 FIX 3: Saya samakan menjadi 'requestor_id' agar sinkron dengan query dashboard di atas
+            'requestor_id' => Auth::id(), 
             'name' => $request->name,
             'description' => $request->description,
             'status' => 1, // Status: New
@@ -76,6 +78,4 @@ class UserPortalController extends Controller
         $articles = KnowledgeBase::latest()->get();
         return view('portal.kb', compact('articles'));
     }
-
-    
 }

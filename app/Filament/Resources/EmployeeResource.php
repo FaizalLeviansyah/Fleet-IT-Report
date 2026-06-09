@@ -16,7 +16,7 @@ class EmployeeResource extends Resource
 {
     protected static ?string $model = Employee::class;
 
-    // --- PENGATURAN SIDEBAR (Cukup 1x saja) ---
+    // --- PENGATURAN SIDEBAR ---
     protected static ?string $navigationIcon = 'heroicon-o-identification';
     protected static ?string $navigationGroup = 'Master Data';
     protected static ?string $navigationLabel = 'Manage PIC / Crew';
@@ -25,7 +25,8 @@ class EmployeeResource extends Resource
     // --- FITUR KEAMANAN: HANYA ADMIN YANG BISA LIHAT MENU INI ---
     public static function canViewAny(): bool
     {
-        return auth()->user()->role === 'admin';
+        // Pengecekan disesuaikan dengan ejaan huruf besar/kecil di DB
+        return auth()->user()->role === 'admin' || auth()->user()->role === 'Admin';
     }
 
     public static function form(Form $form): Form
@@ -44,52 +45,62 @@ class EmployeeResource extends Resource
                             ->email()
                             ->required(),
 
-                        // KOLOM PASSWORD
+                        // 🚨 FIX 1: Kolom Password sekarang DIENKRIPSI OTOMATIS (Hash) agar user bisa login
                         Forms\Components\TextInput::make('password')
                             ->label('Password Baru')
                             ->password()
                             ->revealable()
+                            ->dehydrateStateUsing(fn ($state) => Hash::make($state)) 
                             ->dehydrated(fn ($state) => filled($state))
                             ->required(fn (string $context): bool => $context === 'create'),
 
                         // TOGGLE AKSES
                         \Filament\Forms\Components\Toggle::make('access_app_IT_Management_System')
                             ->label('Beri Akses ITSM Stack')
-                            ->live(), // 👈 WAJIB PAKAI LIVE agar form di bawahnya merespon
+                            ->live(), 
 
-                        \Filament\Forms\Components\Select::make('role')
+                        // 🚨 FIX 2: Hanya ada SATU kolom Role (Sudah disesuaikan dengan DB Anda)
+                        Forms\Components\Select::make('role')
                             ->label('Role Akses Sistem')
                             ->options([
-                                'admin' => '👑 Admin (Tim IT)',
-                                'employee' => '💼 Employee (Requester)',
-                                'vessel' => '🚢 Vessel (Kapal)',
+                                'Admin' => '👑 Admin (Tim IT)',
+                                'User Biasa' => '💼 User Biasa (Pegawai/Crew)',
                             ])
                             ->native(false)
-                            ->required(fn (Get $get) => $get('access_app_IT_Management_System') === true) // Wajib diisi jika toggle nyala
-                            ->visible(fn (Get $get) => $get('access_app_IT_Management_System') === true), // Muncul hanya jika toggle nyala
+                            ->required(fn (Get $get) => $get('access_app_IT_Management_System') === true)
+                            ->visible(fn (Get $get) => $get('access_app_IT_Management_System') === true), 
                     ])->columns(2),
+                    
 
                 \Filament\Forms\Components\Section::make('Informasi Tambahan')
                     ->schema([
-                        Forms\Components\TextInput::make('employee_code')->label('Kode Pegawai (NIK)'),
-                        Forms\Components\Select::make('role')
-                            ->options(['admin' => 'Admin', 'user' => 'User Biasa']),
+                        Forms\Components\TextInput::make('employee_code')
+                            ->label('Kode Pegawai (NIK)'),
+                        
+                        // 🚨 FIX 3: Kolom company_id dimasukkan ke dalam section agar tampilannya rapi
+                        Forms\Components\Select::make('company_id')
+                            ->label('Perusahaan')
+                            ->options([
+                                1 => 'PT Amarin Ship Management',
+                                2 => 'PT Amarin Crewing Services',
+                                3 => 'PT Caraka Tirta Pratama',
+                            ])
+                            ->required(),
+
                         Forms\Components\Select::make('employment_status')
+                            ->label('Status Kerja')
                             ->options(['Active' => 'Active', 'Inactive' => 'Inactive'])
                             ->default('Active'),
+
                         Forms\Components\Toggle::make('is_active')
                             ->label('Status Akun (Aktif/Non-Aktif)')
                             ->default(true),
-                        // Tambahkan ini di dalam array schema() form User Anda
-                        Forms\Components\Section::make('Hak Akses ITSM')
-                            ->description('Atur apakah pegawai ini adalah bagian dari Tim IT.')
-                            ->schema([
-                                Forms\Components\Toggle::make('is_it_team')
-                                    ->label('Jadikan sebagai Teknisi IT (Super Admin ITSM)')
-                                    ->onColor('success')
-                                    ->offColor('gray')
-                                    ->default(false),
-                            ]),
+
+                        Forms\Components\Toggle::make('is_it_team')
+                            ->label('Jadikan sebagai Teknisi IT')
+                            ->onColor('success')
+                            ->offColor('gray')
+                            ->default(false),
                     ])->columns(2),
             ]);
     }
@@ -139,8 +150,6 @@ class EmployeeResource extends Resource
     {
         return [
             'index' => Pages\ListEmployees::route('/'),
-            // 'create' => Pages\CreateEmployee::route('/create'),
-            // 'edit' => Pages\EditEmployee::route('/{record}/edit'),
         ];
     }
 }
