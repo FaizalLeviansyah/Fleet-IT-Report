@@ -29,14 +29,21 @@ Route::middleware(['auth'])->prefix('portal')->name('portal.')->group(function (
     Route::get('/profile', [UserPortalController::class, 'profile'])->name('profile');
     Route::get('/kb', [UserPortalController::class, 'kb'])->name('kb');
     Route::get('/support', [UserPortalController::class, 'support'])->name('support');
+    
     // Rute untuk melihat detail dan progres tiket
     Route::get('/ticket/{id}/detail', [UserPortalController::class, 'showTicket'])->name('show-ticket');
     // Rute untuk user membalas thread/follow-up
     Route::post('/ticket/{id}/reply', [UserPortalController::class, 'replyTicket'])->name('reply-ticket');
     // Rute untuk user memberikan Approval / Menutup Tiket
     Route::post('/ticket/{id}/approve', [UserPortalController::class, 'approveTicket'])->name('approve-ticket');
+    
     // Rute Visualisasi Aset Karyawan
     Route::get('/assets', [UserPortalController::class, 'myAssets'])->name('assets');
+
+    // 👇 PINDAHKAN RUTE MY-ACCESS KE SINI 👇
+    Route::get('/my-access', function() {
+        return view('portal.my-access');
+    })->name('my-access');
 });
 
 // =========================================================================
@@ -81,4 +88,5 @@ Route::middleware('auth')->group(function () {
         $laporan = Laporan::with('gambars')->findOrFail($id);
         return view('cetak-laporan', compact('laporan'));
     })->name('cetak.laporan');
+    
 });
