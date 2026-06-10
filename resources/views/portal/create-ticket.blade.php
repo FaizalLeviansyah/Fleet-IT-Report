@@ -1,39 +1,86 @@
 @extends('portal.layouts.app')
+@section('page_title', 'Buat Tiket Bantuan IT')
 
 @section('content')
-<div class="max-w-2xl mx-auto">
-    <div class="mb-6">
-        <a href="{{ route('portal.dashboard') }}" class="text-slate-400 hover:text-blue-600 font-black tracking-wide"><i class="fas fa-arrow-left mr-2"></i> KEMBALI</a>
-    </div>
-    <div class="bg-white rounded-[2rem] shadow-sm border border-slate-100 p-8 sm:p-12 relative overflow-hidden">
-        <div class="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
-
-        <h2 class="text-3xl font-black text-slate-800 mb-8 relative z-10">Lapor Masalah IT 🛠️</h2>
-
-        <form action="{{ route('portal.store-ticket') }}" method="POST" class="space-y-6 relative z-10">
-            @csrf
-            <div>
-                <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Apa yang bermasalah?</label>
-                <input type="text" name="name" required class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4 font-semibold text-slate-700 outline-none focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition" placeholder="Contoh: Printer Ruang HRD Error Offline">
+<div class="max-w-4xl mx-auto">
+    
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <!-- Header Form -->
+        <div class="px-8 py-6 border-b border-slate-100 bg-slate-50 flex items-center gap-4">
+            <div class="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xl shadow-inner">
+                <i class="fas fa-headset"></i>
             </div>
-
             <div>
-                <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Tingkat Kegawatan</label>
-                <select name="priority" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4 font-semibold text-slate-700 outline-none focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition appearance-none">
-                    <option value="1">🟢 Rendah (Masih bisa kerja, tidak buru-buru)</option>
-                    <option value="2" selected>🟡 Sedang (Mengganggu alur kerja)</option>
-                    <option value="3">🔴 Tinggi (Sistem lumpuh total / Darurat)</option>
+                <h2 class="text-xl font-bold text-slate-800">Form Permintaan Layanan IT</h2>
+                <p class="text-sm text-slate-500">Tiket Anda akan diteruskan ke Supervisor IT (Bpk. Hendri / Ridho) untuk dijadwalkan ke Teknisi.</p>
+            </div>
+        </div>
+
+        <!-- Body Form -->
+        <form action="{{ route('portal.store-ticket') }}" method="POST" class="p-8 space-y-6">
+            @csrf
+
+            <!-- Baris 1: Subjek Masalah -->
+            <div>
+                <label class="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-2">Subjek / Judul Masalah <span class="text-red-500">*</span></label>
+                <input type="text" name="name" required placeholder="Contoh: Email Outlook tidak bisa kirim pesan" 
+                    class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all outline-none">
+            </div>
+            <div>
+                <label class="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-2">Kategori Laporan <span class="text-red-500">*</span></label>
+                <select name="type" required class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all outline-none appearance-none bg-white">
+                    <option value="" disabled selected>-- Pilih Jenis Bantuan --</option>
+                    <option value="Incident">⚠️ Incident (Sistem Error / Perangkat Rusak / Kecelakaan)</option>
+                    <option value="Service Request">📦 Service Request (Permintaan Alat Baru / Akses Software)</option>
+                    <option value="Maintenance">🔧 Maintenance (Pemeliharaan Berkala)</option>
                 </select>
             </div>
-
+            <!-- Baris 2: Prioritas -->
             <div>
-                <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Ceritakan Detailnya</label>
-                <textarea name="description" required rows="5" class="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4 font-semibold text-slate-700 outline-none focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition" placeholder="Ceritakan detail masalah yang dialami agar tim IT cepat paham..."></textarea>
+                <label class="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-2">Tingkat Prioritas <span class="text-red-500">*</span></label>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- Low -->
+                    <label class="relative flex cursor-pointer rounded-xl border border-slate-200 bg-white p-4 shadow-sm focus:outline-none has-[:checked]:border-blue-500 has-[:checked]:ring-1 has-[:checked]:ring-blue-500 transition-all hover:bg-slate-50">
+                        <input type="radio" name="priority" value="1" class="sr-only" checked>
+                        <span class="flex flex-col">
+                            <span class="block text-sm font-bold text-slate-800"><i class="fas fa-circle text-slate-400 text-xs mr-1"></i> Low (Rendah)</span>
+                            <span class="mt-1 flex items-center text-xs text-slate-500">Bukan hal mendesak, misal request *mouse*.</span>
+                        </span>
+                    </label>
+                    <!-- Medium -->
+                    <label class="relative flex cursor-pointer rounded-xl border border-slate-200 bg-white p-4 shadow-sm focus:outline-none has-[:checked]:border-amber-500 has-[:checked]:ring-1 has-[:checked]:ring-amber-500 transition-all hover:bg-slate-50">
+                        <input type="radio" name="priority" value="2" class="sr-only">
+                        <span class="flex flex-col">
+                            <span class="block text-sm font-bold text-slate-800"><i class="fas fa-circle text-amber-500 text-xs mr-1"></i> Medium (Sedang)</span>
+                            <span class="mt-1 flex items-center text-xs text-slate-500">Mengganggu sebagian kecil pekerjaan Anda.</span>
+                        </span>
+                    </label>
+                    <!-- High -->
+                    <label class="relative flex cursor-pointer rounded-xl border border-slate-200 bg-white p-4 shadow-sm focus:outline-none has-[:checked]:border-red-500 has-[:checked]:ring-1 has-[:checked]:ring-red-500 transition-all hover:bg-slate-50">
+                        <input type="radio" name="priority" value="3" class="sr-only">
+                        <span class="flex flex-col">
+                            <span class="block text-sm font-bold text-slate-800"><i class="fas fa-circle text-red-500 text-xs mr-1"></i> High (Mendesak)</span>
+                            <span class="mt-1 flex items-center text-xs text-slate-500">Sistem mati total, operasi kapal terhenti.</span>
+                        </span>
+                    </label>
+                </div>
             </div>
 
-            <div class="pt-6">
-                <button type="submit" class="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-black text-lg py-4 rounded-2xl shadow-xl shadow-blue-500/30 transition-transform transform hover:-translate-y-1">
-                    KIRIM LAPORAN <i class="fas fa-paper-plane ml-2"></i>
+            <!-- Baris 3: Deskripsi Lengkap -->
+            <div>
+                <label class="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-2">Detail Kejadian / Permintaan <span class="text-red-500">*</span></label>
+                <textarea name="description" rows="5" required placeholder="Jelaskan secara rinci masalah yang terjadi atau kebutuhan Anda..." 
+                    class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all outline-none resize-none"></textarea>
+                <p class="text-[10px] text-slate-400 mt-1">*Mohon sebutkan pesan error yang muncul (jika ada).</p>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="pt-4 flex items-center justify-end gap-3 border-t border-slate-100">
+                <a href="{{ route('portal.dashboard') }}" class="px-6 py-2.5 text-sm font-bold text-slate-500 bg-white border border-slate-300 rounded-xl hover:bg-slate-50 hover:text-slate-700 transition">
+                    Batal
+                </a>
+                <button type="submit" class="px-6 py-2.5 text-sm font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 shadow-md shadow-blue-500/30 transition transform hover:-translate-y-0.5">
+                    <i class="fas fa-paper-plane mr-1"></i> Submit Tiket
                 </button>
             </div>
         </form>

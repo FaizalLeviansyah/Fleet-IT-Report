@@ -47,25 +47,29 @@ class UserPortalController extends Controller
         return view('portal.create-ticket');
     }
 
-    // 3. Proses Simpan Tiket ke Database
     public function storeTicket(Request $request)
     {
         $request->validate([
             'name' => 'required|string|max:255',
+            'priority' => 'required|integer',
             'description' => 'required|string',
-            'priority' => 'required|integer'
         ]);
 
         Ticket::create([
             'ticket_number' => 'INC-' . date('Ymd') . '-' . rand(1000, 9999),
-            'requester_id' => Auth::user()->employee_id, // 🚨 FIX MUTLAK
+            'requester_id' => \Illuminate\Support\Facades\Auth::user()->employee_id, 
+            
             'name' => $request->name,
-            'description' => $request->description,
-            'status' => 1, // Status: New
             'priority' => $request->priority,
+            'description' => $request->description,
+            
+            'status' => 1, // 1 = New / Menunggu Dispatcher (Hendri/Ridho)
+            
+            'assigned_to' => null, 
         ]);
 
-        return redirect()->route('portal.dashboard')->with('success', 'Tiket berhasil dibuat! Tim IT akan segera memprosesnya.');
+        return redirect()->route('portal.dashboard')
+            ->with('success', 'Tiket berhasil dikirim! Menunggu assign dari Supervisor IT.');
     }
 
     // 4. Halaman Knowledge Base (SOP)
