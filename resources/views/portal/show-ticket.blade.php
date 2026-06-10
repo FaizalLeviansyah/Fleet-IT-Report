@@ -27,8 +27,8 @@
                     </div>
                 </div>
 
-                @if(isset($ticket->threads))
-                    @foreach($ticket->threads as $thread)
+                @if(isset($ticket->followups))
+                    @foreach($ticket->followups as $thread)
                         @php $isIT = $thread->user->is_it_team ?? false; @endphp
                         <div class="flex gap-4 {{ $isIT ? 'flex-row-reverse' : '' }}">
                             <div class="w-10 h-10 rounded-full {{ $isIT ? 'bg-blue-600' : 'bg-slate-300' }} flex-shrink-0 flex items-center justify-center font-bold text-white shadow-md">

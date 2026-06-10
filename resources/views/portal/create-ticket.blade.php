@@ -66,6 +66,18 @@
                 </div>
             </div>
 
+            <div>
+                <label class="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-2">Aset Terkait (Opsional)</label>
+                <select name="asset_id" class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none">
+                    <option value="">-- Tidak Terkait Aset Tertentu --</option>
+                    @foreach($myAssets as $asset)
+                        <option value="{{ $asset->id }}" {{ request('asset') == $asset->id ? 'selected' : '' }}>
+                            {{ $asset->asset_tag }} - {{ $asset->name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
             <!-- Baris 3: Deskripsi Lengkap -->
             <div>
                 <label class="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-2">Detail Kejadian / Permintaan <span class="text-red-500">*</span></label>

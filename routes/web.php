@@ -35,6 +35,8 @@ Route::middleware(['auth'])->prefix('portal')->name('portal.')->group(function (
     Route::post('/ticket/{id}/reply', [UserPortalController::class, 'replyTicket'])->name('reply-ticket');
     // Rute untuk user memberikan Approval / Menutup Tiket
     Route::post('/ticket/{id}/approve', [UserPortalController::class, 'approveTicket'])->name('approve-ticket');
+    // Rute Visualisasi Aset Karyawan
+    Route::get('/assets', [UserPortalController::class, 'myAssets'])->name('assets');
 });
 
 // =========================================================================

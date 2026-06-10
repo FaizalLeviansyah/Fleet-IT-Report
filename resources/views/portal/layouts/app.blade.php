@@ -36,6 +36,11 @@
                 <i class="fas fa-life-ring w-5 text-center"></i>
                 <span class="font-semibold text-sm">IT Support (Tickets)</span>
             </a>
+            <!-- Tambahkan tepat di bawah menu IT Support -->
+            <a href="{{ route('portal.assets') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all {{ request()->routeIs('portal.assets') ? 'bg-blue-600 text-white shadow-md' : 'hover:bg-slate-800 hover:text-white' }}">
+                <i class="fas fa-laptop w-5 text-center"></i>
+                <span class="font-semibold text-sm">Aset IT Saya</span>
+            </a>
         </nav>
 
         <div class="p-4 border-t border-slate-700/50 bg-[#0B1120]">
