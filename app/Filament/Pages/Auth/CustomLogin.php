@@ -94,20 +94,41 @@ class CustomLogin extends BaseLogin implements HasActions
 
     public function authenticate(): ?\Filament\Http\Responses\Auth\Contracts\LoginResponse
     {
-        // 1. Eksekusi login bawaan Filament (Cek email & password)
-        $response = parent::authenticate();
+        // Ambil data dari form login
+        $data = $this->form->getState();
 
-        // 2. Ambil data user yang baru saja sukses login
+        // 1. Cek Kredensial Manual ke Database (Bypass Filament Security Check sementara)
+        if (! \Illuminate\Support\Facades\Auth::attempt($this->getCredentialsFromFormData($data), $data['remember'] ?? false)) {
+            // Jika email/password memang salah, munculkan error merah
+            $this->throwFailureValidationException();
+        }
+
+        // Ambil data user yang baru saja sukses login
         $user = \Illuminate\Support\Facades\Auth::user();
 
-        // 3. 🚨 LOGIKA PEMISAH JALUR (GATEWAY) 🚨
+        // 2. 🚨 LOGIKA GATEWAY (MENCEGAT USER BIASA SEBELUM DITENDANG) 🚨
         if ($user && $user->role === 'User Biasa') {
-            // Gunakan redirect bawaan Livewire agar mulus pindah ke portal HRIS
+            
+            // Pastikan akunnya aktif dan punya izin masuk aplikasi ITSM
+            if ($user->is_active != 1 || $user->access_app_IT_Management_System != 1) {
+                \Illuminate\Support\Facades\Auth::logout();
+                $this->throwFailureValidationException();
+            }
+
+            // Redirect mulus ke Portal HRIS
             $this->redirect(route('portal.dashboard'), navigate: false);
             return null; 
         }
 
-        // 4. Jika yang login Admin, biarkan masuk ke dasbor Filament
-        return $response;
+        // 3. JIKA YANG LOGIN ADMIN: Baru kita aktifkan keamanan Filament
+        if ($user instanceof \Filament\Models\Contracts\FilamentUser && ! $user->canAccessPanel(filament()->getCurrentPanel())) {
+            \Illuminate\Support\Facades\Auth::logout();
+            $this->throwFailureValidationException();
+        }
+
+        // Buat sesi aman
+        session()->regenerate();
+
+        return app(\Filament\Http\Responses\Auth\Contracts\LoginResponse::class);
     }
 }
