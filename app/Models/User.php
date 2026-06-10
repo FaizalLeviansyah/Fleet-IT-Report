@@ -19,9 +19,16 @@ class User extends Authenticatable implements FilamentUser, HasName
     protected $guarded = [];
     protected $hidden = ['password', 'remember_token'];
 
+    // 🚨 INI YANG DIMODIFIKASI: Kunci Mutlak Gerbang Panel Filament 🚨
     public function canAccessPanel(Panel $panel): bool
     {
-        return $this->is_active == 1 && $this->access_app_IT_Management_System == 1;
+        // Syarat mutlak masuk Dasbor Admin Filament:
+        // 1. Akun berstatus Aktif
+        // 2. Diberi akses ke aplikasi ITSM
+        // 3. WAJIB memiliki role 'Admin' (User Biasa akan ditendang / 403 Forbidden)
+        return $this->is_active == 1 
+            && $this->access_app_IT_Management_System == 1 
+            && ($this->role === 'Admin' || $this->role === 'admin');
     }
 
     public function getFilamentName(): string

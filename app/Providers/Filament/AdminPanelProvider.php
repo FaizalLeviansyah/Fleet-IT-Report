@@ -196,7 +196,10 @@ class AdminPanelProvider extends PanelProvider
                 'panels::user-menu.profile.before',
                 function (): string {
                     $user = auth()->user();
-                    $jabatan = $user->jabatan ?? 'IT Support Team';
+                    
+                    // 🚨 FIX: Tampilkan role asli jika dia bukan Tim IT
+                    $jabatan = $user->is_it_team ? 'IT Support Team' : ($user->role ?? 'Pegawai');
+                    
                     $namaLengkap = $user->full_name ?? 'Administrator';
 
                     if ($user->avatar_url) {
@@ -236,10 +239,7 @@ class AdminPanelProvider extends PanelProvider
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([ Pages\Dashboard::class ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
-
-            // 👇 SAYA KOSONGKAN WIDGET MANUALNYA KARENA SUDAH DI-DISCOVER OTOMATIS OLEH BARIS DI ATAS 👇
             ->widgets([])
-
             ->plugin(\Saade\FilamentFullCalendar\FilamentFullCalendarPlugin::make()->selectable()->editable())
             ->middleware([ EncryptCookies::class, AddQueuedCookiesToResponse::class, StartSession::class, AuthenticateSession::class, ShareErrorsFromSession::class, VerifyCsrfToken::class, SubstituteBindings::class, DisableBladeIconComponents::class, DispatchServingFilamentEvent::class ])
             ->authMiddleware([ Authenticate::class ]);

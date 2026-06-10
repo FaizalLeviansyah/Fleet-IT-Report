@@ -23,7 +23,7 @@ class CustomLogin extends BaseLogin implements HasActions
     {
         return Action::make('forgotPassword')
             ->label('Forgot password?')
-            ->link() // Ubah wujud jadi teks link (bukan tombol kotak)
+            ->link() 
             ->color('primary')
             ->modalHeading('Reset Password Sistem')
             ->modalDescription('Masukkan email terdaftar Anda. Kami akan mengirimkan instruksi pemulihan ke email tersebut.')
@@ -47,8 +47,6 @@ class CustomLogin extends BaseLogin implements HasActions
 
                 try {
                     // Logic kirim email (Pastikan SMTP di .env sudah disetting)
-                    // \Illuminate\Support\Facades\Password::broker()->sendResetLink(['email_work' => $data['email_reset']]);
-
                     Notification::make()->title('Berhasil!')->body('Tautan reset password telah dikirim ke email Anda.')->success()->send();
                 } catch (\Exception $e) {
                     Notification::make()->title('Gagal Mengirim Email')->body('Terjadi kesalahan pada server SMTP.')->danger()->send();
@@ -56,7 +54,7 @@ class CustomLogin extends BaseLogin implements HasActions
             });
     }
 
-    // Logic Login Asli
+    // 🚨 CUKUP 1 KALI SAJA: Logic Pencocokan Database 🚨
     protected function getCredentialsFromFormData(array $data): array
     {
         return [
@@ -64,20 +62,6 @@ class CustomLogin extends BaseLogin implements HasActions
             'password'  => $data['password'],
         ];
     }
-    // app/Filament/Pages/Auth/CustomLogin.php
-
-protected function getRedirectPath(): string
-{
-    $user = \Illuminate\Support\Facades\Auth::user();
-
-    // Jika admin, tetap di panel Filament
-    if ($user->role === 'admin') {
-        return '/admin';
-    }
-
-    // Jika employee atau vessel, lempar keluar ke route portal Blade
-    return '/portal/dashboard';
-}
 
     public function form(Form $form): Form
     {
@@ -107,22 +91,23 @@ protected function getRedirectPath(): string
                     ->inline(false),
             ]);
     }
+
     public function authenticate(): ?\Filament\Http\Responses\Auth\Contracts\LoginResponse
     {
-        // 1. Eksekusi login bawaan Filament
+        // 1. Eksekusi login bawaan Filament (Cek email & password)
         $response = parent::authenticate();
 
-        // 2. Kenali siapa yang login
+        // 2. Ambil data user yang baru saja sukses login
         $user = \Illuminate\Support\Facades\Auth::user();
 
-        // 3. LOGIKA PEMILAH (GATEWAY) BERDASARKAN SCREENSHOT
-        // Jika dia adalah 'User Biasa', tendang ke Portal HRIS
+        // 3. 🚨 LOGIKA PEMISAH JALUR (GATEWAY) 🚨
         if ($user && $user->role === 'User Biasa') {
-            redirect()->intended(route('portal.dashboard'))->send();
-            exit;
+            // Gunakan redirect bawaan Livewire agar mulus pindah ke portal HRIS
+            $this->redirect(route('portal.dashboard'), navigate: false);
+            return null; 
         }
 
-        // 4. Jika dia 'Admin' atau Teknisi IT, biarkan masuk ke Filament
+        // 4. Jika yang login Admin, biarkan masuk ke dasbor Filament
         return $response;
     }
 }

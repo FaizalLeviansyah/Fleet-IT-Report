@@ -14,14 +14,14 @@ class UserPortalController extends Controller
     {
         $user = Auth::user();
         
-        // 🚨 FIX 1: Ubah employee_id menjadi id agar sesuai dengan User Biasa
-        $myTickets = Ticket::where('requestor_id', $user->id)->get();
+        // 🚨 FIX MUTLAK: Pakai 'requester_id' (huruf E) dan '$user->employee_id'
+        $myTickets = Ticket::where('requester_id', $user->employee_id)->get();
         
         $activeTickets = $myTickets->whereIn('status', [1, 2, 3, 4])->count();
         $resolvedTickets = $myTickets->whereIn('status', [5, 6])->count();
         $myAssets = 0; // Ganti dengan logic count Asset jika tabel sudah terhubung
         
-        $recentTickets = Ticket::where('requestor_id', $user->id)
+        $recentTickets = Ticket::where('requester_id', $user->employee_id)
                                ->latest()
                                ->take(5)
                                ->get();
@@ -31,13 +31,13 @@ class UserPortalController extends Controller
 
     public function profile()
     {
-        return view('portal.profile'); // Kita akan buat file ini selanjutnya
+        return view('portal.profile'); 
     }
 
     public function support()
     {
-        // 🚨 FIX 2: Ubah employee_id menjadi id
-        $tickets = Ticket::where('requestor_id', Auth::user()->id)->latest()->get();
+        // 🚨 FIX MUTLAK: Pakai 'requester_id' dan 'employee_id'
+        $tickets = Ticket::where('requester_id', Auth::user()->employee_id)->latest()->get();
         return view('portal.support', compact('tickets'));
     }
 
@@ -58,14 +58,11 @@ class UserPortalController extends Controller
 
         Ticket::create([
             'ticket_number' => 'INC-' . date('Ymd') . '-' . rand(1000, 9999),
-            // 🚨 FIX 3: Saya samakan menjadi 'requestor_id' agar sinkron dengan query dashboard di atas
-            'requestor_id' => Auth::id(), 
+            'requester_id' => Auth::user()->employee_id, // 🚨 FIX MUTLAK
             'name' => $request->name,
             'description' => $request->description,
             'status' => 1, // Status: New
             'priority' => $request->priority,
-            // Jika ada kolom created_by, buka comment di bawah:
-            // 'created_by' => Auth::id(),
         ]);
 
         return redirect()->route('portal.dashboard')->with('success', 'Tiket berhasil dibuat! Tim IT akan segera memprosesnya.');
@@ -74,7 +71,6 @@ class UserPortalController extends Controller
     // 4. Halaman Knowledge Base (SOP)
     public function kb()
     {
-        // Asumsi kolom status di tabel KnowledgeBase Anda adalah 'status'
         $articles = KnowledgeBase::latest()->get();
         return view('portal.kb', compact('articles'));
     }

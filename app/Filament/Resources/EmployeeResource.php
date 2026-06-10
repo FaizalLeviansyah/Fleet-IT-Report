@@ -50,8 +50,11 @@ class EmployeeResource extends Resource
                             ->label('Password Baru')
                             ->password()
                             ->revealable()
-                            ->dehydrateStateUsing(fn ($state) => Hash::make($state)) 
-                            ->dehydrated(fn ($state) => filled($state))
+                            // 👇 FIX: Jangan tarik password hash dari database ke form
+                            ->dehydrated(fn ($state) => filled($state)) 
+                            ->dehydrateStateUsing(fn ($state) => Hash::make($state))
+                            // 👇 FIX: Kosongkan field saat form Edit dibuka
+                            ->formatStateUsing(fn () => null) 
                             ->required(fn (string $context): bool => $context === 'create'),
 
                         // TOGGLE AKSES
