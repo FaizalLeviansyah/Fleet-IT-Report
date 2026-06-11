@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use App\Models\Ticket;
 use App\Models\KnowledgeBase;
 use App\Models\Asset;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
 
 class UserPortalController extends Controller
@@ -41,6 +43,59 @@ class UserPortalController extends Controller
         return view('portal.profile'); 
     }
 
+    // =========================================================================
+    // UPDATE PASSWORD PEGAWAI
+    // =========================================================================
+    public function updatePassword(Request $request)
+    {
+        $request->validate([
+            'current_password' => 'required',
+            'new_password' => 'required|min:6|confirmed', // Pastikan confirm password sesuai
+        ]);
+
+        $user = Auth::user();
+
+        // Cek apakah password lama yang diketikkan cocok dengan database
+        if (!Hash::check($request->current_password, $user->password)) {
+            return back()->withErrors(['current_password' => 'Password saat ini tidak cocok dengan sistem.']);
+        }
+
+        // Simpan password baru
+        $user->update([
+            'password' => Hash::make($request->new_password)
+        ]);
+
+        return back()->with('success', 'Password Anda berhasil diperbarui!');
+    }
+
+    // =========================================================================
+    // UPDATE FOTO PROFIL PEGAWAI
+    // =========================================================================
+    public function updatePhoto(Request $request)
+    {
+        $request->validate([
+            'photo' => 'required|image|mimes:jpg,jpeg,png|max:2048', // Maks 2MB
+        ]);
+
+        $user = Auth::user();
+
+        if ($request->hasFile('photo')) {
+            // Hapus foto lama jika ada
+            if ($user->profile_photo_path) {
+                Storage::disk('public')->delete($user->profile_photo_path);
+            }
+
+            // Simpan foto baru ke folder storage/app/public/profile-photos
+            $path = $request->file('photo')->store('profile-photos', 'public');
+            
+            $user->update([
+                'profile_photo_path' => $path
+            ]);
+        }
+
+        return back()->with('success', 'Foto profil berhasil diperbarui!');
+    }
+
     public function support()
     {
         $tickets = Ticket::where('requester_id', Auth::user()->employee_id)->latest()->get();
@@ -53,17 +108,10 @@ class UserPortalController extends Controller
     public function createTicket()
     {
         $user = Auth::user();
-
-        // 1. Ambil Aset Pribadi (Berdasarkan Nama)
-        $myAssets = Asset::where('current_user', $user->full_name)
-                         ->orWhere('contact_person', $user->full_name)
-                         ->get();
-
-        // 2. Ambil Aset Umum (Printer, Scanner, Network, dll yang tidak dipegang perorangan)
-        // Asumsi: Aset umum kolom current_user-nya kosong (null)
-        $generalAssets = Asset::whereNull('current_user')
-                              ->whereNull('contact_person')
-                              ->get();
+        // Aset Pribadi
+        $myAssets = Asset::where('current_user', $user->full_name)->orWhere('contact_person', $user->full_name)->get();
+        // Aset Umum (Asumsi tidak ada pemilik spesifik)
+        $generalAssets = Asset::whereNull('current_user')->whereNull('contact_person')->get();
 
         return view('portal.create-ticket', compact('myAssets', 'generalAssets'));
     }

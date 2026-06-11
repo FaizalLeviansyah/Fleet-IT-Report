@@ -27,6 +27,8 @@ Route::middleware(['auth'])->prefix('portal')->name('portal.')->group(function (
     Route::get('/ticket/create', [UserPortalController::class, 'createTicket'])->name('create-ticket');
     Route::post('/ticket/store', [UserPortalController::class, 'storeTicket'])->name('store-ticket');
     Route::get('/profile', [UserPortalController::class, 'profile'])->name('profile');
+    Route::post('/profile/update-password', [UserPortalController::class, 'updatePassword'])->name('profile.update-password');
+    Route::post('/profile/update-photo', [UserPortalController::class, 'updatePhoto'])->name('profile.update-photo');
     Route::get('/kb', [UserPortalController::class, 'kb'])->name('kb');
     Route::get('/support', [UserPortalController::class, 'support'])->name('support');
     
