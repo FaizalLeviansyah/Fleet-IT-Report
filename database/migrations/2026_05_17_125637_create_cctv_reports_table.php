@@ -11,9 +11,9 @@ return new class extends Migration
         Schema::create('cctv_reports', function (Blueprint $table) {
             $table->id();
             $table->string('vessel_name'); // Nama Kapal
-            $table->string('channel');     // CH-01, CH-02, dst
-            $table->string('image_path');  // Path Gambar Snapshot
-            $table->timestamp('captured_at'); // Waktu snapshot diambil
+            $table->date('report_date')->nullable(); // Tanggal Laporan Mingguan
+            $table->string('status')->default('Normal'); // Status Keseluruhan (Normal/Warning/Critical)
+            $table->json('camera_checklist')->nullable(); // Menampung array checklist banyak kamera
             $table->timestamps();
         });
     }

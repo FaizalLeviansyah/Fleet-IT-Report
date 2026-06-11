@@ -2,15 +2,22 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class CctvReport extends Model
 {
-    // Gunakan koneksi yang sudah Anda buat di .env
-    protected $connection = 'mysql_cctv';
+    use HasFactory;
 
-    // 🚨 KOREKSI: Arahkan ke tabel yang benar yaitu 'laporan'
-    protected $table = 'cctv_reports';
-    
-    protected $guarded = [];
+    protected $fillable = [
+        'vessel_name',
+        'report_date',
+        'status',
+        'camera_checklist',
+    ];
+
+    // Wajib di-cast ke array agar fitur Repeater (Checklist) Filament berfungsi
+    protected $casts = [
+        'camera_checklist' => 'array',
+    ];
 }
