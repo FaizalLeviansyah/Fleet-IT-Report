@@ -1,101 +1,171 @@
 @extends('portal.layouts.app')
-@section('page_title', 'Monitoring Tiket: ' . ($ticket->ticket_number ?? ''))
+@section('page_title', 'Detail Tiket ' . $ticket->ticket_number)
 
 @section('content')
-<div class="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
+<div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
     
-    <div class="lg:col-span-2 space-y-6">
-        
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-[600px]">
-            <div class="px-6 py-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
-                <h3 class="font-bold text-slate-800"><i class="fas fa-comments text-blue-500 mr-2"></i> Log & Tindakan IT</h3>
+    <!-- KOLOM KIRI: TICKET INFO & ACTION (1/3) -->
+    <div class="space-y-6">
+        <!-- Info Card -->
+        <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
+            <div class="mb-4">
+                <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Nomor Tiket</p>
+                <h2 class="text-2xl font-black text-blue-600">{{ $ticket->ticket_number }}</h2>
             </div>
             
-            <div class="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50/50">
-                <div class="flex gap-4">
-                    <div class="w-10 h-10 rounded-full bg-slate-300 flex-shrink-0 flex items-center justify-center font-bold text-white">
-                        {{ substr($ticket->requester->full_name ?? 'U', 0, 1) }}
-                    </div>
-                    <div class="flex-1">
-                        <div class="bg-white p-4 rounded-2xl rounded-tl-none border border-slate-200 shadow-sm">
-                            <div class="flex justify-between items-start mb-2">
-                                <span class="font-bold text-sm text-slate-800">{{ $ticket->requester->full_name ?? 'Anda' }} (Requester)</span>
-                                <span class="text-[10px] text-slate-400 font-medium">{{ \Carbon\Carbon::parse($ticket->created_at)->format('d M Y, H:i') }}</span>
-                            </div>
-                            <p class="text-sm text-slate-600">{{ $ticket->description }}</p>
+            <h3 class="text-lg font-bold text-slate-800 mb-4">{{ $ticket->name }}</h3>
+            
+            <div class="space-y-4">
+                <div class="flex items-center justify-between pb-3 border-b border-slate-50">
+                    <span class="text-xs font-bold text-slate-500">Status</span>
+                    @if(in_array($ticket->status, [5, 6]))
+                        <span class="px-2 py-1 rounded-md text-[10px] font-black uppercase bg-emerald-50 text-emerald-600 border border-emerald-100">Selesai</span>
+                    @elseif($ticket->status == 1)
+                        <span class="px-2 py-1 rounded-md text-[10px] font-black uppercase bg-blue-50 text-blue-600 border border-blue-100">Menunggu IT</span>
+                    @else
+                        <span class="px-2 py-1 rounded-md text-[10px] font-black uppercase bg-amber-50 text-amber-600 border border-amber-100">Diproses</span>
+                    @endif
+                </div>
+                <div class="flex items-center justify-between pb-3 border-b border-slate-50">
+                    <span class="text-xs font-bold text-slate-500">Prioritas</span>
+                    <span class="text-xs font-black {{ $ticket->priority == 3 ? 'text-red-500' : ($ticket->priority == 2 ? 'text-amber-500' : 'text-slate-600') }}">
+                        {{ $ticket->priority == 3 ? 'High' : ($ticket->priority == 2 ? 'Medium' : 'Low') }}
+                    </span>
+                </div>
+                <div class="flex items-center justify-between pb-3 border-b border-slate-50">
+                    <span class="text-xs font-bold text-slate-500">Kategori</span>
+                    <span class="text-xs font-bold text-slate-800">{{ $ticket->type }}</span>
+                </div>
+                <div class="flex items-center justify-between pb-3 border-b border-slate-50">
+                    <span class="text-xs font-bold text-slate-500">Dibuat Pada</span>
+                    <span class="text-xs font-bold text-slate-800">{{ \Carbon\Carbon::parse($ticket->created_at)->format('d M Y, H:i') }}</span>
+                </div>
+                <div class="pt-2">
+                    <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest block mb-2">Ditangani Oleh:</span>
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center font-bold text-xs">
+                            {{ $ticket->technician ? substr($ticket->technician->full_name, 0, 1) : '?' }}
                         </div>
+                        <span class="text-sm font-bold text-slate-700">{{ $ticket->technician->full_name ?? 'Belum Di-assign' }}</span>
                     </div>
                 </div>
-
-                @if(isset($ticket->followups))
-                    @foreach($ticket->followups as $thread)
-                        @php $isIT = $thread->user->is_it_team ?? false; @endphp
-                        <div class="flex gap-4 {{ $isIT ? 'flex-row-reverse' : '' }}">
-                            <div class="w-10 h-10 rounded-full {{ $isIT ? 'bg-blue-600' : 'bg-slate-300' }} flex-shrink-0 flex items-center justify-center font-bold text-white shadow-md">
-                                {{ substr($thread->user->full_name ?? 'U', 0, 1) }}
-                            </div>
-                            <div class="flex-1 {{ $isIT ? 'text-right' : '' }}">
-                                <div class="inline-block text-left {{ $isIT ? 'bg-blue-50 border-blue-100 rounded-tr-none' : 'bg-white border-slate-200 rounded-tl-none' }} p-4 rounded-2xl border shadow-sm max-w-[90%]">
-                                    <div class="flex justify-between items-center mb-2 gap-4">
-                                        <span class="font-bold text-sm {{ $isIT ? 'text-blue-800' : 'text-slate-800' }}">
-                                            {{ $thread->user->full_name ?? 'User' }} 
-                                            @if($isIT) <i class="fas fa-check-circle text-blue-500 ml-1" title="Teknisi IT"></i> @endif
-                                        </span>
-                                        <span class="text-[10px] text-slate-400 font-medium">{{ \Carbon\Carbon::parse($thread->created_at)->format('d M Y, H:i') }}</span>
-                                    </div>
-                                    <p class="text-sm {{ $isIT ? 'text-blue-900' : 'text-slate-600' }}">{{ $thread->message }}</p>
-                                    
-                                    @if($thread->attachment)
-                                        <a href="/storage/{{ $thread->attachment }}" target="_blank" class="mt-3 inline-flex items-center gap-2 text-xs font-bold text-blue-600 bg-white px-3 py-1.5 rounded-lg border border-blue-200 hover:bg-blue-50">
-                                            <i class="fas fa-paperclip"></i> Lihat Lampiran Evidence
-                                        </a>
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
-                    @endforeach
-                @endif
-            </div>
-
-            <div class="p-4 border-t border-slate-200 bg-white">
-                <form action="{{ route('portal.reply-ticket', $ticket->id) }}" method="POST" enctype="multipart/form-data" class="flex gap-3">
-                    @csrf
-                    <input type="file" name="attachment" id="file-upload" class="hidden">
-                    <label for="file-upload" class="cursor-pointer w-12 h-12 flex items-center justify-center rounded-xl bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-blue-600 transition">
-                        <i class="fas fa-paperclip text-lg"></i>
-                    </label>
-                    <input type="text" name="message" required placeholder="Ketik balasan atau berikan informasi tambahan..." class="flex-1 rounded-xl border border-slate-300 px-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none">
-                    <button type="submit" class="px-6 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-md transition">
-                        Kirim
-                    </button>
-                </form>
             </div>
         </div>
-    </div>
 
-    <div class="space-y-6">
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 text-center">
-            <h4 class="text-xs font-extrabold text-slate-400 uppercase tracking-widest mb-4">Status Saat Ini</h4>
-            <div class="inline-flex items-center justify-center px-4 py-2 rounded-full text-sm font-black uppercase bg-blue-100 text-blue-600 border border-blue-200 mb-4">
-                {{ $ticket->status_name ?? 'IN PROGRESS' }}
+        <!-- Approval Box (MUNCUL JIKA STATUS = 5 / RESOLVED) -->
+        @if($ticket->status == 5)
+        <div class="bg-emerald-50 rounded-3xl border border-emerald-200 shadow-sm p-6 text-center">
+            <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-xl mx-auto mb-3">
+                <i class="fas fa-check-double"></i>
             </div>
-            <p class="text-xs text-slate-500 font-medium">Teknisi: <span class="font-bold text-slate-800">{{ $ticket->technician->full_name ?? 'Menunggu Assign' }}</span></p>
-        </div>
-
-        @if(in_array($ticket->status, [4, 5])) <div class="bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-2xl shadow-lg p-6 text-white relative overflow-hidden">
-            <div class="absolute -right-4 -top-4 opacity-10 text-7xl"><i class="fas fa-check-double"></i></div>
-            <h4 class="font-bold text-lg mb-2 relative z-10">Konfirmasi Penyelesaian</h4>
-            <p class="text-xs text-emerald-100 mb-6 relative z-10">Tim IT menyatakan masalah ini telah diselesaikan. Mohon periksa dan berikan persetujuan Anda untuk menutup tiket ini.</p>
-            
-            <form action="{{ route('portal.approve-ticket', $ticket->id) }}" method="POST" class="relative z-10">
+            <h3 class="font-black text-emerald-800 mb-2">Tiket Selesai?</h3>
+            <p class="text-xs font-medium text-emerald-600 mb-4">Teknisi menyatakan kendala sudah diperbaiki. Silakan konfirmasi untuk menutup tiket.</p>
+            <form action="{{ route('portal.approve-ticket', $ticket->id) }}" method="POST">
                 @csrf
-                <button type="submit" class="w-full bg-white text-emerald-700 font-black py-3 rounded-xl shadow-md hover:shadow-lg hover:bg-emerald-50 transition transform hover:-translate-y-0.5">
-                    APPROVE & TUTUP TIKET
+                <button type="submit" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md transition-all">
+                    Tutup & Approve Tiket
                 </button>
             </form>
         </div>
         @endif
     </div>
 
+    <!-- KOLOM KANAN: LIVE CHAT THREAD (2/3) -->
+    <div class="lg:col-span-2 flex flex-col h-[800px] bg-slate-50 rounded-3xl border border-slate-200 shadow-inner overflow-hidden relative">
+        
+        <!-- Chat Header -->
+        <div class="bg-white px-6 py-4 border-b border-slate-200 flex items-center justify-between z-10 shadow-sm">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center"><i class="fas fa-comments"></i></div>
+                <div>
+                    <h3 class="font-bold text-slate-800">Ruang Diskusi IT</h3>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Respon Real-time</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Messages (Scrollable) -->
+        <div class="flex-1 overflow-y-auto p-6 space-y-6" id="chatContainer">
+            
+            <!-- Pesan Pertama (Deskripsi Awal User) -->
+            <div class="flex flex-col items-end">
+                <div class="max-w-[80%] bg-blue-600 text-white p-4 rounded-2xl rounded-tr-none shadow-sm">
+                    <p class="text-sm font-medium whitespace-pre-wrap">{{ $ticket->description }}</p>
+                </div>
+                <span class="text-[10px] font-bold text-slate-400 mt-1">Anda &middot; {{ \Carbon\Carbon::parse($ticket->created_at)->format('H:i') }}</span>
+            </div>
+
+            <!-- Loop Followups/Balasan -->
+            @foreach($ticket->followups as $reply)
+                @if($reply->user_id == Auth::user()->employee_id)
+                    <!-- Bubble Kanan (User) -->
+                    <div class="flex flex-col items-end">
+                        <div class="max-w-[80%] bg-blue-600 text-white p-4 rounded-2xl rounded-tr-none shadow-sm">
+                            <p class="text-sm font-medium whitespace-pre-wrap">{{ $reply->message }}</p>
+                            @if($reply->attachment)
+                                <a href="{{ asset('storage/'.$reply->attachment) }}" target="_blank" class="mt-3 inline-flex items-center gap-2 text-xs bg-black/20 px-3 py-1.5 rounded-lg hover:bg-black/30 transition">
+                                    <i class="fas fa-paperclip"></i> Lihat Lampiran
+                                </a>
+                            @endif
+                        </div>
+                        <span class="text-[10px] font-bold text-slate-400 mt-1">Anda &middot; {{ \Carbon\Carbon::parse($reply->created_at)->format('d M, H:i') }}</span>
+                    </div>
+                @else
+                    <!-- Bubble Kiri (Admin/Teknisi) -->
+                    <div class="flex flex-col items-start">
+                        <div class="flex items-end gap-2">
+                            <div class="w-8 h-8 rounded-full bg-slate-800 text-white flex items-center justify-center text-xs font-bold shadow-sm">IT</div>
+                            <div class="max-w-[80%] bg-white border border-slate-200 text-slate-700 p-4 rounded-2xl rounded-tl-none shadow-sm">
+                                <p class="text-sm font-medium whitespace-pre-wrap">{{ $reply->message }}</p>
+                                @if($reply->attachment)
+                                    <a href="{{ asset('storage/'.$reply->attachment) }}" target="_blank" class="mt-3 inline-flex items-center gap-2 text-xs bg-slate-100 text-slate-600 px-3 py-1.5 rounded-lg hover:bg-slate-200 transition">
+                                        <i class="fas fa-paperclip"></i> Lihat Lampiran
+                                    </a>
+                                @endif
+                            </div>
+                        </div>
+                        <span class="text-[10px] font-bold text-slate-400 mt-1 ml-10">{{ $reply->user->full_name ?? 'IT Support' }} &middot; {{ \Carbon\Carbon::parse($reply->created_at)->format('d M, H:i') }}</span>
+                    </div>
+                @endif
+            @endforeach
+        </div>
+
+        <!-- Chat Input Area (Hanya Muncul jika belum Closed) -->
+        @if($ticket->status != 6)
+        <div class="bg-white p-4 border-t border-slate-200">
+            <form action="{{ route('portal.reply-ticket', $ticket->id) }}" method="POST" enctype="multipart/form-data">
+                @csrf
+                <div class="flex items-end gap-3 bg-slate-50 border border-slate-200 rounded-2xl p-2 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-100 transition-all">
+                    
+                    <!-- Tombol Attachment -->
+                    <label class="w-10 h-10 flex-shrink-0 flex items-center justify-center bg-white border border-slate-200 rounded-xl text-slate-400 hover:text-blue-600 hover:border-blue-300 cursor-pointer transition">
+                        <i class="fas fa-paperclip"></i>
+                        <input type="file" name="attachment" class="hidden">
+                    </label>
+
+                    <!-- Textarea Chat -->
+                    <textarea name="message" rows="1" required placeholder="Ketik balasan Anda di sini..." class="w-full bg-transparent border-none focus:ring-0 resize-none text-sm text-slate-700 py-2.5 max-h-32" oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"></textarea>
+
+                    <!-- Tombol Kirim -->
+                    <button type="submit" class="w-10 h-10 flex-shrink-0 flex items-center justify-center bg-blue-600 rounded-xl text-white hover:bg-blue-700 transition shadow-md shadow-blue-500/30">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+        @else
+        <!-- Box Tiket Ditutup -->
+        <div class="bg-slate-100 p-4 text-center border-t border-slate-200">
+            <p class="text-sm font-bold text-slate-500"><i class="fas fa-lock mr-1"></i> Tiket ini telah ditutup dan tidak dapat dibalas kembali.</p>
+        </div>
+        @endif
+
+    </div>
 </div>
+
+<script>
+    // Auto-scroll chat ke paling bawah saat halaman diload
+    const chatContainer = document.getElementById('chatContainer');
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+</script>
 @endsection

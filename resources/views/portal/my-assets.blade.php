@@ -1,86 +1,96 @@
 @extends('portal.layouts.app')
-@section('page_title', 'inventaris aset it saya')
+@section('page_title', 'Aset IT Saya')
 
 @section('content')
 <div class="max-w-7xl mx-auto space-y-6">
     
-    <!-- header -->
-    <div class="flex flex-col md:flex-row md:items-center justify-between bg-white p-6 rounded-2xl border border-slate-200 shadow-sm gap-4">
+    <!-- HEADER -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between bg-white p-6 md:p-8 rounded-3xl border border-slate-100 shadow-sm gap-4">
         <div>
-            <h2 class="text-xl font-bold text-slate-800">perangkat kerja anda</h2>
-            <p class="text-sm text-slate-500 mt-1">daftar perangkat keras dan lisensi perangkat lunak yang diamanahkan kepada anda.</p>
+            <h2 class="text-2xl font-black text-slate-800">My IT Assets</h2>
+            <p class="text-sm font-medium text-slate-500 mt-1">Daftar perangkat keras dan perangkat lunak yang diamanahkan kepada Anda.</p>
         </div>
-        <div class="inline-flex items-center justify-center gap-2 bg-slate-100 text-slate-600 font-bold py-2.5 px-6 rounded-xl border border-slate-200">
-            <i class="fas fa-boxes"></i> total: {{ $assets->count() }} perangkat
+        <div class="bg-slate-50 px-5 py-2.5 rounded-xl border border-slate-200 text-center">
+            <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Total Perangkat</p>
+            <p class="text-xl font-black text-blue-600">{{ $assets->count() }} <span class="text-sm font-bold text-slate-500">Unit</span></p>
         </div>
     </div>
 
-    <!-- grid visualisasi aset -->
+    <!-- GRID ASSETS -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         @forelse($assets as $asset)
-        <!-- kartu aset -->
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden group">
+        <div class="bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-md hover:border-blue-200 transition-all overflow-hidden flex flex-col">
             
-            <!-- bagian atas card (gradient & icon) -->
-            <div class="h-24 bg-gradient-to-br from-slate-800 to-slate-900 relative p-5 flex items-start justify-between overflow-hidden">
-                <!-- pola latar -->
-                <div class="absolute -right-4 -top-4 opacity-10 text-8xl group-hover:scale-110 transition-transform duration-500">
-                    <i class="fas fa-laptop"></i> <!-- bisa di-dinamiskan berdasarkan kategori aset -->
-                </div>
-                
-                <div class="relative z-10">
-                    <span class="px-2.5 py-1 bg-white/20 backdrop-blur-sm border border-white/30 text-white text-[10px] font-black uppercase rounded-lg tracking-wider">
-                        {{ $asset->asset_tag ?? 'no-tag' }}
-                    </span>
+            <!-- Card Header (Visual Warna & Icon) -->
+            <div class="h-24 bg-gradient-to-br from-slate-800 to-slate-900 p-5 relative overflow-hidden flex justify-between items-start">
+                <div class="absolute -right-4 -bottom-4 opacity-10 text-7xl text-white">
+                    <i class="fas {{ str_contains(strtolower($asset->asset_type), 'laptop') ? 'fa-laptop' : (str_contains(strtolower($asset->asset_type), 'printer') ? 'fa-print' : 'fa-server') }}"></i>
                 </div>
                 <div class="relative z-10">
-                    @if(($asset->status ?? 'active') === 'active')
-                        <span class="w-3 h-3 rounded-full bg-emerald-400 border-2 border-white shadow-sm block animate-pulse" title="active"></span>
+                    <span class="px-2.5 py-1 bg-white/20 backdrop-blur-sm text-white text-[10px] font-black uppercase rounded-lg border border-white/10">{{ $asset->asset_type }}</span>
+                </div>
+                <div class="relative z-10">
+                    @if($asset->status === 'Active')
+                        <span class="flex items-center gap-1.5 text-xs font-bold text-emerald-400"><span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Online</span>
                     @else
-                        <span class="w-3 h-3 rounded-full bg-red-400 border-2 border-white shadow-sm block" title="in repair"></span>
+                        <span class="flex items-center gap-1.5 text-xs font-bold text-red-400"><span class="w-2 h-2 rounded-full bg-red-400"></span> Offline</span>
                     @endif
                 </div>
             </div>
 
-            <!-- bagian bawah card (detail & specs) -->
-            <div class="p-5 relative -mt-6">
-                <!-- ikon timbul -->
-                <div class="w-12 h-12 bg-white rounded-xl shadow-md border border-slate-100 flex items-center justify-center text-xl text-blue-600 mb-3">
-                    <i class="fas fa-desktop"></i>
-                </div>
+            <!-- Identitas Perangkat -->
+            <div class="px-6 pt-4 pb-2 border-b border-slate-50">
+                <h3 class="text-lg font-black text-slate-800 leading-tight">{{ $asset->asset_name }}</h3>
+                <p class="text-xs font-bold text-blue-600 mt-1">{{ $asset->manufacturer }} {{ $asset->model }}</p>
+            </div>
 
-                <h3 class="font-black text-lg text-slate-800 leading-tight mb-1">{{ $asset->name }}</h3>
-                <p class="text-xs font-semibold text-blue-600 mb-4">{{ $asset->category->name ?? 'perangkat it' }}</p>
-
-                <!-- spesifikasi mini -->
-                <div class="space-y-2 mb-5">
-                    <div class="flex justify-between items-center text-sm border-b border-slate-100 pb-2">
-                        <span class="text-slate-500 font-medium"><i class="fas fa-barcode w-4 text-center mr-1"></i> serial no.</span>
-                        <span class="font-bold text-slate-800">{{ $asset->serial_number ?? '-' }}</span>
-                    </div>
-                    <div class="flex justify-between items-center text-sm border-b border-slate-100 pb-2">
-                        <span class="text-slate-500 font-medium"><i class="fas fa-microchip w-4 text-center mr-1"></i> spesifikasi</span>
-                        <span class="font-bold text-slate-800 text-right max-w-[150px] truncate" title="{{ $asset->notes }}">{{ $asset->notes ?? 'standar' }}</span>
+            <!-- Spesifikasi Teknis -->
+            <div class="p-6 space-y-4 flex-1">
+                <div class="flex items-start gap-3">
+                    <div class="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 flex-shrink-0 border border-slate-100"><i class="fas fa-microchip"></i></div>
+                    <div>
+                        <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Processor (CPU)</p>
+                        <p class="text-sm font-bold text-slate-700 mt-0.5 line-clamp-1" title="{{ $asset->cpu_model }}">{{ $asset->cpu_model ?? '-' }}</p>
                     </div>
                 </div>
+                <div class="flex items-start gap-3">
+                    <div class="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 flex-shrink-0 border border-slate-100"><i class="fas fa-memory"></i></div>
+                    <div>
+                        <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Installed RAM</p>
+                        <p class="text-sm font-bold text-slate-700 mt-0.5">{{ $asset->total_ram ?? '-' }} GB</p>
+                    </div>
+                </div>
+                <div class="flex items-start gap-3">
+                    <div class="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 flex-shrink-0 border border-slate-100"><i class="fas fa-network-wired"></i></div>
+                    <div>
+                        <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">IP Address</p>
+                        <p class="text-sm font-bold text-slate-700 mt-0.5">{{ $asset->ip_address ?? 'DHCP / No Net' }}</p>
+                    </div>
+                </div>
+                <div class="flex items-start gap-3">
+                    <div class="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 flex-shrink-0 border border-slate-100"><i class="fab fa-windows"></i></div>
+                    <div>
+                        <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">OS Version</p>
+                        <p class="text-sm font-bold text-slate-700 mt-0.5">{{ $asset->os_version ?? '-' }}</p>
+                    </div>
+                </div>
+            </div>
 
-                <!-- tombol lapor rusak -->
-                <a href="{{ route('portal.create-ticket') }}?asset={{ $asset->id }}" class="w-full flex items-center justify-center gap-2 bg-slate-50 hover:bg-red-50 text-slate-600 hover:text-red-600 border border-slate-200 hover:border-red-200 font-bold py-2 rounded-xl transition-colors text-sm">
-                    <i class="fas fa-tools"></i> lapor masalah aset ini
-                </a>
+            <!-- Footer Card -->
+            <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 mt-auto flex justify-between items-center">
+                <span class="text-[10px] font-bold text-slate-400"><i class="fas fa-sync-alt mr-1"></i> Sync: {{ $asset->last_seen ? \Carbon\Carbon::parse($asset->last_seen)->diffForHumans() : '-' }}</span>
+                <a href="{{ route('portal.create-ticket', ['asset' => $asset->id]) }}" class="text-xs font-bold text-blue-600 hover:text-blue-800 transition">Lapor Kendala &rarr;</a>
             </div>
         </div>
         @empty
-        <!-- state jika tidak punya aset -->
-        <div class="col-span-full bg-white rounded-2xl border border-dashed border-slate-300 p-12 text-center">
-            <div class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center text-3xl text-slate-400 mx-auto mb-4">
-                <i class="fas fa-box-open"></i>
+        <div class="col-span-full py-16 text-center bg-white rounded-3xl border border-slate-100 shadow-sm">
+            <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-slate-50 text-slate-300 mb-4 border border-slate-100">
+                <i class="fas fa-box-open text-3xl"></i>
             </div>
-            <h3 class="text-lg font-bold text-slate-700 mb-1">belum ada aset terdaftar</h3>
-            <p class="text-sm text-slate-500">saat ini tidak ada perangkat it atau aset perusahaan yang terdaftar atas nama anda.</p>
+            <h3 class="text-xl font-black text-slate-800 mb-2">Tidak Ada Aset</h3>
+            <p class="text-slate-500 font-medium text-sm">Belum ada perangkat IT yang ditugaskan kepada Anda atau Agent belum mendeteksi laptop Anda.</p>
         </div>
         @endforelse
     </div>
-
 </div>
 @endsection

@@ -4,11 +4,14 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Ticket;
+use App\Models\TicketFollowup;
+use Illuminate\Support\Facades\Storage;
 use App\Models\KnowledgeBase;
 use App\Models\Asset;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
+
 
 class UserPortalController extends Controller
 {
@@ -186,42 +189,53 @@ class UserPortalController extends Controller
         return view('portal.show-ticket', compact('ticket'));
     }
 
+    // =========================================================================
+    // FUNGSI BALAS PESAN TIKET (DARI USER KE TIM IT)
+    // =========================================================================
     public function replyTicket(Request $request, $id)
     {
         $request->validate([
             'message' => 'required|string',
-            'attachment' => 'nullable|file|max:5120', 
+            'attachment' => 'nullable|file|max:5120', // Maksimal file 5MB
         ]);
 
-        $ticket = Ticket::where('id', $id)->where('requester_id', Auth::user()->employee_id)->firstOrFail();
+        $ticket = Ticket::findOrFail($id);
 
+        // Upload lampiran jika ada
         $attachmentPath = null;
         if ($request->hasFile('attachment')) {
-            $attachmentPath = $request->file('attachment')->store('ticket-attachments', 'public');
+            $attachmentPath = $request->file('attachment')->store('tickets/attachments', 'public');
         }
 
-        \App\Models\TicketFollowup::create([
+        // Simpan balasan ke database
+        TicketFollowup::create([
             'ticket_id' => $ticket->id,
-            'user_id' => Auth::user()->employee_id, 
+            'user_id' => Auth::user()->employee_id, // Sesuai relasi user di table followup
             'message' => $request->message,
             'attachment' => $attachmentPath,
         ]);
 
-        return redirect()->back()->with('success', 'Pesan berhasil dikirim.');
+        // LOGIC PINTAR: Jika status tiket sedang "Pending" (menunggu balasan user),
+        // otomatis ubah statusnya kembali menjadi "In Progress" karena user sudah membalas.
+        if ($ticket->status == 4) { // 4 = Pending
+            $ticket->update(['status' => 3]); // 3 = In Progress
+        }
+
+        return back()->with('welcome_msg', 'Pesan balasan Anda berhasil terkirim!');
     }
 
+    // =========================================================================
+    // FUNGSI APPROVE TIKET (USER MENYETUJUI TIKET DITUTUP)
+    // =========================================================================
     public function approveTicket($id)
     {
-        $ticket = Ticket::where('id', $id)->where('requester_id', Auth::user()->employee_id)->firstOrFail();
+        $ticket = Ticket::findOrFail($id);
         
-        $ticket->update(['status' => 6]);
-
-        \App\Models\TicketFollowup::create([
-            'ticket_id' => $ticket->id,
-            'user_id' => Auth::user()->employee_id,
-            'message' => '✅ TIKET DISETUJUI DAN DITUTUP OLEH REQUESTER.',
+        // Ubah status menjadi Closed (6)
+        $ticket->update([
+            'status' => 6 // 6 = Closed (Ditutup permanen)
         ]);
 
-        return redirect()->back()->with('success', 'Terima kasih! Tiket telah disetujui dan ditutup.');
+        return back()->with('welcome_msg', 'Terima kasih! Tiket telah berhasil ditutup.');
     }
 }
