@@ -47,24 +47,22 @@
                 <p class="respect">R.E.S.P.E.C.T</p>
             </div>
 
-            <!-- 👇 TAMBAHAN DROPDOWN ALA GLPI 👇 -->
-            <div class="login-destination-wrapper" wire:ignore>
-                <label class="destination-label">Login Destination </label>
-                <div class="destination-select-container">
-                    <select class="destination-select">
-                        <option value="auto">🤖 Auto-Detect Route (Recomennded)</option>
-                        <option value="admin">👑 Admin Panel</option>
-                        <option value="portal">💼 Employee or Vessel Crew</option>
-                    </select>
-                    <div class="select-icon">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                    </div>
-                </div>
-                <p class="destination-hint">*Sistem akan mengarahkan Anda otomatis berdasarkan hak akses.</p>
-            </div>
-            <!-- 👆 AKHIR TAMBAHAN 👆 -->
+            <form wire:submit.prevent="authenticate" class="amarin-form">
 
-            <form wire:submit="authenticate" class="amarin-form">
+                <div class="login-destination-wrapper">
+                    <label class="destination-label">Login Destination </label>
+                    <div class="destination-select-container">
+                        <select class="destination-select" wire:model.live="loginDestination" id="destSelect">
+                            <option value="auto">🤖 Auto-Detect Route (Recommended)</option>
+                            <option value="admin">👑 Admin Panel</option>
+                            <option value="portal">💼 Employee or Vessel Crew</option>
+                        </select>
+                        <div class="select-icon">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                    </div>
+                    <p class="destination-hint">*Sistem akan mengarahkan Anda otomatis berdasarkan hak akses.</p>
+                </div>
 
                 {{ $this->form }}
 
@@ -72,7 +70,7 @@
                     {{ $this->forgotPasswordAction }}
                 </div>
                 
-                <button type="submit" class="btn-submit" id="submitBtn">
+                <button type="submit" class="btn-submit" id="submitBtn" wire:ignore>
                     Sign In
                     <svg style="width: 18px; height: 18px; transition: transform 0.3s;" class="btn-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                 </button>
@@ -82,9 +80,11 @@
     </div>
 
     <x-filament-actions::modals />
-
+    @livewire('notifications')
+    <x-filament-actions::modals />
     <style>
-        .amarin-login-wrapper { display: flex; flex-direction: row-reverse; position: fixed; inset: 0; width: 100vw; height: 100vh; background-color: #FAFBFC; z-index: 99999; font-family: 'Poppins', sans-serif; overflow: hidden; }
+        /* 🚨 FIX UTAMA: z-index diturunkan ke 40 agar SweetAlert (z-50) bisa muncul di atasnya! */
+        .amarin-login-wrapper { display: flex; flex-direction: row-reverse; position: fixed; inset: 0; width: 100vw; height: 100vh; background-color: #FAFBFC; z-index: 40; font-family: 'Poppins', sans-serif; overflow: hidden; }
 
         .amarin-login-left { display: none; background-color: #031E49; width: 55%; position: relative; flex-direction: column; justify-content: space-between; align-items: flex-end; text-align: right; padding: 4rem; overflow: hidden; color: white; }
         @media (min-width: 1024px) { .amarin-login-left { display: flex; } }
@@ -114,12 +114,10 @@
         .c-box { width: 2rem; height: 2rem; border-radius: 0.375rem; background-color: #06285c; border: 1px solid rgba(59, 130, 246, 0.3); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.875rem; color: #eff6ff; }
         .amarin-culture p { font-size: 0.625rem; color: rgba(191, 219, 254, 0.5); font-weight: 500; letter-spacing: 0.025em; margin-top: 0.75rem; }
 
-        /* AREA KANAN (FORM) */
         .amarin-login-right { width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; background-color: #FAFBFC; }
         @media (min-width: 1024px) { .amarin-login-right { width: 45%; } }
         .bg-grid { position: absolute; inset: 0; opacity: 0.03; background-image: radial-gradient(#000 1px, transparent 1px); background-size: 20px 20px; pointer-events: none; }
 
-      /* SHADOW CARD MEWAH & SUPER TEGAS */
         .amarin-login-card { width: 100%; max-width: 420px; background-color: white; padding: 2.5rem 2.5rem; border-radius: 1.25rem; border: 1px solid rgba(15, 29, 61, 0.1); position: relative; z-index: 10; margin: 0 1rem; box-shadow: 0 25px 50px -12px rgba(3, 30, 73, 0.35), 0 0 0 1px rgba(3, 30, 73, 0.05) !important; transition: all 0.3s ease; }
         .amarin-login-card:hover { transform: translateY(-3px); box-shadow: 0 30px 60px -10px rgba(3, 30, 73, 0.45) !important; }
 
@@ -131,21 +129,19 @@
         .subtitle { font-size: 0.85rem; color: #4B5563; margin-bottom: 0.75rem; font-weight: 500; }
         .respect { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.35em; color: #9CA3AF; text-transform: uppercase; }
 
-        /* STYLING DROPDOWN */
-        .login-destination-wrapper { margin-bottom: 1.25rem; width: 100%; }
+        /* 👇 FIX CSS: Jarak Dropdown Dirapatkan & Posisi Icon Di-Center 👇 */
+        .login-destination-wrapper { margin-bottom: 0.5rem; width: 100%; }
         .destination-label { display: block; font-size: 11px; font-weight: 700; color: #4B5563; letter-spacing: 0.025em; text-transform: uppercase; margin-bottom: 0.5rem; }
         .destination-select-container { position: relative; width: 100%; }
-        .destination-select { appearance: none; -webkit-appearance: none; width: 100%; border-radius: 0.5rem; border: 1px solid #D1D5DB; padding: 0.5rem 2.5rem 0.5rem 1rem; font-size: 0.875rem; color: #374151; background-color: #F9FAFB; font-weight: 600; cursor: pointer; transition: all 0.2s ease; outline: none; }
+        .destination-select { appearance: none; -webkit-appearance: none; width: 100%; border-radius: 0.5rem; border: 1px solid #D1D5DB; padding: 0.6rem 2.5rem 0.6rem 1rem; font-size: 0.875rem; color: #374151; background-color: #F9FAFB; font-weight: 600; cursor: pointer; transition: all 0.2s ease; outline: none; }
         .destination-select:focus { border-color: #3B82F6; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2); background-color: white; }
-        .select-icon { position: absolute; inset-y: 0; right: 0; display: flex; align-items: center; padding-right: 0.75rem; pointer-events: none; color: #6B7280; }
+        .select-icon { position: absolute; top: 50%; transform: translateY(-50%); right: 1rem; display: flex; align-items: center; pointer-events: none; color: #6B7280; }
         .select-icon svg { width: 1.25rem; height: 1.25rem; }
         .destination-hint { font-size: 0.65rem; color: #9CA3AF; margin-top: 0.375rem; font-weight: 500; }
 
-        /* FORM & BUTTON */
-        .amarin-form { display: flex; flex-direction: column; width: 100%; gap: 1.25rem; }
+        .amarin-form { display: flex; flex-direction: column; width: 100%; gap: 1rem; }
 
-        /* Mengakali Posisi Forgot Password agar sejajar dengan Checkbox */
-        .forgot-password-container { text-align: right; margin-top: -38px; position: relative; z-index: 20; height: 0; overflow: visible; }
+        .forgot-password-container { text-align: right; margin-top: -30px; position: relative; z-index: 20; height: 0; overflow: visible; }
         .forgot-password-container a { font-size: 0.75rem !important; color: #2563EB !important; text-decoration: none !important; font-weight: 600 !important; }
         .forgot-password-container a:hover { color: #1D4ED8 !important; text-decoration: underline !important; }
 
@@ -157,17 +153,16 @@
 
         @keyframes shine { 0% { left: -150%; } 20% { left: 200%; } 100% { left: 200%; } }
 
-        /* 👇 FIX: MERAMPIKAN LABEL FORM FILAMENT AGAR TIDAK BESAR & JELEK 👇 */
         .fi-fo-field-wrp-label { font-size: 11px !important; font-weight: 700 !important; color: #4B5563 !important; letter-spacing: 0.025em; text-transform: uppercase !important; }
         .fi-input { border-radius: 0.5rem !important; border-color: #D1D5DB !important; box-shadow: none !important; padding-top: 0.5rem !important; padding-bottom: 0.5rem !important; }
         .fi-input:focus { border-color: #3B82F6 !important; ring: 2px solid #BFDBFE !important; }
         .fi-fo-checkbox { margin-top: 0.25rem !important; }
         .fi-checkbox-input { border-radius: 0.25rem !important; }
     </style>
-    <!-- 👇 TAMBAHKAN SCRIPT INI DI BAWAH <style> 👇 -->
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const selectDest = document.querySelector('.destination-select');
+            const selectDest = document.getElementById('destSelect');
             const submitBtn = document.getElementById('submitBtn');
             const originalBtnContent = submitBtn.innerHTML;
 
@@ -175,17 +170,14 @@
                 const val = e.target.value;
                 
                 if (val === 'portal') {
-                    // Berubah jadi Hijau untuk Portal Karyawan
                     submitBtn.style.backgroundColor = '#059669'; 
                     submitBtn.style.boxShadow = '0 4px 6px -1px rgba(5, 150, 105, 0.3)';
                     submitBtn.innerHTML = `Masuk ke Portal Karyawan <svg style="width: 18px; height: 18px; transition: transform 0.3s;" class="btn-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>`;
                 } else if (val === 'admin') {
-                    // Berubah jadi Biru Gelap untuk Admin
                     submitBtn.style.backgroundColor = '#1E3A8A';
                     submitBtn.style.boxShadow = '0 4px 6px -1px rgba(30, 58, 138, 0.3)';
                     submitBtn.innerHTML = `Masuk ke IT Admin <svg style="width: 18px; height: 18px; transition: transform 0.3s;" class="btn-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>`;
                 } else {
-                    // Kembali ke Biru Standar untuk Auto-Detect
                     submitBtn.style.backgroundColor = '#0056B3';
                     submitBtn.style.boxShadow = '0 4px 6px -1px rgba(0, 86, 179, 0.2)';
                     submitBtn.innerHTML = originalBtnContent;
