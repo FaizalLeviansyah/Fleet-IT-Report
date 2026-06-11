@@ -31,6 +31,10 @@ Route::middleware(['auth'])->prefix('portal')->name('portal.')->group(function (
     Route::post('/profile/update-photo', [UserPortalController::class, 'updatePhoto'])->name('profile.update-photo');
     Route::get('/kb', [UserPortalController::class, 'kb'])->name('kb');
     Route::get('/support', [UserPortalController::class, 'support'])->name('support');
+    Route::get('/my-assets', [UserPortalController::class, 'myAssets'])->name('portal.my-assets');
+    // 👇 TAMBAHKAN 2 RUTE INI UNTUK INTERAKSI TIKET 👇
+    Route::post('/ticket/{id}/reply', [UserPortalController::class, 'replyTicket'])->name('portal.reply-ticket');
+    Route::post('/ticket/{id}/approve', [UserPortalController::class, 'approveTicket'])->name('portal.approve-ticket');
     
     // Rute untuk melihat detail dan progres tiket
     Route::get('/ticket/{id}/detail', [UserPortalController::class, 'showTicket'])->name('show-ticket');

@@ -9,28 +9,37 @@ class TicketsByStatusChart extends ChartWidget
 {
     protected static ?string $heading = 'Distribusi Status Tiket';
     protected static ?int $sort = 2;
+    
+    // Mengecilkan ukuran chart agar tidak memakan layar
+    protected static ?array $options = [
+        'maintainAspectRatio' => false,
+    ];
 
     protected function getData(): array
     {
+        $new = Ticket::where('status', 1)->count();
+        $progress = Ticket::whereIn('status', [2, 3, 4])->count();
+        $resolved = Ticket::whereIn('status', [5, 6])->count();
+
         return [
             'datasets' => [
                 [
-                    'label' => 'Tiket',
-                    'data' => [
-                        Ticket::where('status', 1)->count(),
-                        Ticket::where('status', 2)->count(),
-                        Ticket::where('status', 4)->count(),
-                        Ticket::where('status', 5)->count(),
+                    'label' => 'Jumlah Tiket',
+                    'data' => [$new, $progress, $resolved],
+                    'backgroundColor' => [
+                        '#ef4444', // Merah untuk New
+                        '#f59e0b', // Kuning untuk Progress
+                        '#10b981', // Hijau untuk Resolved/Closed
                     ],
-                    'backgroundColor' => ['#ef4444', '#f59e0b', '#6b7280', '#10b981'],
+                    'borderWidth' => 0,
                 ],
             ],
-            'labels' => ['New', 'Assigned', 'Pending', 'Solved'],
+            'labels' => ['New', 'In Progress', 'Resolved / Closed'],
         ];
     }
 
     protected function getType(): string
     {
-        return 'doughnut';
+        return 'doughnut'; // Grafik Donat
     }
 }
