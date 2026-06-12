@@ -16,16 +16,19 @@ class DashboardStatsWidget extends BaseWidget
     {
         // Hitung Data Real-time
         $openTickets = Ticket::whereIn('status', [1, 2, 3])->count();
-        $unassignedTickets = Ticket::where('status', 1)->whereNull('assigned_to')->count();
+        
+        // 👇 FIX SEMENTARA: Kita hapus pengecekan kolom teknisi agar tidak error
+        $unassignedTickets = Ticket::where('status', 1)->count();
+        
         $resolvedTickets = Ticket::whereIn('status', [5, 6])->count();
         $onlineAssets = Asset::where('status', 'Active')->count();
-
+        
         return [
             Stat::make('Tiket Aktif (Open)', $openTickets)
                 ->description('Tiket yang butuh penanganan')
                 ->descriptionIcon('heroicon-m-arrow-trending-up')
                 ->color('danger')
-                ->chart([7, 2, 10, 3, 15, 4, 17]), // Efek grafik mini (sparkline)
+                ->chart([7, 2, 10, 3, 15, 4, 17]), 
 
             Stat::make('Tiket Unassigned', $unassignedTickets)
                 ->description('Belum diambil teknisi IT')

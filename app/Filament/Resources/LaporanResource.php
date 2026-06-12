@@ -16,8 +16,9 @@ class LaporanResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
     protected static ?string $navigationLabel = 'Laporan CCTV';
 
-    protected static ?string $navigationGroup = 'CCTV Monitoring';
-    protected static ?int $navigationSort = 2; // Agar tampil di bawah Live Monitoring
+    // Disatukan di grup CCTV Monitoring agar sejajar dengan Live Monitoring
+    protected static ?string $navigationGroup = 'CCTV MONITORING';
+    protected static ?int $navigationSort = 2; 
 
     public static function form(Form $form): Form
     {
@@ -25,20 +26,17 @@ class LaporanResource extends Resource
             ->schema([
                 \Filament\Forms\Components\Section::make('Informasi Laporan')
                     ->schema([
-                        // KITA GUNAKAN KOLOM 'lokasi' (SESUAI TINKER)
                         \Filament\Forms\Components\Select::make('lokasi')
                             ->label('Nama Kapal')
                             ->options(fn () => \App\Models\Vessel::pluck('vessel_name', 'vessel_name')->toArray())
                             ->searchable()
                             ->required(),
 
-                        // KITA GUNAKAN KOLOM 'waktu_kejadian'
                         \Filament\Forms\Components\DateTimePicker::make('waktu_kejadian')
                             ->label('Waktu Laporan')
                             ->displayFormat('d M Y, H:i')
                             ->required(),
 
-                        // KITA GUNAKAN KOLOM 'isi_laporan'
                         \Filament\Forms\Components\Textarea::make('isi_laporan')
                             ->label('Keterangan / Isi Laporan')
                             ->columnSpanFull()
@@ -46,9 +44,9 @@ class LaporanResource extends Resource
                             ->nullable(),
                     ])->columns(2),
 
+                // SECTION LAMA TETAP DIPERTAHANKAN
                 \Filament\Forms\Components\Section::make('Status CCTV (Pilih Ceklis/Silang)')
                     ->schema([
-                        // STATUS SESUAI TINKER
                         \Filament\Forms\Components\Select::make('status_ccr')
                             ->label('Kamera CCR')
                             ->options(['Ceklis' => 'Ceklis', 'Silang' => 'Silang', 'NA' => 'NA']),
@@ -70,11 +68,45 @@ class LaporanResource extends Resource
                             ->options(['Ceklis' => 'Ceklis', 'Silang' => 'Silang', 'NA' => 'NA']),
                     ])->columns(3),
 
-                // SECTION 3: GALERI GAMBAR (MULTI-UPLOAD)
+                // 👇 SECTION BARU: CHECKLIST DINAMIS (TIDAK MENGGANGGU YANG LAMA) 👇
+                \Filament\Forms\Components\Section::make('Checklist Kamera Tambahan (Real-time)')
+                    ->description('Catat status detail setiap kamera pada vessel ini.')
+                    ->schema([
+                        \Filament\Forms\Components\Repeater::make('camera_checklist')
+                            ->label('')
+                            ->schema([
+                                \Filament\Forms\Components\TextInput::make('camera_name')
+                                    ->label('Nama/Lokasi Kamera')
+                                    ->placeholder('Contoh: Engine Room / Deck')
+                                    ->required()
+                                    ->columnSpan(2),
+                                \Filament\Forms\Components\Select::make('status')
+                                    ->label('Status Kamera')
+                                    ->options([
+                                        'Online' => '🟢 Online (Jernih)',
+                                        'Blur' => '🟡 Blur / Kotor',
+                                        'Offline' => '🔴 Offline / No Signal',
+                                    ])
+                                    ->required()
+                                    ->columnSpan(1),
+                                \Filament\Forms\Components\TextInput::make('remarks')
+                                    ->label('Catatan / Keterangan')
+                                    ->placeholder('Tindakan yang diperlukan...')
+                                    ->columnSpan(3),
+                            ])
+                            ->columns(6)
+                            ->defaultItems(0) // Default kosong agar tidak mengganggu layout
+                            ->addActionLabel('Tambah Checklist Kamera')
+                            ->reorderable()
+                            ->collapsible(),
+                    ]),
+                // 👆 BATAS SECTION BARU 👆
+
+                // SECTION 3 LAMA TETAP AMAN (GALERI)
                 \Filament\Forms\Components\Section::make('Galeri Snapshot CCTV')
                     ->schema([
                         \Filament\Forms\Components\Repeater::make('gambars')
-                            ->relationship('gambars') // Harus sama dengan nama fungsi di Model Laporan
+                            ->relationship('gambars') 
                             ->label('')
                             ->schema([
                                 \Filament\Forms\Components\Select::make('channel')
@@ -92,16 +124,16 @@ class LaporanResource extends Resource
                                 \Filament\Forms\Components\FileUpload::make('path_gambar')
                                     ->label('File Snapshot')
                                     ->image()
-                                    ->directory('laporan-images') // Supaya upload baru masuk ke folder yang sama
+                                    ->directory('laporan-images') 
                                     ->required(),
 
                                 \Filament\Forms\Components\Toggle::make('is_visible')
                                     ->label('Tampilkan di Laporan?')
                                     ->default(true),
                             ])
-                            ->columns(3) // Mengatur agar Channel, Upload, dan Toggle bersebelahan
+                            ->columns(3) 
                             ->grid(1)
-                            ->defaultItems(0) // Default tidak ada kotak kosong jika data tidak ada
+                            ->defaultItems(0) 
                             ->addActionLabel('Tambah Snapshot Baru'),
                     ]),
             ]);
@@ -110,7 +142,7 @@ class LaporanResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->deferLoading() // ANTI LEMOT
+            ->deferLoading() 
             ->columns([
                 Tables\Columns\TextColumn::make('lokasi')
                     ->label('Nama Kapal')
@@ -143,7 +175,6 @@ class LaporanResource extends Resource
             ->actions([
                 Tables\Actions\EditAction::make()->modalWidth('4xl'),
                 Tables\Actions\ViewAction::make()->modalWidth('4xl'),
-                // TAMBAHAN TOMBOL CETAK
                 Tables\Actions\Action::make('cetak')
                     ->label('Cetak / PDF')
                     ->icon('heroicon-o-printer')
@@ -153,16 +184,12 @@ class LaporanResource extends Resource
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    // Tombol Hapus Bawaan
                     Tables\Actions\DeleteBulkAction::make(),
-
-                    // --- TAMBAHKAN TOMBOL EKSPOR INI ---
                     \Filament\Tables\Actions\ExportBulkAction::make()
                         ->exporter(\App\Filament\Exports\LaporanExporter::class)
                         ->label('Ekspor ke CSV/Excel')
                         ->icon('heroicon-o-arrow-down-tray')
                         ->color('success'),
-                    // ------------------------------------
                 ]),
             ]);
     }
@@ -176,8 +203,6 @@ class LaporanResource extends Resource
     {
         return [
             'index' => Pages\ListLaporans::route('/'),
-            // 'create' => Pages\CreateLaporan::route('/create'),
-            // 'edit' => Pages\EditLaporan::route('/{record}/edit'),
         ];
     }
 }
