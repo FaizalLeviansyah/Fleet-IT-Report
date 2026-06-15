@@ -30,21 +30,37 @@ class PdfController extends Controller
 
         $groupedLaporans = $laporans->groupBy('lokasi');
 
-        // 👇 ANALITIK: Menghitung Metrik Executive Summary
         $totalLaporan = $laporans->count();
         $totalKapal = $groupedLaporans->count();
 
         $stats = ['Clear' => 0, 'Blur' => 0, 'NA' => 0];
         $channels = ['status_ajg', 'status_brt', 'status_ccr', 'status_ecr', 'status_wkn', 'status_wkr'];
 
-        foreach ($laporans as $lap) {
-            foreach ($channels as $ch) {
-                $status = $lap->$ch ?? 'Clear'; // Fallback jika data lama kosong
-                if (isset($stats[$status])) $stats[$status]++;
+        // DATA AUDIT TRAIL
+        $auditTrail = [];
+
+        foreach ($groupedLaporans as $lokasi => $laps) {
+            $totalSnapshots = 0;
+            $incidents = 0;
+
+            foreach ($laps as $lap) {
+                $totalSnapshots += $lap->gambars->count();
+                foreach ($channels as $ch) {
+                    $status = $lap->$ch ?? 'Clear';
+                    if (isset($stats[$status])) $stats[$status]++;
+                    if ($status !== 'Clear') $incidents++; // Hitung insiden per kapal
+                }
             }
+
+            $auditTrail[] = [
+                'armada' => $lokasi,
+                'total_laporan' => $laps->count(),
+                'total_snapshot' => $totalSnapshots,
+                'insiden' => $incidents,
+            ];
         }
 
-        $totalCams = array_sum($stats) ?: 1; // Hindari pembagian 0
+        $totalCams = array_sum($stats) ?: 1;
         $uptimePercentage = round(($stats['Clear'] / $totalCams) * 100, 1);
         $downtimeCount = $stats['Blur'] + $stats['NA'];
 
@@ -52,18 +68,15 @@ class PdfController extends Controller
             'groupedLaporans' => $groupedLaporans,
             'from' => $from,
             'to' => $to,
-            // Kirim data analitik ke PDF
-            'totalLaporan' => $totalLaporan,
             'totalKapal' => $totalKapal,
             'uptimePercentage' => $uptimePercentage,
             'downtimeCount' => $downtimeCount,
-            'stats' => $stats
+            'auditTrail' => $auditTrail // Kirim data tabel audit ke View
         ])
         ->setPaper('a4', 'portrait')
         ->setWarnings(false)
         ->setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true]);
 
-        $filename = 'SUMMARY_OPS_' . str_replace('/', '', $from) . '-' . str_replace('/', '', $to) . '.pdf';
-        return $pdf->stream($filename);
+        return $pdf->stream('SUMMARY_OPS.pdf');
     }
 }
