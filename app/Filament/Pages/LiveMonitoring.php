@@ -10,7 +10,7 @@ use Carbon\Carbon;
 class LiveMonitoring extends Page
 {
     protected static ?string $navigationIcon = 'heroicon-o-video-camera';
-    protected static ?string $navigationGroup = 'CCTV Monitoring';
+    protected static ?string $navigationGroup = 'IT Operation';
     protected static ?int $navigationSort = 1;
     protected static ?string $title = 'CCTV Monitoring';
     protected static string $view = 'filament.pages.live-monitoring';
@@ -35,7 +35,7 @@ class LiveMonitoring extends Page
 
     public function mount()
     {
-        // 🚨 FIX 1: Set rentang waktu penuh tahun 2026 secara default 
+        // 🚨 FIX 1: Set rentang waktu penuh tahun 2026 secara default
         // Agar semua data seeder (Feb-Apr) otomatis langsung ter-load tanpa harus di-adjust manual
         $this->start_date = '2026-01-01';
         $this->end_date = '2026-12-31';
@@ -140,12 +140,12 @@ class LiveMonitoring extends Page
         if ($this->frame_interval !== 'all') {
             $raw_data = $raw_data->groupBy(function($item) {
                 $time = Carbon::parse($item->captured_at);
-                $intervalKey = $time->format('Y-m-d H'); 
-                if ($this->frame_interval === 'half_day') $intervalKey = $time->format('Y-m-d A'); 
-                if ($this->frame_interval === 'daily') $intervalKey = $time->format('Y-m-d'); 
+                $intervalKey = $time->format('Y-m-d H');
+                if ($this->frame_interval === 'half_day') $intervalKey = $time->format('Y-m-d A');
+                if ($this->frame_interval === 'daily') $intervalKey = $time->format('Y-m-d');
                 return $item->channel . '_' . $intervalKey;
             })->map(function($group) {
-                return $group->first(); 
+                return $group->first();
             })->values();
         }
 
@@ -158,7 +158,7 @@ class LiveMonitoring extends Page
             })
             ->orderBy('captured_at', 'desc')
             ->first();
-            
+
         $this->last_sync = $latest ? Carbon::parse($latest->captured_at)->format('d M Y - h:i A') : 'Tidak Ada Data';
         $this->total_active_cams = $raw_data->unique('channel')->count();
 

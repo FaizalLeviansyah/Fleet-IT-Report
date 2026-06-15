@@ -19,7 +19,7 @@ class TicketResource extends Resource
     protected static ?string $model = Ticket::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-ticket';
-    protected static ?string $navigationGroup = 'ITSM Service Desk';
+    protected static ?string $navigationGroup = 'IT Management';
     protected static ?string $navigationLabel = 'Manajemen Tiket';
     protected static ?int $navigationSort = 1;
 
@@ -43,19 +43,19 @@ class TicketResource extends Resource
                         Forms\Components\TextInput::make('ticket_number')
                             ->label('Nomor Tiket')
                             ->disabled(),
-                        
+
                         // 👇 FIX 1: Ubah 'id' menjadi 'employee_id'
                         Forms\Components\Select::make('user_id')
                             ->label('Pelapor (Requester)')
                             ->options(User::pluck('full_name', 'employee_id'))
                             ->searchable()
                             ->disabled(),
-                            
+
                         Forms\Components\TextInput::make('name')
                             ->label('Subjek / Judul')
                             ->columnSpanFull()
                             ->disabled(),
-                            
+
                         Forms\Components\Textarea::make('description')
                             ->label('Detail Masalah')
                             ->rows(4)
@@ -65,14 +65,14 @@ class TicketResource extends Resource
 
                 Forms\Components\Section::make('Penugasan & Status IT')
                     ->schema([
-                        
+
                         // 👇 FIX 2: Ubah 'id' menjadi 'employee_id'
                         Forms\Components\Select::make('assigned_to')
                             ->label('Teknisi IT (Assignee)')
                             ->options(User::where('is_it_team', 1)->orWhere('role', 'admin')->pluck('full_name', 'employee_id'))
                             ->searchable()
                             ->preload(),
-                            
+
                         Forms\Components\Select::make('priority')
                             ->label('Tingkat Prioritas')
                             ->options([
@@ -81,7 +81,7 @@ class TicketResource extends Resource
                                 3 => 'High (Mendesak)',
                             ])
                             ->required(),
-                            
+
                         Forms\Components\Select::make('status')
                             ->label('Status Tiket')
                             ->options([
@@ -109,7 +109,7 @@ class TicketResource extends Resource
                     ->weight('bold')
                     ->color('primary')
                     ->copyable(),
-                
+
                 Tables\Columns\TextColumn::make('requester.full_name')
                     ->label('Pelapor')
                     ->searchable()
@@ -208,7 +208,7 @@ class TicketResource extends Resource
                             ->success()
                             ->send();
                     }),
-                    
+
                 Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
@@ -225,7 +225,7 @@ class TicketResource extends Resource
             TicketResource\RelationManagers\SolutionRelationManager::class,
             TicketResource\RelationManagers\TasksRelationManager::class,
         ];
-    } 
+    }
 
     public static function getPages(): array
     {

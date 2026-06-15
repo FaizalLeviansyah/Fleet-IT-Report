@@ -16,7 +16,7 @@ class LaporanResource extends Resource
     protected static ?string $model = Laporan::class;
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
     protected static ?string $navigationLabel = 'Laporan CCTV';
-    protected static ?string $navigationGroup = 'CCTV MONITORING';
+    protected static ?string $navigationGroup = 'IT Operation';
     protected static ?int $navigationSort = 2;
 
     // Schema bersih agar bisa dipakai di Create, Edit, dan Duplicate

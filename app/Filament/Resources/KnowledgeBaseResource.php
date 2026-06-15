@@ -17,8 +17,8 @@ class KnowledgeBaseResource extends Resource
     protected static ?string $model = KnowledgeBase::class;
     protected static ?string $navigationIcon = 'heroicon-o-book-open';
     protected static ?string $navigationLabel = 'ITSM / Knowledge Base';
-    protected static ?string $navigationGroup = 'IT MANAGEMENT';
-    protected static ?int $navigationSort = 4;
+    protected static ?string $navigationGroup = 'IT Management';
+    protected static ?int $navigationSort = 3;
     protected static ?string $modelLabel = 'Artikel Pengetahuan';
     protected static ?string $pluralModelLabel = 'Basis Pengetahuan (FAQ)';
 

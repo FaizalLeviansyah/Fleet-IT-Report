@@ -26,6 +26,13 @@ class AdminPanelProvider extends PanelProvider
         return $panel
             ->default()
             ->id('admin')
+            ->navigationGroups([
+                'IT Management',
+                'IT Operation',
+                'HR / Pekerjaan',
+                'Master Data',
+                'My Profile & Support',
+            ])
             ->path('admin')
             // TAB BROWSER & FAVICON
             ->brandName('ITSM Stack')
@@ -196,10 +203,10 @@ class AdminPanelProvider extends PanelProvider
                 'panels::user-menu.profile.before',
                 function (): string {
                     $user = auth()->user();
-                    
+
                     // 🚨 FIX: Tampilkan role asli jika dia bukan Tim IT
                     $jabatan = $user->is_it_team ? 'IT Support Team' : ($user->role ?? 'Pegawai');
-                    
+
                     $namaLengkap = $user->full_name ?? 'Administrator';
 
                     if ($user->avatar_url) {
