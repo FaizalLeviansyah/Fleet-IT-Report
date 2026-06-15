@@ -46,7 +46,7 @@
         .snap-img { width: 100%; height: 100%; object-fit: contain; position: absolute; top: 0; left: 0; opacity: 0; transition: opacity 0.5s ease-in-out; }
         .snap-img.active { opacity: 1; z-index: 5; }
         .play-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; opacity: 0; transition: 0.3s; z-index: 10;}
-        .cam-card:hover .play-overlay { opacity: 1; }
+        .img-box:hover .play-overlay { opacity: 1; }
         .play-overlay svg { width: 48px; height: 48px; color: white; drop-shadow: 0 4px 6px rgba(0,0,0,0.5); }
 
         .cam-footer { padding: 12px 15px; background: #fafafa; border-top: 1px solid #f1f5f9; display: flex; flex-direction: column; gap: 8px; }
@@ -201,16 +201,21 @@
                     })->values()->toJson();
                 @endphp
 
-                <div class="cam-card" data-images="{{ $alpineImages }}" @click="openTheater('{{ $fullName }}', JSON.parse($el.dataset.images))">
+                <div class="cam-card !cursor-default">
                     <div class="cam-header">
-                        <div class="cam-title">{{ $fullName }}</div>
-                        <div class="status-live">
+                        <div class="cam-title w-full mr-4">
+                            <input type="text"
+                                   wire:model.blur="channel_labels.{{ $ch }}"
+                                   class="bg-transparent border-none focus:ring-0 p-0 m-0 w-full text-[13px] font-black text-slate-800 dark:text-slate-200 uppercase tracking-wide hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-text rounded px-1"
+                                   placeholder="NAMA KAMERA" />
+                        </div>
+                        <div class="status-live shrink-0">
                             <span class="inline-block w-2 h-2 rounded-full {{ $totalImages > 0 ? 'bg-green-500 animate-pulse' : 'bg-slate-300 dark:bg-slate-600' }}"></span>
                             {{ $totalImages > 0 ? 'LIVE' : 'OFFLINE' }}
                         </div>
                     </div>
 
-                    <div class="img-box">
+                    <div class="img-box cursor-pointer" data-images="{{ $alpineImages }}" @click="openTheater('{{ $fullName }}', JSON.parse($el.dataset.images))">
                         @if($totalImages > 0)
                             @foreach($images as $index => $img)
                                 <img src="{{ asset('storage/' . $img->image_path) }}"
@@ -241,10 +246,6 @@
                                 @endif
                             </div>
                         </div>
-                        {{-- <div class="footer-row">
-                            <div class="info-label">Frame Found:</div>
-                            <div class="info-value">{{ $totalImages }} Photos</div>
-                        </div> --}}
                     </div>
                 </div>
             @endforeach

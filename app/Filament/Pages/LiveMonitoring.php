@@ -5,6 +5,7 @@ namespace App\Filament\Pages;
 use Filament\Pages\Page;
 use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 use Carbon\Carbon;
 
 class LiveMonitoring extends Page
@@ -24,28 +25,33 @@ class LiveMonitoring extends Page
     public $last_sync = '-';
     public $total_active_cams = 0;
 
-    public $channel_labels = [
-        'AJG' => 'CCTV 1 (Cam A)',
-        'BRT' => 'CCTV 2 (Cam B)',
-        'CCR' => 'CCTV 3 (Cam C)',
-        'ECR' => 'CCTV 4 (Cam D)',
-        'WKN' => 'CCTV 5 (Cam E)',
-        'WKR' => 'CCTV 6 (Cam F)',
-    ];
+    public $channel_labels = [];
 
     public function mount()
     {
-        // 🚨 FIX 1: Set rentang waktu penuh tahun 2026 secara default
-        // Agar semua data seeder (Feb-Apr) otomatis langsung ter-load tanpa harus di-adjust manual
         $this->start_date = '2026-01-01';
         $this->end_date = '2026-12-31';
         $this->start_time = '00:00';
         $this->end_time = '23:59';
+
+        // 💡 SMART SYSTEM: Tarik nama kamera dari memori Cache, jika kosong pakai default
+        $this->channel_labels = Cache::get('cctv_channel_labels', [
+            'AJG' => 'CCTV 1 (Cam A)',
+            'BRT' => 'CCTV 2 (Cam B)',
+            'CCR' => 'CCTV 3 (Cam C)',
+            'ECR' => 'CCTV 4 (Cam D)',
+            'WKN' => 'CCTV 5 (Cam E)',
+            'WKR' => 'CCTV 6 (Cam F)',
+        ]);
     }
 
-    /**
-     * Generator Variasi Nama Kapal untuk Mengatasi Inkonsistensi Database vs Folder
-     */
+    // 💡 SMART SYSTEM: Fungsi ini otomatis berjalan saat user selesai mengetik & klik di luar kotak
+    public function updatedChannelLabels($value, $key)
+    {
+        Cache::put('cctv_channel_labels', $this->channel_labels); // Simpan permanen ke Cache server
+        Notification::make()->title('Label Kamera Tersimpan!')->success()->send();
+    }
+
     private function getVesselVariants($vesselName): array
     {
         if (empty($vesselName)) return [];
@@ -54,11 +60,9 @@ class LiveMonitoring extends Page
             $vesselName,
             str_replace(' ', '_', $vesselName),
             str_replace([' ', '.'], ['_', ''], $vesselName),
-            // Mengatasi konversi Romawi ke Angka Biasa (II -> 2, I -> 1)
             str_replace([' II', ' I'], [' 2', ' 1'], $vesselName),
             str_replace([' ', '.'], ['_', ''], str_replace([' II', ' I'], [' 2', ' 1'], $vesselName)),
             str_replace(' ', '_', str_replace([' II', ' I'], [' 2', ' 1'], $vesselName)),
-            // Ambil kata kunci murni (misal: "Caine", "Eternal", "Soviana")
             preg_replace('/[^A-Za-z0-9]/', '', $vesselName)
         ]), function($v) {
             return strlen($v) > 2 && !in_array(strtoupper($v), ['MT', 'MV', 'MT.', 'MV.']);
@@ -101,7 +105,7 @@ class LiveMonitoring extends Page
 
     public function applyFilter()
     {
-        Notification::make()->title('Filter Diterapkan').body('Mensinkronkan timeline CCTV...')->info()->send();
+        Notification::make()->title('Filter Diterapkan')->body('Mensinkronkan timeline CCTV...')->info()->send();
     }
 
     protected function getViewData(): array
@@ -124,7 +128,6 @@ class LiveMonitoring extends Page
 
         $variants = $this->getVesselVariants($this->selected_vessel);
 
-        // 🚨 FIX 2: Query Multi-Variant Matching untuk menjaring data terlepas dari ketidaksesuaian nama seeder
         $raw_data = DB::table('cctv_reports')
             ->where(function($q) use ($variants) {
                 $q->where('vessel_name', $this->selected_vessel);

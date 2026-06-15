@@ -5,24 +5,30 @@
     <title>Summary Ops PDF</title>
     <style>
         body { font-family: 'Helvetica', sans-serif; font-size: 11px; color: #1e293b; margin: 0; padding: 0; }
-        .header { text-align: center; border-bottom: 2px solid #3b82f6; padding-bottom: 15px; margin-bottom: 20px; }
-        .header h1 { margin: 0; font-size: 26px; color: #0f172a; text-transform: uppercase; letter-spacing: 1px; }
-        .header p { margin: 5px 0 0; color: #64748b; font-size: 12px; font-weight: bold; }
 
-        .exec-summary { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
-        .exec-summary td { width: 33.33%; padding: 15px; text-align: center; border: 1px solid #e2e8f0; background-color: #f8fafc; }
-        .exec-summary .title { font-size: 10px; color: #64748b; text-transform: uppercase; margin-bottom: 5px; display: block; }
-        .exec-summary .value { font-size: 24px; font-weight: bold; color: #0f172a; }
+        /* COVER PAGE STYLES */
+        .cover-page { min-height: 100vh; padding: 40px 20px; page-break-after: always; }
+        .header { text-align: center; border-bottom: 3px solid #3b82f6; padding-bottom: 25px; margin-bottom: 40px; }
+        .header h1 { margin: 0; font-size: 32px; color: #0f172a; text-transform: uppercase; letter-spacing: 2px; }
+        .header p { margin: 10px 0 0; color: #64748b; font-size: 14px; font-weight: bold; letter-spacing: 1px; }
+
+        .exec-summary { width: 100%; border-collapse: collapse; margin-bottom: 40px; }
+        .exec-summary td { width: 33.33%; padding: 30px 15px; text-align: center; border: 1px solid #e2e8f0; background-color: #f8fafc; border-radius: 8px;}
+        .exec-summary .title { font-size: 12px; color: #64748b; text-transform: uppercase; margin-bottom: 10px; display: block; letter-spacing: 1px; }
+        .exec-summary .value { font-size: 36px; font-weight: black; color: #0f172a; }
         .exec-summary .value.green { color: #16a34a; }
         .exec-summary .value.red { color: #dc2626; }
 
-        /* TABEL AUDIT TRAIL BARU */
-        .audit-table { width: 100%; border-collapse: collapse; margin-bottom: 30px; font-size: 10px; }
-        .audit-table th { background-color: #1e293b; color: #fff; padding: 8px; text-transform: uppercase; border: 1px solid #1e293b; }
-        .audit-table td { border: 1px solid #cbd5e1; padding: 8px; text-align: center; }
+        .audit-title { font-size: 16px; font-weight: bold; color: #1e293b; margin-bottom: 15px; text-transform: uppercase; border-left: 4px solid #3b82f6; padding-left: 10px;}
+        .audit-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 11px; }
+        .audit-table th { background-color: #1e293b; color: #fff; padding: 12px; text-transform: uppercase; border: 1px solid #1e293b; }
+        .audit-table td { border: 1px solid #cbd5e1; padding: 12px; text-align: center; }
         .audit-table td.text-left { text-align: left; font-weight: bold; }
         .audit-table tr:nth-child(even) { background-color: #f8fafc; }
+        .audit-table tr.offline td { color: #94a3b8; font-style: italic; background-color: #fef2f2;}
+        .note { font-size: 10px; color: #64748b; font-style: italic; text-align: left; margin-top: 10px; }
 
+        /* DATA LAPORAN STYLES */
         .laporan-card { border: 1px solid #cbd5e1; margin-bottom: 25px; page-break-inside: avoid; border-radius: 4px; background-color: #fff; overflow: hidden; }
         .laporan-header-table { width: 100%; background-color: #1e293b; color: #fff; border-collapse: collapse; }
         .laporan-header-table td { padding: 10px 15px; font-size: 13px; font-weight: bold; text-transform: uppercase; }
@@ -46,60 +52,65 @@
 </head>
 <body>
 
-    <div class="header">
-        <h1>SUMMARY OPS REPORT</h1>
-        <p>PERIODE: {{ $from }} S/D {{ $to }}</p>
+    <div class="cover-page">
+        <div class="header">
+            <h1>SUMMARY OPS REPORT</h1>
+            <p>PERIODE: {{ $from }} S/D {{ $to }}</p>
+        </div>
+
+        <table class="exec-summary">
+            <tr>
+                <td>
+                    <span class="title">Status Armada (Total {{ $totalKapal }})</span>
+                    <span class="value" style="font-size: 20px;">
+                        <span class="green">{{ $activeVesselsCount }} Aktif</span> /
+                        <span class="red">{{ $offlineVesselsCount }} Offline</span>
+                    </span>
+                </td>
+                <td>
+                    <span class="title">System Uptime</span>
+                    <span class="value {{ $uptimePercentage >= 90 ? 'green' : 'red' }}">{{ $uptimePercentage }}%</span>
+                </td>
+                <td>
+                    <span class="title">Insiden Kamera (Blur/NA)</span>
+                    <span class="value red">{{ $downtimeCount }} Titik</span>
+                </td>
+            </tr>
+        </table>
+
+        <div class="audit-title">AUDIT TRAIL & LOG AKTIVITAS KAPAL</div>
+        <table class="audit-table">
+            <thead>
+                <tr>
+                    <th>Nama Armada</th>
+                    <th>Status Sistem</th>
+                    <th>Laporan Masuk</th>
+                    <th>Kuantitas Snapshot</th>
+                    <th>Insiden Terdeteksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($auditTrail as $audit)
+                    <tr class="{{ $audit['status'] === 'Offline / No Data' ? 'offline' : '' }}">
+                        <td class="text-left">ARMADA: {{ $audit['armada'] }}</td>
+                        <td style="font-weight: bold; {{ $audit['status'] === 'Aktif' ? 'color: #16a34a;' : 'color: #dc2626;' }}">{{ $audit['status'] }}</td>
+                        <td>{{ $audit['total_laporan'] }} Log</td>
+                        <td>{{ $audit['total_snapshot'] }} Foto</td>
+                        <td style="{{ $audit['insiden'] > 0 ? 'color: red; font-weight: bold;' : '' }}">
+                            {{ $audit['insiden'] }} Titik
+                        </td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+        <p class="note">* Catatan: Armada dengan status "Offline / No Data" menunjukkan tidak ada rekaman/laporan CCTV yang diterima oleh server pusat pada rentang tanggal tersebut.</p>
     </div>
 
-    <!-- METRIK EXECUTIVE -->
-    <table class="exec-summary">
-        <tr>
-            <td>
-                <span class="title">Total Armada Terpantau</span>
-                <span class="value">{{ $totalKapal }} Kapal</span>
-            </td>
-            <td>
-                <span class="title">System Uptime</span>
-                <span class="value {{ $uptimePercentage >= 90 ? 'green' : 'red' }}">{{ $uptimePercentage }}%</span>
-            </td>
-            <td>
-                <span class="title">Insiden Kamera (Blur/NA)</span>
-                <span class="value red">{{ $downtimeCount }} Titik</span>
-            </td>
-        </tr>
-    </table>
-
-    <!-- TABEL AUDIT TRAIL -->
-    <table class="audit-table">
-        <thead>
-            <tr>
-                <th>Nama Armada</th>
-                <th>Total Laporan Masuk</th>
-                <th>Kuantitas Snapshot</th>
-                <th>Insiden Terdeteksi</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach($auditTrail as $audit)
-                <tr>
-                    <td class="text-left">ARMADA: {{ $audit['armada'] }}</td>
-                    <td>{{ $audit['total_laporan'] }} Log</td>
-                    <td>{{ $audit['total_snapshot'] }} Foto</td>
-                    <td style="{{ $audit['insiden'] > 0 ? 'color: red; font-weight: bold;' : 'color: green;' }}">
-                        {{ $audit['insiden'] }} Titik
-                    </td>
-                </tr>
-            @endforeach
-        </tbody>
-    </table>
-
-    <!-- LOOPING DATA ARMADA -->
     @foreach($groupedLaporans as $lokasi => $laporans)
         @foreach($laporans as $laporan)
             <div class="laporan-card">
                 <table class="laporan-header-table">
                     <tr>
-                        <!-- HAPUS EMOJI DISINI -->
                         <td align="left">ARMADA: {{ $lokasi }}</td>
                         <td align="right">WAKTU: {{ $laporan->waktu_kejadian ? $laporan->waktu_kejadian->format('d M Y, H:i') : '-' }} WIB</td>
                     </tr>
@@ -136,7 +147,6 @@
                             @else
                                 <div style="height: 110px; line-height: 110px; border: 1px dashed #ccc; font-size: 10px; color: #999;">NO IMAGE</div>
                             @endif
-                            <!-- NAMA KAMERA BISA DIEDIT NANTINYA -->
                             <div class="image-channel">CH: {{ $gambar->channel }}</div>
                         </div>
                     @endforeach
