@@ -5,7 +5,7 @@
             <!-- Render Native Form Schema (Section, Grid, DatePicker) -->
             {{ $this->form }}
 
-            <!-- Native Button Filament (Pasti Muncul & Responsif) -->
+            <!-- Native Button Filament -->
             <div class="mt-6">
                 <x-filament::button type="submit" size="lg" color="primary" class="w-full justify-center">
                     GENERATE SUMMARY PDF

@@ -6,6 +6,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\UserPortalController;
 use App\Models\Laporan;
+use App\Http\Controllers\PdfController;
 
 // =========================================================================
 // 1. REDIRECT GERBANG UTAMA (DITARUH DI LUAR AGAR BISA DIAKSES GUEST)
@@ -35,14 +36,14 @@ Route::middleware(['auth'])->prefix('portal')->name('portal.')->group(function (
     // 👇 TAMBAHKAN 2 RUTE INI UNTUK INTERAKSI TIKET 👇
     Route::post('/ticket/{id}/reply', [UserPortalController::class, 'replyTicket'])->name('portal.reply-ticket');
     Route::post('/ticket/{id}/approve', [UserPortalController::class, 'approveTicket'])->name('portal.approve-ticket');
-    
+
     // Rute untuk melihat detail dan progres tiket
     Route::get('/ticket/{id}/detail', [UserPortalController::class, 'showTicket'])->name('show-ticket');
     // Rute untuk user membalas thread/follow-up
     Route::post('/ticket/{id}/reply', [UserPortalController::class, 'replyTicket'])->name('reply-ticket');
     // Rute untuk user memberikan Approval / Menutup Tiket
     Route::post('/ticket/{id}/approve', [UserPortalController::class, 'approveTicket'])->name('approve-ticket');
-    
+
     // Rute Visualisasi Aset Karyawan
     Route::get('/assets', [UserPortalController::class, 'myAssets'])->name('assets');
 
@@ -81,7 +82,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/assets', [App\Http\Controllers\AssetController::class, 'store'])->name('assets.store');
     Route::put('/assets/{asset}', [App\Http\Controllers\AssetController::class, 'update'])->name('assets.update');
     Route::delete('/assets/{asset}', [App\Http\Controllers\AssetController::class, 'destroy'])->name('assets.destroy');
-    
+
     // RUTE ITSM HELPDESK & TICKETING
     Route::resource('tickets', App\Http\Controllers\TicketController::class);
     Route::get('/tickets/create', [App\Http\Controllers\TicketController::class, 'create'])->name('tickets.create');
@@ -94,5 +95,8 @@ Route::middleware('auth')->group(function () {
         $laporan = Laporan::with('gambars')->findOrFail($id);
         return view('cetak-laporan', compact('laporan'));
     })->name('cetak.laporan');
-    
+
+    // Rute untuk cetak Summary Ops
+    Route::get('/cetak-summary-ops', [PdfController::class, 'generateSummary'])->name('cetak.summary')->middleware('web');
+
 });
