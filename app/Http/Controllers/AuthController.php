@@ -33,7 +33,7 @@ class AuthController extends Controller
             // Login paksa menggunakan ID User tersebut
             Auth::login($user);
             $request->session()->regenerate();
-            
+
             return $this->redirectBasedOnRole($user);
         }
 

@@ -9,200 +9,118 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Filament\Notifications\Notification;
 
 class LaporanResource extends Resource
 {
     protected static ?string $model = Laporan::class;
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
     protected static ?string $navigationLabel = 'Laporan CCTV';
-
-    // Disatukan di grup CCTV Monitoring agar sejajar dengan Live Monitoring
     protected static ?string $navigationGroup = 'CCTV MONITORING';
-    protected static ?int $navigationSort = 2; 
+    protected static ?int $navigationSort = 2;
+
+    // Schema bersih agar bisa dipakai di Create, Edit, dan Duplicate
+    public static function getFormSchema(bool $useRelationship = true): array
+    {
+        $repeater = Forms\Components\Repeater::make('gambars')
+            ->label('UPLOAD PHOTOS')
+            ->schema([
+                Forms\Components\FileUpload::make('path_gambar')->label('Image File')->image()->directory('laporan-images')->required()->columnSpan(2),
+                Forms\Components\Select::make('channel')->label('CH')->options(['AJG'=>'AJG','BRT'=>'BRT','CCR'=>'CCR','ECR'=>'ECR','WKN'=>'WKN','WKR'=>'WKR'])->required()->columnSpan(1),
+            ])->columns(3)->addActionLabel('+ ADD MORE PHOTOS')->defaultItems(0);
+
+        if ($useRelationship) {
+            $repeater->relationship('gambars');
+        }
+
+        return [
+            Forms\Components\Select::make('lokasi')->label('ARMADA / LOKASI')->options(fn () => \App\Models\Vessel::pluck('vessel_name', 'vessel_name')->toArray())->searchable()->required(),
+
+            Forms\Components\Section::make('CCTV 6 CH STATUS')->schema([
+                Forms\Components\Select::make('status_ajg')->label('AJG')->options(['Clear' => '🟢 Clear', 'Blur' => '🟡 Blur', 'NA' => '🔴 NA'])->default('Clear')->native(false),
+                Forms\Components\Select::make('status_brt')->label('BRT')->options(['Clear' => '🟢 Clear', 'Blur' => '🟡 Blur', 'NA' => '🔴 NA'])->default('Clear')->native(false),
+                Forms\Components\Select::make('status_ccr')->label('CCR')->options(['Clear' => '🟢 Clear', 'Blur' => '🟡 Blur', 'NA' => '🔴 NA'])->default('Clear')->native(false),
+                Forms\Components\Select::make('status_ecr')->label('ECR')->options(['Clear' => '🟢 Clear', 'Blur' => '🟡 Blur', 'NA' => '🔴 NA'])->default('Clear')->native(false),
+                Forms\Components\Select::make('status_wkn')->label('WKN')->options(['Clear' => '🟢 Clear', 'Blur' => '🟡 Blur', 'NA' => '🔴 NA'])->default('Clear')->native(false),
+                Forms\Components\Select::make('status_wkr')->label('WKR')->options(['Clear' => '🟢 Clear', 'Blur' => '🟡 Blur', 'NA' => '🔴 NA'])->default('Clear')->native(false),
+            ])->columns(2),
+
+            Forms\Components\DateTimePicker::make('waktu_kejadian')->label('TIMESTAMP')->default(now())->required(),
+            Forms\Components\Textarea::make('isi_laporan')->label('NARRATIVE')->placeholder('Type details...')->rows(3)->default('Auto-Snapshot'),
+
+            $repeater,
+        ];
+    }
 
     public static function form(Form $form): Form
     {
-        return $form
-            ->schema([
-                \Filament\Forms\Components\Section::make('Informasi Laporan')
-                    ->schema([
-                        \Filament\Forms\Components\Select::make('lokasi')
-                            ->label('Nama Kapal')
-                            ->options(fn () => \App\Models\Vessel::pluck('vessel_name', 'vessel_name')->toArray())
-                            ->searchable()
-                            ->required(),
-
-                        \Filament\Forms\Components\DateTimePicker::make('waktu_kejadian')
-                            ->label('Waktu Laporan')
-                            ->displayFormat('d M Y, H:i')
-                            ->required(),
-
-                        \Filament\Forms\Components\Textarea::make('isi_laporan')
-                            ->label('Keterangan / Isi Laporan')
-                            ->columnSpanFull()
-                            ->rows(4)
-                            ->nullable(),
-                    ])->columns(2),
-
-                // SECTION LAMA TETAP DIPERTAHANKAN
-                \Filament\Forms\Components\Section::make('Status CCTV (Pilih Ceklis/Silang)')
-                    ->schema([
-                        \Filament\Forms\Components\Select::make('status_ccr')
-                            ->label('Kamera CCR')
-                            ->options(['Ceklis' => 'Ceklis', 'Silang' => 'Silang', 'NA' => 'NA']),
-
-                        \Filament\Forms\Components\Select::make('status_front1')
-                            ->label('Kamera Front 1')
-                            ->options(['Ceklis' => 'Ceklis', 'Silang' => 'Silang', 'NA' => 'NA']),
-
-                        \Filament\Forms\Components\Select::make('status_front2')
-                            ->label('Kamera Front 2')
-                            ->options(['Ceklis' => 'Ceklis', 'Silang' => 'Silang', 'NA' => 'NA']),
-
-                        \Filament\Forms\Components\Select::make('status_back1')
-                            ->label('Kamera Back 1')
-                            ->options(['Ceklis' => 'Ceklis', 'Silang' => 'Silang', 'NA' => 'NA']),
-
-                        \Filament\Forms\Components\Select::make('status_back2')
-                            ->label('Kamera Back 2')
-                            ->options(['Ceklis' => 'Ceklis', 'Silang' => 'Silang', 'NA' => 'NA']),
-                    ])->columns(3),
-
-                // 👇 SECTION BARU: CHECKLIST DINAMIS (TIDAK MENGGANGGU YANG LAMA) 👇
-                \Filament\Forms\Components\Section::make('Checklist Kamera Tambahan (Real-time)')
-                    ->description('Catat status detail setiap kamera pada vessel ini.')
-                    ->schema([
-                        \Filament\Forms\Components\Repeater::make('camera_checklist')
-                            ->label('')
-                            ->schema([
-                                \Filament\Forms\Components\TextInput::make('camera_name')
-                                    ->label('Nama/Lokasi Kamera')
-                                    ->placeholder('Contoh: Engine Room / Deck')
-                                    ->required()
-                                    ->columnSpan(2),
-                                \Filament\Forms\Components\Select::make('status')
-                                    ->label('Status Kamera')
-                                    ->options([
-                                        'Online' => '🟢 Online (Jernih)',
-                                        'Blur' => '🟡 Blur / Kotor',
-                                        'Offline' => '🔴 Offline / No Signal',
-                                    ])
-                                    ->required()
-                                    ->columnSpan(1),
-                                \Filament\Forms\Components\TextInput::make('remarks')
-                                    ->label('Catatan / Keterangan')
-                                    ->placeholder('Tindakan yang diperlukan...')
-                                    ->columnSpan(3),
-                            ])
-                            ->columns(6)
-                            ->defaultItems(0) // Default kosong agar tidak mengganggu layout
-                            ->addActionLabel('Tambah Checklist Kamera')
-                            ->reorderable()
-                            ->collapsible(),
-                    ]),
-                // 👆 BATAS SECTION BARU 👆
-
-                // SECTION 3 LAMA TETAP AMAN (GALERI)
-                \Filament\Forms\Components\Section::make('Galeri Snapshot CCTV')
-                    ->schema([
-                        \Filament\Forms\Components\Repeater::make('gambars')
-                            ->relationship('gambars') 
-                            ->label('')
-                            ->schema([
-                                \Filament\Forms\Components\Select::make('channel')
-                                    ->label('Channel Kamera')
-                                    ->options([
-                                        'CCR' => 'CCR',
-                                        'AJG' => 'Anjungan (AJG)',
-                                        'BRT' => 'Buritan (BRT)',
-                                        'ECR' => 'ECR',
-                                        'WKN' => 'WKN',
-                                        'WKR' => 'WKR',
-                                    ])
-                                    ->required(),
-
-                                \Filament\Forms\Components\FileUpload::make('path_gambar')
-                                    ->label('File Snapshot')
-                                    ->image()
-                                    ->directory('laporan-images') 
-                                    ->required(),
-
-                                \Filament\Forms\Components\Toggle::make('is_visible')
-                                    ->label('Tampilkan di Laporan?')
-                                    ->default(true),
-                            ])
-                            ->columns(3) 
-                            ->grid(1)
-                            ->defaultItems(0) 
-                            ->addActionLabel('Tambah Snapshot Baru'),
-                    ]),
-            ]);
+        return $form->schema(self::getFormSchema(true))->columns(1);
     }
 
     public static function table(Table $table): Table
     {
         return $table
-            ->deferLoading() 
+            ->defaultSort('waktu_kejadian', 'desc')
             ->columns([
-                Tables\Columns\TextColumn::make('lokasi')
-                    ->label('Nama Kapal')
-                    ->searchable()
-                    ->sortable()
-                    ->weight('bold'),
+                Tables\Columns\ImageColumn::make('gambars.path_gambar')->label('SNAPSHOT')->limit(1)->square()->size(60),
+                Tables\Columns\TextColumn::make('lokasi')->label('ARMADA / DATE')->weight('bold')->searchable()->description(fn (Laporan $record): string => $record->waktu_kejadian ? $record->waktu_kejadian->format('d M, H:i T') : '-'),
 
-                Tables\Columns\TextColumn::make('waktu_kejadian')
-                    ->label('Waktu Laporan')
-                    ->dateTime('d M Y, H:i')
-                    ->sortable(),
-
-                Tables\Columns\TextColumn::make('isi_laporan')
-                    ->label('Keterangan')
-                    ->limit(50)
-                    ->searchable(),
-
-                Tables\Columns\TextColumn::make('status_ccr')
-                    ->label('Status CCR')
-                    ->badge()
-                    ->color(fn (?string $state): string => match ($state) {
-                        'Ceklis' => 'success',
-                        'Silang' => 'danger',
-                        default => 'warning',
-                    }),
-            ])
-            ->filters([
-                //
+                Tables\Columns\TextColumn::make('ch_status_badges')->label('6 CH SYSTEMS')->html()->getStateUsing(function (Laporan $record) {
+                    $chs = ['AJG' => $record->status_ajg, 'BRT' => $record->status_brt, 'CCR' => $record->status_ccr, 'ECR' => $record->status_ecr, 'WKN' => $record->status_wkn, 'WKR' => $record->status_wkr];
+                    $html = '<div style="display: flex; flex-wrap: wrap; gap: 4px; width: 140px;">';
+                    foreach ($chs as $label => $status) {
+                        $bgColor = match($status) { 'Clear' => '#dcfce7', 'Blur' => '#fef08a', 'NA' => '#fee2e2', default => '#f3f4f6' };
+                        $textColor = match($status) { 'Clear' => '#166534', 'Blur' => '#854d0e', 'NA' => '#991b1b', default => '#374151' };
+                        $html .= "<span style='background-color: {$bgColor}; color: {$textColor}; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 4px; width: 40px; text-align: center;'>{$label}</span>";
+                    }
+                    return $html . '</div>';
+                }),
+                Tables\Columns\TextColumn::make('isi_laporan')->label('NARRATIVE')->limit(30)->color('gray'),
             ])
             ->actions([
-                Tables\Actions\EditAction::make()->modalWidth('4xl'),
-                Tables\Actions\ViewAction::make()->modalWidth('4xl'),
-                Tables\Actions\Action::make('cetak')
-                    ->label('Cetak / PDF')
-                    ->icon('heroicon-o-printer')
-                    ->color('success')
-                    ->url(fn (Laporan $record) => route('cetak.laporan', $record->id))
-                    ->openUrlInNewTab(),
+                // AKSI DUPLIKAT SPA (Slide-Over Panel)
+                Tables\Actions\Action::make('duplicate')
+                    ->label('')
+                    ->tooltip('Duplicate Data')
+                    ->icon('heroicon-m-document-duplicate')
+                    ->color('warning')
+                    ->slideOver()
+                    ->modalWidth('2xl')
+                    ->modalHeading('Duplicate Laporan')
+                    ->form(self::getFormSchema(false)) // Tarik form tanpa relasi (khusus input duplikat)
+                    ->fillForm(function (Laporan $record) {
+                        $data = $record->toArray();
+                        $data['waktu_kejadian'] = now(); // Update jam terbaru
+                        $data['gambars'] = $record->gambars->map(fn($g) => ['path_gambar' => $g->path_gambar, 'channel' => $g->channel])->toArray();
+                        return $data;
+                    })
+                    ->action(function (array $data) {
+                        $laporan = Laporan::create(\Illuminate\Support\Arr::except($data, ['gambars']));
+                        if (!empty($data['gambars'])) {
+                            foreach($data['gambars'] as $g) {
+                                $laporan->gambars()->create(['channel' => $g['channel'], 'path_gambar' => $g['path_gambar'], 'is_visible' => true]);
+                            }
+                        }
+                        Notification::make()->title('Data Berhasil Diduplikat!')->success()->send();
+                    }),
+
+                // AKSI EDIT SPA (Slide-Over Panel)
+                Tables\Actions\EditAction::make()->label('')->tooltip('Update Report')->slideOver()->modalWidth('2xl'),
+                Tables\Actions\DeleteAction::make()->label('')->tooltip('Delete'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
-                    \Filament\Tables\Actions\ExportBulkAction::make()
-                        ->exporter(\App\Filament\Exports\LaporanExporter::class)
-                        ->label('Ekspor ke CSV/Excel')
-                        ->icon('heroicon-o-arrow-down-tray')
-                        ->color('success'),
+                    \Filament\Tables\Actions\ExportBulkAction::make()->label('Export Selected')->icon('heroicon-o-document-arrow-down')->color('danger'),
                 ]),
             ]);
-    }
-
-    public static function getRelations(): array
-    {
-        return [];
     }
 
     public static function getPages(): array
     {
         return [
             'index' => Pages\ListLaporans::route('/'),
+            // Semua aksi (Create, Edit) sekarang menggunakan Modal/SlideOver di halaman Index!
         ];
     }
 }

@@ -13,10 +13,13 @@ class ListLaporans extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            // Pop-Up akan muncul DI TENGAH (karena tidak ada slideOver)
-            // '4xl' adalah ukurannya agar form 2 kolom tidak berantakan
-            \Filament\Actions\CreateAction::make()
-                ->modalWidth('4xl'),
+            // Membuat aksi Create muncul sebagai Panel Samping (SPA Real-time)
+            Actions\CreateAction::make()
+                ->label('New Laporan')
+                ->icon('heroicon-o-plus')
+                ->slideOver()
+                ->modalWidth('2xl')
+                ->successNotificationTitle('Laporan Baru Berhasil Disimpan!'),
         ];
     }
 }

@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::table('laporans', function (Blueprint $table) {
             // Tambahkan kolom untuk menampung checklist multi-kamera
-            $table->json('camera_checklist')->nullable(); 
+            $table->json('camera_checklist')->nullable();
         });
     }
 

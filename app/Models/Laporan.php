@@ -10,12 +10,11 @@ class Laporan extends Model
     protected $table = 'laporan';
     protected $guarded = [];
 
-    // 👇 TAMBAHKAN INI AGAR CHECKLIST BISA DISIMPAN SEBAGAI ARRAY
     protected $casts = [
         'camera_checklist' => 'array',
+        'waktu_kejadian' => 'datetime',
     ];
 
-    // INI WAJIB ADA AGAR FILAMENT BISA MENARIK GAMBARNYA!
     public function gambars()
     {
         return $this->hasMany(GambarLaporan::class, 'laporan_id');
