@@ -7,6 +7,7 @@ use App\Models\Laporan;
 use App\Models\Vessel;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
 
 class PdfController extends Controller
 {
@@ -23,7 +24,7 @@ class PdfController extends Controller
         $startDate = Carbon::createFromFormat('d/m/Y', $from)->startOfDay();
         $endDate = Carbon::createFromFormat('d/m/Y', $to)->endOfDay();
 
-        $allVessels = \App\Models\Vessel::orderBy('vessel_name', 'asc')->pluck('vessel_name')->toArray();
+        $allVessels = Vessel::orderBy('vessel_name', 'asc')->pluck('vessel_name')->toArray();
 
         $laporans = Laporan::with('gambars')
             ->whereBetween('waktu_kejadian', [$startDate, $endDate])
@@ -33,21 +34,28 @@ class PdfController extends Controller
         $groupedLaporans = $laporans->groupBy('lokasi');
 
         $totalKapal = count($allVessels);
-        $activeVesselsCount = 0; // 👇 Tambahan Penghitung Kapal Aktif
-        $offlineVesselsCount = 0; // 👇 Tambahan Penghitung Kapal Offline
+        $activeVesselsCount = 0;
+        $offlineVesselsCount = 0;
 
         $stats = ['Clear' => 0, 'Blur' => 0, 'NA' => 0];
         $channels = ['status_ajg', 'status_brt', 'status_ccr', 'status_ecr', 'status_wkn', 'status_wkr'];
 
         $auditTrail = [];
 
+        // Tarik nama kustom kamera dari Cache untuk setiap kapal
+        $vesselCustomLabels = [];
+        $default_labels = ['AJG'=>'AJG','BRT'=>'BRT','CCR'=>'CCR','ECR'=>'ECR','WKN'=>'WKN','WKR'=>'WKR'];
+
         foreach ($allVessels as $vesselName) {
+            // Ambil cache nama kustom, jika tidak ada, gunakan nama asli CH
+            $vesselCustomLabels[$vesselName] = Cache::get('cctv_labels_' . md5($vesselName), $default_labels);
+
             $laps = $groupedLaporans->get($vesselName, collect());
             $totalSnapshots = 0;
             $incidents = 0;
 
             if ($laps->count() > 0) {
-                $activeVesselsCount++; // Hitung jika ada laporan
+                $activeVesselsCount++;
                 foreach ($laps as $lap) {
                     $totalSnapshots += $lap->gambars->count();
                     foreach ($channels as $ch) {
@@ -57,7 +65,7 @@ class PdfController extends Controller
                     }
                 }
             } else {
-                $offlineVesselsCount++; // Hitung jika kosong
+                $offlineVesselsCount++;
             }
 
             $auditTrail[] = [
@@ -78,11 +86,12 @@ class PdfController extends Controller
             'from' => $from,
             'to' => $to,
             'totalKapal' => $totalKapal,
-            'activeVesselsCount' => $activeVesselsCount, // Lempar ke Blade
-            'offlineVesselsCount' => $offlineVesselsCount, // Lempar ke Blade
+            'activeVesselsCount' => $activeVesselsCount,
+            'offlineVesselsCount' => $offlineVesselsCount,
             'uptimePercentage' => $uptimePercentage,
             'downtimeCount' => $downtimeCount,
-            'auditTrail' => $auditTrail
+            'auditTrail' => $auditTrail,
+            'vesselCustomLabels' => $vesselCustomLabels // Kirim ke blade PDF
         ])
         ->setPaper('a4', 'portrait')
         ->setWarnings(false)

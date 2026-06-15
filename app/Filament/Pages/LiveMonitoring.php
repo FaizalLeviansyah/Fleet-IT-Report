@@ -27,6 +27,16 @@ class LiveMonitoring extends Page
 
     public $channel_labels = [];
 
+    // Template default jika armada tersebut belum pernah disetting namanya
+    private $default_labels = [
+        'AJG' => 'CCTV 1 (Cam A)',
+        'BRT' => 'CCTV 2 (Cam B)',
+        'CCR' => 'CCTV 3 (Cam C)',
+        'ECR' => 'CCTV 4 (Cam D)',
+        'WKN' => 'CCTV 5 (Cam E)',
+        'WKR' => 'CCTV 6 (Cam F)',
+    ];
+
     public function mount()
     {
         $this->start_date = '2026-01-01';
@@ -34,21 +44,19 @@ class LiveMonitoring extends Page
         $this->start_time = '00:00';
         $this->end_time = '23:59';
 
-        // 💡 SMART SYSTEM: Tarik nama kamera dari memori Cache, jika kosong pakai default
-        $this->channel_labels = Cache::get('cctv_channel_labels', [
-            'AJG' => 'CCTV 1 (Cam A)',
-            'BRT' => 'CCTV 2 (Cam B)',
-            'CCR' => 'CCTV 3 (Cam C)',
-            'ECR' => 'CCTV 4 (Cam D)',
-            'WKN' => 'CCTV 5 (Cam E)',
-            'WKR' => 'CCTV 6 (Cam F)',
-        ]);
+        $this->channel_labels = $this->default_labels;
     }
 
-    // 💡 SMART SYSTEM: Fungsi ini otomatis berjalan saat user selesai mengetik & klik di luar kotak
+    // 💡 SMART SYSTEM: Simpan nama kamera ke Cache KHUSUS untuk kapal yang dipilih
     public function updatedChannelLabels($value, $key)
     {
-        Cache::put('cctv_channel_labels', $this->channel_labels); // Simpan permanen ke Cache server
+        if (empty($this->selected_vessel)) {
+            Notification::make()->title('Pilih armada terlebih dahulu!')->warning()->send();
+            return;
+        }
+
+        // Simpan permanen ke cache dengan kunci unik nama kapalnya
+        Cache::forever('cctv_labels_' . md5($this->selected_vessel), $this->channel_labels);
         Notification::make()->title('Label Kamera Tersimpan!')->success()->send();
     }
 
@@ -72,6 +80,9 @@ class LiveMonitoring extends Page
     public function updatedSelectedVessel($value)
     {
         if (!empty($value)) {
+            // 💡 SMART SYSTEM: Tarik nama kamera unik milik kapal ini saat dropdown diubah
+            $this->channel_labels = Cache::get('cctv_labels_' . md5($value), $this->default_labels);
+
             $variants = $this->getVesselVariants($value);
 
             $latest = DB::table('cctv_reports')
@@ -89,6 +100,8 @@ class LiveMonitoring extends Page
             } else {
                 Notification::make()->title('Kapal Offline 🔴')->body("Belum ada rekaman fisik untuk {$value}.")->danger()->send();
             }
+        } else {
+            $this->channel_labels = $this->default_labels;
         }
     }
 

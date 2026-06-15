@@ -147,7 +147,9 @@
                             @else
                                 <div style="height: 110px; line-height: 110px; border: 1px dashed #ccc; font-size: 10px; color: #999;">NO IMAGE</div>
                             @endif
-                            <div class="image-channel">CH: {{ $gambar->channel }}</div>
+                            <div class="image-channel">
+                                {{ $vesselCustomLabels[$lokasi][$gambar->channel] ?? 'CH: ' . $gambar->channel }}
+                            </div>
                         </div>
                     @endforeach
                 </div>
