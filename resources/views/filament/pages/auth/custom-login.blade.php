@@ -55,6 +55,7 @@
                         <select class="destination-select" wire:model.live="loginDestination" id="destSelect">
                             <option value="auto">🤖 Auto-Detect Route (Recommended)</option>
                             <option value="admin">👑 Admin Panel</option>
+                            <option value="owner">🏢 Client / Vessel Owner</option>
                             <option value="portal">💼 Employee or Vessel Crew</option>
                         </select>
                         <div class="select-icon">
@@ -69,7 +70,7 @@
                 <div class="forgot-password-container">
                     {{ $this->forgotPasswordAction }}
                 </div>
-                
+
                 <button type="submit" class="btn-submit" id="submitBtn" wire:ignore>
                     Sign In
                     <svg style="width: 18px; height: 18px; transition: transform 0.3s;" class="btn-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
@@ -83,7 +84,6 @@
     @livewire('notifications')
     <x-filament-actions::modals />
     <style>
-        /* 🚨 FIX UTAMA: z-index diturunkan ke 40 agar SweetAlert (z-50) bisa muncul di atasnya! */
         .amarin-login-wrapper { display: flex; flex-direction: row-reverse; position: fixed; inset: 0; width: 100vw; height: 100vh; background-color: #FAFBFC; z-index: 40; font-family: 'Poppins', sans-serif; overflow: hidden; }
 
         .amarin-login-left { display: none; background-color: #031E49; width: 55%; position: relative; flex-direction: column; justify-content: space-between; align-items: flex-end; text-align: right; padding: 4rem; overflow: hidden; color: white; }
@@ -129,7 +129,6 @@
         .subtitle { font-size: 0.85rem; color: #4B5563; margin-bottom: 0.75rem; font-weight: 500; }
         .respect { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.35em; color: #9CA3AF; text-transform: uppercase; }
 
-        /* 👇 FIX CSS: Jarak Dropdown Dirapatkan & Posisi Icon Di-Center 👇 */
         .login-destination-wrapper { margin-bottom: 0.5rem; width: 100%; }
         .destination-label { display: block; font-size: 11px; font-weight: 700; color: #4B5563; letter-spacing: 0.025em; text-transform: uppercase; margin-bottom: 0.5rem; }
         .destination-select-container { position: relative; width: 100%; }
@@ -168,15 +167,19 @@
 
             selectDest.addEventListener('change', function(e) {
                 const val = e.target.value;
-                
+
                 if (val === 'portal') {
-                    submitBtn.style.backgroundColor = '#059669'; 
+                    submitBtn.style.backgroundColor = '#059669';
                     submitBtn.style.boxShadow = '0 4px 6px -1px rgba(5, 150, 105, 0.3)';
                     submitBtn.innerHTML = `Masuk ke Portal Karyawan <svg style="width: 18px; height: 18px; transition: transform 0.3s;" class="btn-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>`;
                 } else if (val === 'admin') {
                     submitBtn.style.backgroundColor = '#1E3A8A';
                     submitBtn.style.boxShadow = '0 4px 6px -1px rgba(30, 58, 138, 0.3)';
                     submitBtn.innerHTML = `Masuk ke IT Admin <svg style="width: 18px; height: 18px; transition: transform 0.3s;" class="btn-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>`;
+                } else if (val === 'owner') {
+                    submitBtn.style.backgroundColor = '#0F766E'; // Warna Emerald gelap nan elegan untuk Owner
+                    submitBtn.style.boxShadow = '0 4px 6px -1px rgba(15, 118, 110, 0.3)';
+                    submitBtn.innerHTML = `Masuk ke Client Dashboard <svg style="width: 18px; height: 18px; transition: transform 0.3s;" class="btn-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>`;
                 } else {
                     submitBtn.style.backgroundColor = '#0056B3';
                     submitBtn.style.boxShadow = '0 4px 6px -1px rgba(0, 86, 179, 0.2)';

@@ -62,6 +62,7 @@
                         <select name="role_visual" class="glass-input w-full px-5 py-3.5 rounded-2xl text-sm text-slate-600 font-bold outline-none appearance-none cursor-pointer">
                             <option value="auto">🤖 Auto-Detect (Otomatis dari Email)</option>
                             <option value="admin">👑 Admin (Tim IT)</option>
+                            <option value="owner">🏢 Client / Vessel Owner</option>
                             <option value="employee">💼 Karyawan (Darat)</option>
                             <option value="vessel">🚢 Vessel (Kapal)</option>
                         </select>

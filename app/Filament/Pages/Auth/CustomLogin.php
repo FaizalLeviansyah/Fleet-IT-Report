@@ -11,6 +11,7 @@ use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
 use Filament\Notifications\Notification;
 use App\Models\User;
+use Illuminate\Support\Facades\Hash;
 
 class CustomLogin extends BaseLogin implements HasActions
 {
@@ -24,7 +25,7 @@ class CustomLogin extends BaseLogin implements HasActions
     {
         return Action::make('forgotPassword')
             ->label('Forgot password?')
-            ->link() 
+            ->link()
             ->color('primary')
             ->modalHeading('Reset Password Sistem')
             ->modalDescription('Masukkan email terdaftar Anda. Kami akan mengirimkan instruksi pemulihan ke email tersebut.')
@@ -39,7 +40,8 @@ class CustomLogin extends BaseLogin implements HasActions
                     ->prefixIcon('heroicon-m-envelope'),
             ])
             ->action(function (array $data): void {
-                $user = User::where('email_work', $data['email_reset'])->first();
+                // 💡 FIX: Cari di kedua kolom (Pegawai & Owner)
+                $user = User::where('email_work', $data['email_reset'])->orWhere('email', $data['email_reset'])->first();
 
                 if (!$user) {
                     Notification::make()->title('Gagal!')->body('Email tidak ditemukan dalam sistem ITSM.')->danger()->send();
@@ -82,33 +84,28 @@ class CustomLogin extends BaseLogin implements HasActions
     {
         $data = $this->form->getState();
 
-        // 1. CARI USER MANUAL DI DATABASE
-        $user = User::where('email_work', $data['email'])->first();
+        // 1. 💡 FIX: CARI USER DI KOLOM EMAIL_WORK (Pegawai) ATAU EMAIL (Owner)
+        $user = User::where('email_work', $data['email'])->orWhere('email', $data['email'])->first();
 
-        // 2. JIKA USER TIDAK ADA ATAU PASSWORD SALAH -> LEMPAR ERROR BAWAAN
-        if (! $user || ! \Illuminate\Support\Facades\Hash::check($data['password'], $user->password)) {
+        // 2. JIKA USER TIDAK ADA ATAU PASSWORD SALAH -> LEMPAR ERROR
+        if (! $user || ! Hash::check($data['password'], $user->password)) {
             $this->throwFailureValidationException();
         }
 
-        // 3. JIKA PASSWORD BENAR, LAKUKAN PENGECEKAN KASTA & LISENSI
-        $isAdmin = ($user->role === 'admin' || $user->is_it_team == 1); 
+        // 3. JIKA PASSWORD BENAR, LAKUKAN PENGECEKAN KASTA
+        // Yang boleh masuk Filament Dasbor adalah Admin, Tim IT, DAN Owner!
+        $isFilamentUser = in_array($user->role, ['admin', 'owner']) || $user->is_it_team == 1;
         $destination = $this->loginDestination;
 
-        // Cek Lisensi
-        if ($user->is_active != 1 || $user->access_app_IT_Management_System != 1) {
-            Notification::make()->title('Akses Ditolak 🛑')->body('Akun Anda tidak memiliki izin untuk mengakses ITSM Stack.')->danger()->send();
+        // Cek Admin / Owner Nyasar Ke Portal Karyawan
+        if ($destination === 'portal' && $isFilamentUser) {
+            Notification::make()->title('Salah Jalur! 🛑')->body('Akun Anda dikonfigurasi untuk Dasbor Utama. Silakan ganti pilihan login Anda.')->danger()->send();
             return null;
         }
 
-        // Cek Admin Nyasar Ke Portal
-        if ($destination === 'portal' && $isAdmin) {
-            Notification::make()->title('Salah Jalur! 🛑')->body('Anda adalah Admin / Tim IT. Silakan pilih "Admin Panel".')->danger()->send();
-            return null;
-        }
-
-        // Cek Pegawai Nyasar Ke Admin
-        if ($destination === 'admin' && !$isAdmin) {
-            Notification::make()->title('Akses Ilegal! 🚫')->body('Anda bukan Admin / Tim IT. Silakan pilih "Employee Portal".')->danger()->send();
+        // Cek Pegawai Biasa Nyasar Ke Dasbor Admin / Owner
+        if (in_array($destination, ['admin', 'owner']) && !$isFilamentUser) {
+            Notification::make()->title('Akses Ilegal! 🚫')->body('Anda tidak memiliki akses ke Dasbor Utama. Silakan pilih "Employee Portal".')->danger()->send();
             return null;
         }
 
@@ -116,17 +113,20 @@ class CustomLogin extends BaseLogin implements HasActions
         filament()->auth()->login($user, $data['remember'] ?? false);
         session()->regenerate();
 
+        // Ambil nama depan untuk sapaan (Karena owner pakai 'name', pegawai pakai 'full_name')
+        $firstName = explode(' ', $user->full_name ?? $user->name ?? 'User')[0];
+
         // 5. NOTIFIKASI & REDIRECT SESUAI KASTA
-        if ($isAdmin) {
+        if ($isFilamentUser) {
             Notification::make()
                 ->title('Login Berhasil 🎉')
-                ->body('Selamat datang kembali, ' . explode(' ', $user->full_name)[0] . '!')
+                ->body('Selamat datang kembali, ' . $firstName . '!')
                 ->success()
                 ->send();
 
             return app(\Filament\Http\Responses\Auth\Contracts\LoginResponse::class);
         } else {
-            session()->flash('welcome_msg', 'Selamat datang di Portal Layanan IT, ' . explode(' ', $user->full_name)[0] . '! 👋');
+            session()->flash('welcome_msg', 'Selamat datang di Portal Layanan IT, ' . $firstName . '! 👋');
             $this->redirect(route('portal.dashboard'), navigate: false);
             return null;
         }
