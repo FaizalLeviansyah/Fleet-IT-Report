@@ -102,30 +102,34 @@ class VesselResource extends Resource
                             ->required(),
                         Forms\Components\TextInput::make('name')->label('Nama Lengkap (PIC Owner)')->required(),
 
-                        // 💡 FIX: Validasi Email sekarang mengarah ke tabel Master Pegawai
                         Forms\Components\TextInput::make('email')
                             ->label('Email Akses (Work Email)')
                             ->email()
-                            ->unique(table: 'tbl_employee', column: 'email_work')
+                            ->unique(table: \App\Models\User::class, column: 'email_work')
                             ->required(),
 
                         Forms\Components\TextInput::make('password')->password()->required(),
                     ])
                     ->action(function (array $data) {
-                        // 💡 FIX: Sesuaikan nama kolom dengan struktur tbl_employee dan berikan Akses Lisensi
-                        User::create([
+                        // 💡 FIX: Suntikkan employee_code otomatis (Misal: OWN-1718610000)
+                        $autoCode = 'OWN-' . time();
+
+                        \App\Models\User::create([
+                            'employee_code' => $autoCode, // 👈 SOLUSI ERROR 1364
                             'full_name' => $data['name'],
                             'email_work' => $data['email'],
-                            // Password otomatis akan di-Hash oleh mutator di model User.php
                             'password' => $data['password'],
                             'role' => 'owner',
                             'company' => $data['company'],
-
-                            // Wajib diset angka 1 agar user bisa masuk melalui gerbang Login
                             'is_active' => 1,
                             'access_app_IT_Management_System' => 1,
                         ]);
-                        \Filament\Notifications\Notification::make()->title('Akun Owner Berhasil Dibuat!')->success()->send();
+
+                        \Filament\Notifications\Notification::make()
+                            ->title('Akun Owner Berhasil Dibuat!')
+                            ->body('User ID (Sistem): ' . $autoCode)
+                            ->success()
+                            ->send();
                     })
             ])
             ->columns([
