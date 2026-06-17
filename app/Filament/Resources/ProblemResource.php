@@ -16,15 +16,13 @@ class ProblemResource extends Resource
     protected static ?string $model = Problem::class;
     protected static ?string $navigationIcon = 'heroicon-o-fire';
     protected static ?string $navigationLabel = 'ITSM / Problem';
-    protected static ?string $navigationGroup = 'IT MANAGEMENT';
+    protected static ?string $navigationGroup = 'IT Management';
     protected static ?int $navigationSort = 2;
 
-    // KUNCI KEAMANAN: HANYA TIM IT YANG BISA LIHAT MENU INI
+    // 💡 SECURITY (RBAC): Sembunyikan menu ini dari Client (Owner)
     public static function canViewAny(): bool
     {
-        return in_array(auth()->user()->full_name, [
-            'FAIZAL LEVIANSYAH', 'FARHAN ARIF INDIARTO', 'HENDRI SETIO PRAKOSO'
-        ]);
+        return strtolower(auth()->user()->role) !== 'owner';
     }
 
     public static function form(Form $form): Form
@@ -89,7 +87,7 @@ class ProblemResource extends Resource
 
                 Tables\Columns\TextColumn::make('tickets_count')
                     ->label('Total Tiket Terhubung')
-                    ->counts('tickets') // Menghitung jumlah tiket yang di-attach
+                    ->counts('tickets')
                     ->badge()
                     ->color('info'),
 
@@ -106,7 +104,6 @@ class ProblemResource extends Resource
     public static function getRelations(): array
     {
         return [
-            // 👇 Pakai alamat lengkap agar Laravel tidak nyasar 👇
             \App\Filament\Resources\ProblemResource\RelationManagers\TicketsRelationManager::class,
         ];
     }

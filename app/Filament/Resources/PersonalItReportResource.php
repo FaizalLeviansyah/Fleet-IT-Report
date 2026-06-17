@@ -23,6 +23,12 @@ class PersonalItReportResource extends Resource
     protected static ?string $navigationGroup = 'HR / Pekerjaan';
     protected static ?int $navigationSort = 1;
 
+    // 💡 SECURITY (RBAC): Sembunyikan menu ini dari Client (Owner)
+    public static function canViewAny(): bool
+    {
+        return strtolower(auth()->user()->role) !== 'owner';
+    }
+
     public static function form(Form $form): Form
     {
         return $form
@@ -85,7 +91,6 @@ class PersonalItReportResource extends Resource
                         ></div>
                     HTML)),
 
-                // 🚨 PERBAIKAN: Tambahkan dehydrated(false) agar tidak disimpan ke database 🚨
                 Forms\Components\Hidden::make('force_reset_trigger')
                     ->dehydrated(false)
                     ->live()

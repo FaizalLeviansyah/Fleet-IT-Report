@@ -26,6 +26,12 @@ class LaporanResource extends Resource
     protected static ?string $navigationGroup = 'IT Operation';
     protected static ?int $navigationSort = 2;
 
+    // 💡 SECURITY (RBAC): Sembunyikan menu ini dari Client (Owner)
+    public static function canViewAny(): bool
+    {
+        return strtolower(auth()->user()->role) !== 'owner';
+    }
+
     public static function canCreate(): bool { return auth()->user()->role !== 'owner'; }
     public static function canEdit(\Illuminate\Database\Eloquent\Model $record): bool { return auth()->user()->role !== 'owner'; }
     public static function canDelete(\Illuminate\Database\Eloquent\Model $record): bool { return auth()->user()->role !== 'owner'; }

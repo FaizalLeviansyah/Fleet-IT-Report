@@ -111,16 +111,19 @@ class VesselResource extends Resource
                         Forms\Components\TextInput::make('password')->password()->required(),
                     ])
                     ->action(function (array $data) {
-                        // 💡 FIX: Suntikkan employee_code otomatis (Misal: OWN-1718610000)
                         $autoCode = 'OWN-' . time();
 
                         \App\Models\User::create([
-                            'employee_code' => $autoCode, // 👈 SOLUSI ERROR 1364
+                            'employee_code' => $autoCode,
                             'full_name' => $data['name'],
                             'email_work' => $data['email'],
                             'password' => $data['password'],
                             'role' => 'owner',
                             'company' => $data['company'],
+
+                            // 👇 INI YANG TERLEWAT OLEH ANDA MAS LEVI! Wajib ada company_id untuk database HRD
+                            'company_id' => 1,
+
                             'is_active' => 1,
                             'access_app_IT_Management_System' => 1,
                         ]);

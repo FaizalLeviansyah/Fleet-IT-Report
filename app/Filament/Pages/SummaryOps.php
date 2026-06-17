@@ -22,6 +22,12 @@ class SummaryOps extends Page implements HasForms
     protected static ?string $navigationLabel = 'Summary Ops';
     protected static ?string $title = 'Summary Ops';
     protected static ?string $navigationGroup = 'IT Operation';
+
+    // 💡 SECURITY (RBAC): Sembunyikan page ini dari Client (Owner)
+    public static function canAccess(): bool
+    {
+        return strtolower(auth()->user()->role) !== 'owner';
+    }
     protected static ?int $navigationSort = 3;
 
     protected static string $view = 'filament.pages.summary-ops';

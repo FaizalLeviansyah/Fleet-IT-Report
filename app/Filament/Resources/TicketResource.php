@@ -4,7 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\TicketResource\Pages;
 use App\Models\Ticket;
-use App\Models\User; // Sudah ditambahkan
+use App\Models\User;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -23,7 +23,12 @@ class TicketResource extends Resource
     protected static ?string $navigationLabel = 'Manajemen Tiket';
     protected static ?int $navigationSort = 1;
 
-    // Badge notifikasi merah di menu sidebar untuk tiket baru
+    // 💡 SECURITY (RBAC): Sembunyikan menu ini dari Client (Owner)
+    public static function canViewAny(): bool
+    {
+        return strtolower(auth()->user()->role) !== 'owner';
+    }
+
     public static function getNavigationBadge(): ?string
     {
         return static::getModel()::where('status', 1)->count() ?: null;
@@ -44,7 +49,6 @@ class TicketResource extends Resource
                             ->label('Nomor Tiket')
                             ->disabled(),
 
-                        // 👇 FIX 1: Ubah 'id' menjadi 'employee_id'
                         Forms\Components\Select::make('user_id')
                             ->label('Pelapor (Requester)')
                             ->options(User::pluck('full_name', 'employee_id'))
@@ -65,8 +69,6 @@ class TicketResource extends Resource
 
                 Forms\Components\Section::make('Penugasan & Status IT')
                     ->schema([
-
-                        // 👇 FIX 2: Ubah 'id' menjadi 'employee_id'
                         Forms\Components\Select::make('assigned_to')
                             ->label('Teknisi IT (Assignee)')
                             ->options(User::where('is_it_team', 1)->orWhere('role', 'admin')->pluck('full_name', 'employee_id'))
@@ -188,7 +190,6 @@ class TicketResource extends Resource
                     ]),
             ])
             ->actions([
-                // ACTION: TOMBOL AMBIL TIKET
                 Tables\Actions\Action::make('take_ticket')
                     ->label('Ambil Tiket')
                     ->icon('heroicon-o-hand-raised')
@@ -196,11 +197,11 @@ class TicketResource extends Resource
                     ->requiresConfirmation()
                     ->modalHeading('Ambil Alih Tiket Ini?')
                     ->modalDescription('Anda akan ditetapkan sebagai teknisi penanggung jawab (PIC) untuk tiket ini dan statusnya akan berubah menjadi In Progress.')
-                    ->hidden(fn (Ticket $record) => $record->assigned_to !== null) // Sembunyikan jika sudah ada yg ambil
+                    ->hidden(fn (Ticket $record) => $record->assigned_to !== null)
                     ->action(function (Ticket $record) {
                         $record->update([
                             'assigned_to' => Auth::id(),
-                            'status' => 3, // Ubah jadi In Progress
+                            'status' => 3,
                         ]);
                         Notification::make()
                             ->title('Tiket Berhasil Diambil!')

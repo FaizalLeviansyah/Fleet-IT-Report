@@ -40,8 +40,8 @@ class CustomLogin extends BaseLogin implements HasActions
                     ->prefixIcon('heroicon-m-envelope'),
             ])
             ->action(function (array $data): void {
-                // 💡 FIX: Cari di kedua kolom (Pegawai & Owner)
-                $user = User::where('email_work', $data['email_reset'])->orWhere('email', $data['email_reset'])->first();
+                // UBAH MENJADI:
+$user = User::where('email_work', $data['email_reset'])->first();
 
                 if (!$user) {
                     Notification::make()->title('Gagal!')->body('Email tidak ditemukan dalam sistem ITSM.')->danger()->send();
@@ -85,7 +85,7 @@ class CustomLogin extends BaseLogin implements HasActions
         $data = $this->form->getState();
 
         // 1. 💡 FIX: CARI USER DI KOLOM EMAIL_WORK (Pegawai) ATAU EMAIL (Owner)
-        $user = User::where('email_work', $data['email'])->orWhere('email', $data['email'])->first();
+        $user = User::where('email_work', $data['email'])->first();
 
         // 2. JIKA USER TIDAK ADA ATAU PASSWORD SALAH -> LEMPAR ERROR
         if (! $user || ! Hash::check($data['password'], $user->password)) {

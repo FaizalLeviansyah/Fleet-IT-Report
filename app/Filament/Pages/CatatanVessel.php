@@ -15,6 +15,11 @@ class CatatanVessel extends Page
 
     // 👇 Masuk ke dalam rumah IT Operation
     protected static ?string $navigationGroup = 'IT Operation';
+    // 💡 SECURITY (RBAC): Sembunyikan page ini dari Client (Owner)
+    public static function canAccess(): bool
+    {
+        return strtolower(auth()->user()->role) !== 'owner';
+    }
     protected static ?int $navigationSort = 4; // Taruh paling atas di IT Operation
 
     protected static string $view = 'filament.pages.catatan-vessel';

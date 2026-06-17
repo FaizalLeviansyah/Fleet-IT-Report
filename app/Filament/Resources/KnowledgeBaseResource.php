@@ -22,14 +22,16 @@ class KnowledgeBaseResource extends Resource
     protected static ?string $modelLabel = 'Artikel Pengetahuan';
     protected static ?string $pluralModelLabel = 'Basis Pengetahuan (FAQ)';
 
-    // =====================================================================
-    // LOGIC MAGIS 1: USER BIASA HANYA BISA MELIHAT ARTIKEL "PUBLIC"
-    // =====================================================================
+    // 💡 SECURITY (RBAC): Sembunyikan menu ini dari Client (Owner)
+    public static function canViewAny(): bool
+    {
+        return strtolower(auth()->user()->role) !== 'owner';
+    }
+
     public static function getEloquentQuery(): Builder
     {
         $query = parent::getEloquentQuery();
 
-        // Jika yang login BUKAN tim IT, sembunyikan artikel yang is_public = false
         if (auth()->user()->is_it_team != 1) {
             $query->where('is_public', true);
         }
@@ -37,9 +39,6 @@ class KnowledgeBaseResource extends Resource
         return $query;
     }
 
-    // =====================================================================
-    // LOGIC MAGIS 2: KUNCI TOMBOL CREATE, EDIT, DELETE (HANYA UNTUK IT)
-    // =====================================================================
     public static function canCreate(): bool
     {
         return auth()->user()->is_it_team == 1;
@@ -127,7 +126,7 @@ class KnowledgeBaseResource extends Resource
                     ->falseIcon('heroicon-o-lock-closed')
                     ->trueColor('success')
                     ->falseColor('danger')
-                    ->visible($isIT), // Kolom ini disembunyikan untuk user biasa
+                    ->visible($isIT),
 
                 Tables\Columns\TextColumn::make('updated_at')
                     ->label('Terakhir Diperbarui')
@@ -136,10 +135,7 @@ class KnowledgeBaseResource extends Resource
             ])
             ->defaultSort('updated_at', 'desc')
             ->actions([
-                // Semua orang bisa klik "Baca"
                 Tables\Actions\ViewAction::make()->label('Baca Artikel'),
-
-                // Edit & Delete otomatis terkunci oleh fungsi canEdit & canDelete di atas
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ]);
