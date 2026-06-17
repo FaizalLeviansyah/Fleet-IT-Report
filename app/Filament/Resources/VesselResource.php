@@ -82,7 +82,6 @@ class VesselResource extends Resource
     {
         return $table
             ->headerActions([
-                // 💡 UX HINT: Panduan membuat Akun Owner Multi-Tenant
                 Action::make('hint_owner')
                     ->label('Cara Buat Akun Owner')
                     ->icon('heroicon-o-information-circle')
@@ -92,7 +91,6 @@ class VesselResource extends Resource
                     ->modalSubmitAction(false)
                     ->modalCancelActionLabel('Paham!'),
 
-                // 💡 MULTI-TENANT ACTION
                 Action::make('create_owner')
                     ->label('Buat Akun Owner (PT)')
                     ->icon('heroicon-o-user-plus')
@@ -103,16 +101,29 @@ class VesselResource extends Resource
                             ->options(fn () => Vessel::select('company_name')->distinct()->pluck('company_name', 'company_name')->toArray())
                             ->required(),
                         Forms\Components\TextInput::make('name')->label('Nama Lengkap (PIC Owner)')->required(),
-                        Forms\Components\TextInput::make('email')->email()->unique(table: 'users', column: 'email')->required(),
+
+                        // 💡 FIX: Validasi Email sekarang mengarah ke tabel Master Pegawai
+                        Forms\Components\TextInput::make('email')
+                            ->label('Email Akses (Work Email)')
+                            ->email()
+                            ->unique(table: 'tbl_employee', column: 'email_work')
+                            ->required(),
+
                         Forms\Components\TextInput::make('password')->password()->required(),
                     ])
                     ->action(function (array $data) {
+                        // 💡 FIX: Sesuaikan nama kolom dengan struktur tbl_employee dan berikan Akses Lisensi
                         User::create([
-                            'name' => $data['name'],
-                            'email' => $data['email'],
-                            'password' => bcrypt($data['password']),
+                            'full_name' => $data['name'],
+                            'email_work' => $data['email'],
+                            // Password otomatis akan di-Hash oleh mutator di model User.php
+                            'password' => $data['password'],
                             'role' => 'owner',
                             'company' => $data['company'],
+
+                            // Wajib diset angka 1 agar user bisa masuk melalui gerbang Login
+                            'is_active' => 1,
+                            'access_app_IT_Management_System' => 1,
                         ]);
                         \Filament\Notifications\Notification::make()->title('Akun Owner Berhasil Dibuat!')->success()->send();
                     })

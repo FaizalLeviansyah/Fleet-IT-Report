@@ -13,7 +13,7 @@ class User extends Authenticatable implements FilamentUser, HasName
 {
     use Notifiable;
 
-    protected $connection = 'mysql_master'; 
+    protected $connection = 'mysql_master';
     protected $table = 'tbl_employee';
     protected $primaryKey = 'employee_id';
     protected $guarded = [];
@@ -25,15 +25,15 @@ class User extends Authenticatable implements FilamentUser, HasName
         // Syarat mutlak masuk Dasbor Admin Filament:
         // 1. Akun berstatus Aktif
         // 2. Diberi akses ke aplikasi ITSM
-        // 3. WAJIB memiliki role 'Admin' (User Biasa akan ditendang / 403 Forbidden)
-        return $this->is_active == 1 
-            && $this->access_app_IT_Management_System == 1 
-            && ($this->role === 'Admin' || $this->role === 'admin');
+        // 3. WAJIB memiliki role 'Admin' ATAU 'Owner' (User Biasa akan ditendang ke Portal)
+        return $this->is_active == 1
+            && $this->access_app_IT_Management_System == 1
+            && in_array(strtolower($this->role), ['admin', 'owner']);
     }
 
     public function getFilamentName(): string
     {
-        return $this->full_name;
+        return $this->full_name ?? 'User';
     }
 
     public function setPasswordAttribute($value)
