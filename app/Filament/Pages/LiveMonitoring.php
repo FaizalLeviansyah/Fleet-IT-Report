@@ -5,7 +5,7 @@ namespace App\Filament\Pages;
 use Filament\Pages\Page;
 use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Cache;
+use App\Models\Vessel;
 use Carbon\Carbon;
 
 class LiveMonitoring extends Page
@@ -27,7 +27,6 @@ class LiveMonitoring extends Page
 
     public $channel_labels = [];
 
-    // Template default jika armada tersebut belum pernah disetting namanya
     private $default_labels = [
         'AJG' => 'CCTV 1 (Cam A)',
         'BRT' => 'CCTV 2 (Cam B)',
@@ -39,15 +38,14 @@ class LiveMonitoring extends Page
 
     public function mount()
     {
-        $this->start_date = '2026-01-01';
-        $this->end_date = '2026-12-31';
+        // Set default rentang bulan ini saja agar tidak berat
+        $this->start_date = now()->startOfMonth()->format('Y-m-d');
+        $this->end_date = now()->format('Y-m-d');
         $this->start_time = '00:00';
         $this->end_time = '23:59';
-
         $this->channel_labels = $this->default_labels;
     }
 
-    // 💡 SMART SYSTEM: Simpan nama kamera ke Cache KHUSUS untuk kapal yang dipilih
     public function updatedChannelLabels($value, $key)
     {
         if (empty($this->selected_vessel)) {
@@ -55,9 +53,14 @@ class LiveMonitoring extends Page
             return;
         }
 
-        // Simpan permanen ke cache dengan kunci unik nama kapalnya
-        Cache::forever('cctv_labels_' . md5($this->selected_vessel), $this->channel_labels);
-        Notification::make()->title('Label Kamera Tersimpan!')->success()->send();
+        $vessel = Vessel::where('vessel_name', $this->selected_vessel)->first();
+        if ($vessel) {
+            $vessel->update(['cctv_names' => $this->channel_labels]);
+            Notification::make()
+                ->title('Label Nama Kamera Tersimpan di Master Data!')
+                ->success()
+                ->send();
+        }
     }
 
     private function getVesselVariants($vesselName): array
@@ -77,26 +80,61 @@ class LiveMonitoring extends Page
         });
     }
 
+    // 💡 FUNGSI BARU: Smart Query Filter (Anti Bug Eternal Oil 1 vs 2)
+    private function applyVesselFilter($query, $vesselName)
+    {
+        $variants = $this->getVesselVariants($vesselName);
+
+        // Deteksi apakah user sedang mencari Kapal "1" (Romawi I atau Angka 1)
+        $isVesselOne = preg_match('/ I$/i', $vesselName) || preg_match('/ 1$/i', $vesselName);
+
+        $query->where(function($q) use ($vesselName, $variants, $isVesselOne) {
+            $q->where('vessel_name', $vesselName);
+
+            foreach ($variants as $variant) {
+                $q->orWhere(function($subQ) use ($variant, $isVesselOne) {
+                    $subQ->where(function($q2) use ($variant) {
+                        $q2->where('vessel_name', 'LIKE', "%{$variant}%")
+                           ->orWhere('image_path', 'LIKE', "%{$variant}%");
+                    });
+
+                    // Jika mencari kapal I, BLOKIR mutlak semua data yang berbau kapal II
+                    if ($isVesselOne) {
+                        $subQ->where('vessel_name', 'NOT LIKE', "%II%")
+                             ->where('image_path', 'NOT LIKE', "%II%")
+                             ->where('vessel_name', 'NOT LIKE', "% 2%")
+                             ->where('image_path', 'NOT LIKE', "% 2%");
+                    }
+                });
+            }
+        });
+
+        return $query;
+    }
+
     public function updatedSelectedVessel($value)
     {
         if (!empty($value)) {
-            // 💡 SMART SYSTEM: Tarik nama kamera unik milik kapal ini saat dropdown diubah
-            $this->channel_labels = Cache::get('cctv_labels_' . md5($value), $this->default_labels);
+            $vessel = Vessel::where('vessel_name', $value)->first();
+            $this->channel_labels = $vessel?->cctv_names ?? $this->default_labels;
 
-            $variants = $this->getVesselVariants($value);
-
-            $latest = DB::table('cctv_reports')
-                ->where(function($q) use ($value, $variants) {
-                    $q->where('vessel_name', $value);
-                    foreach ($variants as $variant) {
-                        $q->orWhere('image_path', 'LIKE', "%{$variant}%");
-                    }
-                })
-                ->latest('captured_at')
-                ->first();
+            // Menggunakan Smart Query Filter
+            $latest = DB::table('cctv_reports');
+            $latest = $this->applyVesselFilter($latest, $value)->latest('captured_at')->first();
 
             if ($latest) {
-                Notification::make()->title('Sistem Terhubung 🟢')->body("Mengambil data lintasan CCTV {$value}.")->success()->send();
+                // 💡 SMART UX: Otomatis melompat (Time-Travel) ke tanggal snapshot terbaru!
+                $latestDate = Carbon::parse($latest->captured_at);
+                $this->end_date = $latestDate->format('Y-m-d');
+                $this->start_date = $latestDate->copy()->subDays(2)->format('Y-m-d'); // Mundur 2 hari untuk jangkauan
+                $this->start_time = '00:00';
+                $this->end_time = '23:59';
+
+                Notification::make()
+                    ->title('Sistem Terhubung 🟢')
+                    ->body("Menampilkan snapshot mutakhir ({$latestDate->format('d M Y')}) dari {$value}.")
+                    ->success()
+                    ->send();
             } else {
                 Notification::make()->title('Kapal Offline 🔴')->body("Belum ada rekaman fisik untuk {$value}.")->danger()->send();
             }
@@ -123,7 +161,7 @@ class LiveMonitoring extends Page
 
     protected function getViewData(): array
     {
-        $daftar_kapal = DB::table('vessels')->select('vessel_name')->orderBy('vessel_name', 'asc')->get();
+        $daftar_kapal = Vessel::select('vessel_name')->orderBy('vessel_name', 'asc')->get();
         $standard_channels = ['AJG', 'BRT', 'CCR', 'ECR', 'WKN', 'WKR'];
         $data_per_channel = array_fill_keys($standard_channels, collect());
 
@@ -139,17 +177,10 @@ class LiveMonitoring extends Page
         $start = Carbon::parse($this->start_date . ' ' . $this->start_time)->format('Y-m-d H:i:s');
         $end = Carbon::parse($this->end_date . ' ' . $this->end_time)->format('Y-m-d H:i:s');
 
-        $variants = $this->getVesselVariants($this->selected_vessel);
-
-        $raw_data = DB::table('cctv_reports')
-            ->where(function($q) use ($variants) {
-                $q->where('vessel_name', $this->selected_vessel);
-                foreach ($variants as $variant) {
-                    $q->orWhere('vessel_name', 'LIKE', "%{$variant}%")
-                      ->orWhere('image_path', 'LIKE', "%{$variant}%");
-                }
-            })
-            ->whereBetween('captured_at', [$start, $end])
+        // Tarik data dengan Smart Query Filter
+        $raw_data = DB::table('cctv_reports');
+        $raw_data = $this->applyVesselFilter($raw_data, $this->selected_vessel);
+        $raw_data = $raw_data->whereBetween('captured_at', [$start, $end])
             ->orderBy('captured_at', 'asc')
             ->get();
 
@@ -165,15 +196,8 @@ class LiveMonitoring extends Page
             })->values();
         }
 
-        $latest = DB::table('cctv_reports')
-            ->where(function($q) use ($variants) {
-                $q->where('vessel_name', $this->selected_vessel);
-                foreach ($variants as $variant) {
-                    $q->orWhere('image_path', 'LIKE', "%{$variant}%");
-                }
-            })
-            ->orderBy('captured_at', 'desc')
-            ->first();
+        $latest = DB::table('cctv_reports');
+        $latest = $this->applyVesselFilter($latest, $this->selected_vessel)->orderBy('captured_at', 'desc')->first();
 
         $this->last_sync = $latest ? Carbon::parse($latest->captured_at)->format('d M Y - h:i A') : 'Tidak Ada Data';
         $this->total_active_cams = $raw_data->unique('channel')->count();

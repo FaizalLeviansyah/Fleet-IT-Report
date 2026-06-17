@@ -11,10 +11,20 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('laporans', function (Blueprint $table) {
-            // Tambahkan kolom untuk menampung checklist multi-kamera
-            $table->json('camera_checklist')->nullable();
-        });
+        // 💡 SMART BYPASS: Cek dulu apakah tabelnya ada sebelum dimodifikasi
+        if (Schema::hasTable('laporans')) {
+            Schema::table('laporans', function (Blueprint $table) {
+                if (!Schema::hasColumn('laporans', 'camera_checklist')) {
+                    $table->json('camera_checklist')->nullable();
+                }
+            });
+        } elseif (Schema::hasTable('laporan')) {
+            Schema::table('laporan', function (Blueprint $table) {
+                if (!Schema::hasColumn('laporan', 'camera_checklist')) {
+                    $table->json('camera_checklist')->nullable();
+                }
+            });
+        }
     }
 
     /**
@@ -22,8 +32,14 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('laporans', function (Blueprint $table) {
-            //
-        });
+        if (Schema::hasTable('laporans')) {
+            Schema::table('laporans', function (Blueprint $table) {
+                $table->dropColumn('camera_checklist');
+            });
+        } elseif (Schema::hasTable('laporan')) {
+            Schema::table('laporan', function (Blueprint $table) {
+                $table->dropColumn('camera_checklist');
+            });
+        }
     }
 };

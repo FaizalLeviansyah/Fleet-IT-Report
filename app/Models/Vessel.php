@@ -2,13 +2,17 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Vessel extends Model
 {
-    // Beri tahu Laravel bahwa tabelnya bernama 'vessels' di database utama
-    protected $table = 'vessels';
+    use HasFactory;
 
-    // Izinkan semua kolom diisi (mass assignment)
-    protected $guarded = [];
+    protected $guarded = []; // Mengizinkan semua kolom diisi
+
+    // 👇 TAMBAHKAN BLOK INI
+    protected $casts = [
+        'cctv_names' => 'array',
+    ];
 }

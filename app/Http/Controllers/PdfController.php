@@ -7,7 +7,6 @@ use App\Models\Laporan;
 use App\Models\Vessel;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Cache;
 
 class PdfController extends Controller
 {
@@ -24,7 +23,8 @@ class PdfController extends Controller
         $startDate = Carbon::createFromFormat('d/m/Y', $from)->startOfDay();
         $endDate = Carbon::createFromFormat('d/m/Y', $to)->endOfDay();
 
-        $allVessels = Vessel::orderBy('vessel_name', 'asc')->pluck('vessel_name')->toArray();
+        // 💡 Tarik SELURUH OBJEK Master Kapal (Bukan cuma namanya)
+        $allVessels = Vessel::orderBy('vessel_name', 'asc')->get();
 
         $laporans = Laporan::with('gambars')
             ->whereBetween('waktu_kejadian', [$startDate, $endDate])
@@ -33,7 +33,7 @@ class PdfController extends Controller
 
         $groupedLaporans = $laporans->groupBy('lokasi');
 
-        $totalKapal = count($allVessels);
+        $totalKapal = $allVessels->count();
         $activeVesselsCount = 0;
         $offlineVesselsCount = 0;
 
@@ -41,14 +41,14 @@ class PdfController extends Controller
         $channels = ['status_ajg', 'status_brt', 'status_ccr', 'status_ecr', 'status_wkn', 'status_wkr'];
 
         $auditTrail = [];
-
-        // Tarik nama kustom kamera dari Cache untuk setiap kapal
         $vesselCustomLabels = [];
         $default_labels = ['AJG'=>'AJG','BRT'=>'BRT','CCR'=>'CCR','ECR'=>'ECR','WKN'=>'WKN','WKR'=>'WKR'];
 
-        foreach ($allVessels as $vesselName) {
-            // Ambil cache nama kustom, jika tidak ada, gunakan nama asli CH
-            $vesselCustomLabels[$vesselName] = Cache::get('cctv_labels_' . md5($vesselName), $default_labels);
+        foreach ($allVessels as $vessel) {
+            $vesselName = $vessel->vessel_name;
+
+            // 💡 Tarik Data dari Kolom cctv_names di Master Data
+            $vesselCustomLabels[$vesselName] = $vessel->cctv_names ?? $default_labels;
 
             $laps = $groupedLaporans->get($vesselName, collect());
             $totalSnapshots = 0;
@@ -91,7 +91,7 @@ class PdfController extends Controller
             'uptimePercentage' => $uptimePercentage,
             'downtimeCount' => $downtimeCount,
             'auditTrail' => $auditTrail,
-            'vesselCustomLabels' => $vesselCustomLabels // Kirim ke blade PDF
+            'vesselCustomLabels' => $vesselCustomLabels
         ])
         ->setPaper('a4', 'portrait')
         ->setWarnings(false)
