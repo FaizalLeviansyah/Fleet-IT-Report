@@ -23,6 +23,8 @@ class LiveMonitoring extends Page
     public $end_time = '';
     public $frame_interval = 'all';
     public $last_sync = '-';
+    public $min_date = '';
+    public $max_date = '';
     public $total_active_cams = 0;
 
     public $channel_labels = [];
@@ -118,28 +120,40 @@ class LiveMonitoring extends Page
             $vessel = Vessel::where('vessel_name', $value)->first();
             $this->channel_labels = $vessel?->cctv_names ?? $this->default_labels;
 
-            // Menggunakan Smart Query Filter
-            $latest = DB::table('cctv_reports');
-            $latest = $this->applyVesselFilter($latest, $value)->latest('captured_at')->first();
+            $latestQuery = DB::table('cctv_reports');
+            $latest = $this->applyVesselFilter($latestQuery, $value)->latest('captured_at')->first();
 
-            if ($latest) {
-                // 💡 SMART UX: Otomatis melompat (Time-Travel) ke tanggal snapshot terbaru!
+            // 💡 SMART UX: Cari data paling tua (pertama kali direkam) untuk mengunci kalender mundur
+            $oldestQuery = DB::table('cctv_reports');
+            $oldest = $this->applyVesselFilter($oldestQuery, $value)->oldest('captured_at')->first();
+
+            if ($latest && $oldest) {
                 $latestDate = Carbon::parse($latest->captured_at);
-                $this->end_date = $latestDate->format('Y-m-d');
-                $this->start_date = $latestDate->copy()->subDays(2)->format('Y-m-d'); // Mundur 2 hari untuk jangkauan
+
+                // Set Batasan Mutlak Kalender
+                $this->max_date = $latestDate->format('Y-m-d');
+                $this->min_date = Carbon::parse($oldest->captured_at)->format('Y-m-d');
+
+                // Auto-Time Travel
+                $this->end_date = $this->max_date;
+                $this->start_date = $latestDate->copy()->subDays(2)->format('Y-m-d');
                 $this->start_time = '00:00';
                 $this->end_time = '23:59';
 
                 Notification::make()
                     ->title('Sistem Terhubung 🟢')
-                    ->body("Menampilkan snapshot mutakhir ({$latestDate->format('d M Y')}) dari {$value}.")
+                    ->body("Tersedia data dari {$this->min_date} s/d {$this->max_date}.")
                     ->success()
                     ->send();
             } else {
+                $this->min_date = '';
+                $this->max_date = '';
                 Notification::make()->title('Kapal Offline 🔴')->body("Belum ada rekaman fisik untuk {$value}.")->danger()->send();
             }
         } else {
             $this->channel_labels = $this->default_labels;
+            $this->min_date = '';
+            $this->max_date = '';
         }
     }
 

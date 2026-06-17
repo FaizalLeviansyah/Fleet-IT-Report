@@ -147,8 +147,14 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="f-group"><label class="f-label">Start Date</label><input type="date" wire:model="start_date" class="f-input" required></div>
-                <div class="f-group"><label class="f-label">End Date</label><input type="date" wire:model="end_date" class="f-input" required></div>
+                <div class="f-group">
+                    <label class="f-label">Start Date</label>
+                    <input type="date" wire:model="start_date" min="{{ $min_date }}" max="{{ $max_date }}" class="f-input" required>
+                </div>
+                <div class="f-group">
+                    <label class="f-label">End Date</label>
+                    <input type="date" wire:model="end_date" min="{{ $min_date }}" max="{{ $max_date }}" class="f-input" required>
+                </div>
                 <div class="f-group"><label class="f-label">Start Time</label><input type="time" wire:model="start_time" class="f-input"></div>
                 <div class="f-group"><label class="f-label">End Time</label><input type="time" wire:model="end_time" class="f-input"></div>
                 <button type="submit" class="btn-apply">Apply</button>
@@ -186,7 +192,14 @@
         </div>
 
         <div class="monitor-grid">
-            @foreach($channels as $ch)
+            @php
+                // 💡 PHYSICAL LOCK: Kunci posisi kamera agar tidak melompat (AJG selalu kiri atas, dll)
+                $strictChannels = ['AJG', 'BRT', 'CCR', 'ECR', 'WKN', 'WKR'];
+                $extraChannels = array_diff($channels, $strictChannels);
+                $finalChannels = array_merge($strictChannels, $extraChannels);
+            @endphp
+
+            @foreach($finalChannels as $ch)
                 @php
                     $images = $data_per_channel[$ch] ?? collect();
                     $totalImages = count($images);
