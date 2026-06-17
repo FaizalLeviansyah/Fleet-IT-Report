@@ -98,5 +98,5 @@ Route::middleware('auth')->group(function () {
 
     // Rute untuk cetak Summary Ops
     Route::get('/cetak-summary-ops', [PdfController::class, 'generateSummary'])->name('cetak.summary')->middleware('web');
-
+    Route::get('/cetak-bulk-laporan', [App\Http\Controllers\PdfController::class, 'bulkExportLaporan'])->name('cetak.bulk.laporan')->middleware('web');
 });
