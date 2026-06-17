@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\VesselResource\Pages;
 use App\Models\Vessel;
+use App\Models\User;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -11,6 +12,8 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\KeyValue;
+use Filament\Tables\Actions\Action;
+use Illuminate\Support\HtmlString;
 
 class VesselResource extends Resource
 {
@@ -56,7 +59,6 @@ class VesselResource extends Resource
                             ->columnSpanFull()
                             ->rows(3),
 
-                        // 💡 FIX: Menyamakan default dengan Live Monitoring
                         KeyValue::make('cctv_names')
                             ->label('Konfigurasi Channel CCTV (Universal)')
                             ->keyLabel('Kode CH Asli (AJG, BRT, dll)')
@@ -79,6 +81,42 @@ class VesselResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->headerActions([
+                // 💡 UX HINT: Panduan membuat Akun Owner Multi-Tenant
+                Action::make('hint_owner')
+                    ->label('Cara Buat Akun Owner')
+                    ->icon('heroicon-o-information-circle')
+                    ->color('info')
+                    ->modalHeading('Panduan Akun Multi-Tenant (Vessel Owner)')
+                    ->modalDescription(new HtmlString('Fitur ini digunakan untuk membuat akses khusus bagi <strong>Klien / Owner Perusahaan (PT)</strong> agar mereka bisa memantau CCTV kapal mereka sendiri secara mandiri. <br><br><strong>Mekanisme Sistem:</strong><br>1. Klik tombol hijau <strong>"Buat Akun Owner (PT)"</strong>.<br>2. Pilih Nama PT (Sistem otomatis mendeteksi PT yang terdaftar di database).<br>3. Isi Nama, Email, dan Password Akun.<br>4. Saat User tersebut Login, sistem secara gaib akan mengunci hak aksesnya menjadi <strong>Read-Only</strong> dan memblokir kamera milik perusahaan lain agar tidak saling intip.'))
+                    ->modalSubmitAction(false)
+                    ->modalCancelActionLabel('Paham!'),
+
+                // 💡 MULTI-TENANT ACTION
+                Action::make('create_owner')
+                    ->label('Buat Akun Owner (PT)')
+                    ->icon('heroicon-o-user-plus')
+                    ->color('success')
+                    ->form([
+                        Forms\Components\Select::make('company')
+                            ->label('Pilih Perusahaan (PT)')
+                            ->options(fn () => Vessel::select('company_name')->distinct()->pluck('company_name', 'company_name')->toArray())
+                            ->required(),
+                        Forms\Components\TextInput::make('name')->label('Nama Lengkap (PIC Owner)')->required(),
+                        Forms\Components\TextInput::make('email')->email()->unique(table: 'users', column: 'email')->required(),
+                        Forms\Components\TextInput::make('password')->password()->required(),
+                    ])
+                    ->action(function (array $data) {
+                        User::create([
+                            'name' => $data['name'],
+                            'email' => $data['email'],
+                            'password' => bcrypt($data['password']),
+                            'role' => 'owner',
+                            'company' => $data['company'],
+                        ]);
+                        \Filament\Notifications\Notification::make()->title('Akun Owner Berhasil Dibuat!')->success()->send();
+                    })
+            ])
             ->columns([
                 Tables\Columns\TextColumn::make('company_name')
                     ->label('Perusahaan')
@@ -94,7 +132,6 @@ class VesselResource extends Resource
                     ->label('PIC')
                     ->searchable(),
 
-                // 💡 UX UPGRADE: Menambahkan Kolom Total Kamera
                 Tables\Columns\TextColumn::make('cctv_names')
                     ->label('Total Kamera')
                     ->getStateUsing(fn (Vessel $record): string => is_array($record->cctv_names) ? count($record->cctv_names) . ' Kamera' : '6 Kamera (Default)')

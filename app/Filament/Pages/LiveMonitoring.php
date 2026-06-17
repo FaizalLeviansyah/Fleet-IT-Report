@@ -40,7 +40,6 @@ class LiveMonitoring extends Page
 
     public function mount()
     {
-        // Set default rentang bulan ini saja agar tidak berat
         $this->start_date = now()->startOfMonth()->format('Y-m-d');
         $this->end_date = now()->format('Y-m-d');
         $this->start_time = '00:00';
@@ -48,8 +47,17 @@ class LiveMonitoring extends Page
         $this->channel_labels = $this->default_labels;
     }
 
+    // 💡 SECURITY: Cegah Owner mengedit nama kamera di Live Monitoring (Opsional tapi aman)
     public function updatedChannelLabels($value, $key)
     {
+        if (auth()->user()->role === 'owner') {
+            Notification::make()->title('Akses Ditolak!')->body('Hanya Admin yang dapat merubah label kamera.')->danger()->send();
+            // Kembalikan data lama
+            $vessel = Vessel::where('vessel_name', $this->selected_vessel)->first();
+            $this->channel_labels = $vessel?->cctv_names ?? $this->default_labels;
+            return;
+        }
+
         if (empty($this->selected_vessel)) {
             Notification::make()->title('Pilih armada terlebih dahulu!')->warning()->send();
             return;
@@ -82,12 +90,9 @@ class LiveMonitoring extends Page
         });
     }
 
-    // 💡 FUNGSI BARU: Smart Query Filter (Anti Bug Eternal Oil 1 vs 2)
     private function applyVesselFilter($query, $vesselName)
     {
         $variants = $this->getVesselVariants($vesselName);
-
-        // Deteksi apakah user sedang mencari Kapal "1" (Romawi I atau Angka 1)
         $isVesselOne = preg_match('/ I$/i', $vesselName) || preg_match('/ 1$/i', $vesselName);
 
         $query->where(function($q) use ($vesselName, $variants, $isVesselOne) {
@@ -100,7 +105,6 @@ class LiveMonitoring extends Page
                            ->orWhere('image_path', 'LIKE', "%{$variant}%");
                     });
 
-                    // Jika mencari kapal I, BLOKIR mutlak semua data yang berbau kapal II
                     if ($isVesselOne) {
                         $subQ->where('vessel_name', 'NOT LIKE', "%II%")
                              ->where('image_path', 'NOT LIKE', "%II%")
@@ -123,18 +127,15 @@ class LiveMonitoring extends Page
             $latestQuery = DB::table('cctv_reports');
             $latest = $this->applyVesselFilter($latestQuery, $value)->latest('captured_at')->first();
 
-            // 💡 SMART UX: Cari data paling tua (pertama kali direkam) untuk mengunci kalender mundur
             $oldestQuery = DB::table('cctv_reports');
             $oldest = $this->applyVesselFilter($oldestQuery, $value)->oldest('captured_at')->first();
 
             if ($latest && $oldest) {
                 $latestDate = Carbon::parse($latest->captured_at);
 
-                // Set Batasan Mutlak Kalender
                 $this->max_date = $latestDate->format('Y-m-d');
                 $this->min_date = Carbon::parse($oldest->captured_at)->format('Y-m-d');
 
-                // Auto-Time Travel
                 $this->end_date = $this->max_date;
                 $this->start_date = $latestDate->copy()->subDays(2)->format('Y-m-d');
                 $this->start_time = '00:00';
@@ -175,7 +176,15 @@ class LiveMonitoring extends Page
 
     protected function getViewData(): array
     {
-        $daftar_kapal = Vessel::select('vessel_name')->orderBy('vessel_name', 'asc')->get();
+        $user = auth()->user();
+
+        // 💡 SECURITY (MULTI-TENANT): Filter Kapal di Dropdown Live Monitoring
+        $vesselQuery = Vessel::select('vessel_name')->orderBy('vessel_name', 'asc');
+        if ($user->role === 'owner') {
+            $vesselQuery->where('company_name', $user->company);
+        }
+        $daftar_kapal = $vesselQuery->get();
+
         $standard_channels = ['AJG', 'BRT', 'CCR', 'ECR', 'WKN', 'WKR'];
         $data_per_channel = array_fill_keys($standard_channels, collect());
 
@@ -191,7 +200,6 @@ class LiveMonitoring extends Page
         $start = Carbon::parse($this->start_date . ' ' . $this->start_time)->format('Y-m-d H:i:s');
         $end = Carbon::parse($this->end_date . ' ' . $this->end_time)->format('Y-m-d H:i:s');
 
-        // Tarik data dengan Smart Query Filter
         $raw_data = DB::table('cctv_reports');
         $raw_data = $this->applyVesselFilter($raw_data, $this->selected_vessel);
         $raw_data = $raw_data->whereBetween('captured_at', [$start, $end])

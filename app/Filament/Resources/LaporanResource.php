@@ -26,6 +26,23 @@ class LaporanResource extends Resource
     protected static ?string $navigationGroup = 'IT Operation';
     protected static ?int $navigationSort = 2;
 
+    public static function canCreate(): bool { return auth()->user()->role !== 'owner'; }
+    public static function canEdit(\Illuminate\Database\Eloquent\Model $record): bool { return auth()->user()->role !== 'owner'; }
+    public static function canDelete(\Illuminate\Database\Eloquent\Model $record): bool { return auth()->user()->role !== 'owner'; }
+
+    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+        $query = parent::getEloquentQuery();
+        $user = auth()->user();
+
+        if ($user->role === 'owner') {
+            $vessels = Vessel::where('company_name', $user->company)->pluck('vessel_name');
+            $query->whereIn('lokasi', $vessels);
+        }
+
+        return $query;
+    }
+
     public static function getFormSchema(bool $useRelationship = true): array
     {
         $repeater = Forms\Components\Repeater::make('gambars')
@@ -38,7 +55,6 @@ class LaporanResource extends Resource
                     ->required()
                     ->columnSpan(2),
 
-                // 💡 FIX: Samakan Default Fallback
                 Forms\Components\Select::make('channel')
                     ->label('CH')
                     ->options(function (Get $get) {
@@ -50,12 +66,8 @@ class LaporanResource extends Resource
                             }
                         }
                         return [
-                            'AJG' => 'CCTV 1 (Cam A)',
-                            'BRT' => 'CCTV 2 (Cam B)',
-                            'CCR' => 'CCTV 3 (Cam C)',
-                            'ECR' => 'CCTV 4 (Cam D)',
-                            'WKN' => 'CCTV 5 (Cam E)',
-                            'WKR' => 'CCTV 6 (Cam F)'
+                            'AJG' => 'CCTV 1 (Cam A)', 'BRT' => 'CCTV 2 (Cam B)', 'CCR' => 'CCTV 3 (Cam C)',
+                            'ECR' => 'CCTV 4 (Cam D)', 'WKN' => 'CCTV 5 (Cam E)', 'WKR' => 'CCTV 6 (Cam F)'
                         ];
                     })
                     ->required()
@@ -74,7 +86,6 @@ class LaporanResource extends Resource
                 ->live()
                 ->required(),
 
-            // 💡 FIX: Samakan Label Toggle Default
             Forms\Components\Section::make('CCTV 6 CH STATUS')
                 ->schema([
                     Forms\Components\Grid::make(3)->schema([
@@ -128,7 +139,17 @@ class LaporanResource extends Resource
                     ->modalHeading('Panduan Smart Export PDF')
                     ->modalDescription(new HtmlString('Untuk mencetak PDF, silakan <strong>centang (checklist)</strong> kotak di sebelah kiri pada baris data laporan yang ingin dicetak. Setelah dicentang, tombol <strong>"Bulk Action"</strong> akan muncul di kiri atas tabel, lalu klik dan pilih <strong>"Cetak PDF (Smart Export)"</strong>. Anda bisa mencentang puluhan laporan sekaligus!'))
                     ->modalSubmitAction(false)
-                    ->modalCancelActionLabel('Paham!')
+                    ->modalCancelActionLabel('Paham!'),
+
+                // 💡 UX UPGRADE: Hint edukasi mekanisme duplikat data
+                Action::make('hint_duplicate')
+                    ->label('Cara Duplikat Data')
+                    ->icon('heroicon-o-document-duplicate')
+                    ->color('warning')
+                    ->modalHeading('Panduan Duplikat Laporan')
+                    ->modalDescription(new HtmlString('Fitur ini sangat mempercepat tugas Admin jika kondisi kamera kapal tidak berubah dari jam sebelumnya. <br><br><strong>Mekanisme Sistem:</strong><br>1. Klik ikon <strong>Copy / Dua Lembar Kertas (Warna Kuning)</strong> di baris laporan yang mau disalin.<br>2. Panel samping akan terbuka, memuat seluruh teks narasi, status ke-6 channel kamera, hingga file foto dari laporan lama.<br>3. <strong>Sistem secara pintar otomatis mengubah waktu kejadian (TIMESTAMP) ke detik saat ini</strong> agar data tetap real-time.<br>4. Lakukan penyesuaian jika diperlukan, lalu klik Save.'))
+                    ->modalSubmitAction(false)
+                    ->modalCancelActionLabel('Mengerti!')
             ])
             ->columns([
                 Tables\Columns\ImageColumn::make('gambars.path_gambar')->label('SNAPSHOT')->limit(1)->square()->size(60),
@@ -137,7 +158,6 @@ class LaporanResource extends Resource
                 Tables\Columns\TextColumn::make('ch_status_badges')->label('6 CH SYSTEMS')->html()->getStateUsing(function (Laporan $record) {
                     $chs = ['AJG' => $record->status_ajg, 'BRT' => $record->status_brt, 'CCR' => $record->status_ccr, 'ECR' => $record->status_ecr, 'WKN' => $record->status_wkn, 'WKR' => $record->status_wkr];
 
-                    // Tarik nama label kustom milik kapal ini, jika belum pernah diubah di Master, gunakan default baru
                     $defaultLabels = [
                         'AJG' => 'CCTV 1 (Cam A)', 'BRT' => 'CCTV 2 (Cam B)', 'CCR' => 'CCTV 3 (Cam C)',
                         'ECR' => 'CCTV 4 (Cam D)', 'WKN' => 'CCTV 5 (Cam E)', 'WKR' => 'CCTV 6 (Cam F)'
@@ -166,6 +186,7 @@ class LaporanResource extends Resource
                     ->slideOver()
                     ->modalWidth('2xl')
                     ->modalHeading('Duplicate Laporan')
+                    ->visible(fn () => auth()->user()->role !== 'owner')
                     ->form(self::getFormSchema(false))
                     ->fillForm(function (Laporan $record) {
                         $data = $record->toArray();
