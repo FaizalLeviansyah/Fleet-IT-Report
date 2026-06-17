@@ -7,9 +7,13 @@ use App\Models\Laporan;
 use App\Models\Vessel;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
 
 class PdfController extends Controller
 {
+    // =======================================================
+    // 1. FUNGSI UNTUK CETAK SUMMARY OPS
+    // =======================================================
     public function generateSummary(Request $request)
     {
         ini_set('memory_limit', '2048M');
@@ -23,7 +27,6 @@ class PdfController extends Controller
         $startDate = Carbon::createFromFormat('d/m/Y', $from)->startOfDay();
         $endDate = Carbon::createFromFormat('d/m/Y', $to)->endOfDay();
 
-        // 💡 Tarik SELURUH OBJEK Master Kapal (Bukan cuma namanya)
         $allVessels = Vessel::orderBy('vessel_name', 'asc')->get();
 
         $laporans = Laporan::with('gambars')
@@ -46,8 +49,6 @@ class PdfController extends Controller
 
         foreach ($allVessels as $vessel) {
             $vesselName = $vessel->vessel_name;
-
-            // 💡 Tarik Data dari Kolom cctv_names di Master Data
             $vesselCustomLabels[$vesselName] = $vessel->cctv_names ?? $default_labels;
 
             $laps = $groupedLaporans->get($vesselName, collect());
@@ -98,5 +99,40 @@ class PdfController extends Controller
         ->setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true]);
 
         return $pdf->stream('SUMMARY_OPS.pdf');
+    }
+
+    // =======================================================
+    // 2. FUNGSI UNTUK CETAK BULK EXPORT LAPORAN
+    // =======================================================
+    public function bulkExportLaporan(Request $request)
+    {
+        ini_set('memory_limit', '2048M');
+        ini_set('max_execution_time', '300');
+
+        $key = $request->query('key');
+        $ids = Cache::get($key);
+
+        if (!$ids) {
+            abort(404, 'Sesi cetak PDF kedaluwarsa atau tidak valid. Silakan ulangi checklist dari sistem.');
+        }
+
+        $allVessels = Vessel::all();
+        $laporans = Laporan::with('gambars')->whereIn('id', $ids)->orderBy('lokasi', 'asc')->orderBy('waktu_kejadian', 'desc')->get();
+        $groupedLaporans = $laporans->groupBy('lokasi');
+
+        $vesselCustomLabels = [];
+        foreach ($allVessels as $vessel) {
+            $vesselCustomLabels[$vessel->vessel_name] = $vessel->cctv_names ?? ['AJG'=>'AJG','BRT'=>'BRT','CCR'=>'CCR','ECR'=>'ECR','WKN'=>'WKN','WKR'=>'WKR'];
+        }
+
+        $pdf = Pdf::loadView('pdf.bulk-laporan', [
+            'groupedLaporans' => $groupedLaporans,
+            'vesselCustomLabels' => $vesselCustomLabels
+        ])
+        ->setPaper('a4', 'portrait')
+        ->setWarnings(false)
+        ->setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => true]);
+
+        return $pdf->stream('LAPORAN_CCTV_BULK_' . now()->format('Ymd_His') . '.pdf');
     }
 }

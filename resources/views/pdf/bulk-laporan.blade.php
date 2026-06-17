@@ -6,13 +6,13 @@
     <style>
         body { font-family: 'Helvetica', sans-serif; font-size: 11px; color: #1e293b; margin: 0; padding: 0; }
 
-        /* HEADER SEDERHANA UNTUK BULK EXPORT */
-        .header { text-align: center; border-bottom: 3px solid #3b82f6; padding-bottom: 15px; margin-bottom: 30px; margin-top: 10px; }
+        /* HEADER TAMPIL DI SETIAP HALAMAN */
+        .header { text-align: center; border-bottom: 3px solid #3b82f6; padding-bottom: 15px; margin-bottom: 20px; }
         .header h1 { margin: 0; font-size: 24px; color: #0f172a; text-transform: uppercase; letter-spacing: 2px; }
         .header p { margin: 5px 0 0; color: #64748b; font-size: 12px; font-weight: bold; letter-spacing: 1px; }
 
-        /* DATA LAPORAN STYLES */
-        .laporan-card { border: 1px solid #cbd5e1; margin-bottom: 25px; page-break-inside: avoid; border-radius: 4px; background-color: #fff; overflow: hidden; }
+        /* 💡 FIX: Hapus page-break-inside: avoid; agar DomPDF tidak error */
+        .laporan-card { border: 1px solid #cbd5e1; margin-bottom: 20px; border-radius: 4px; background-color: #fff; }
         .laporan-header-table { width: 100%; background-color: #1e293b; color: #fff; border-collapse: collapse; }
         .laporan-header-table td { padding: 10px 15px; font-size: 13px; font-weight: bold; text-transform: uppercase; }
 
@@ -31,76 +31,96 @@
         .text-section { padding: 0 15px 15px 15px; }
         .narrative-box { background-color: #f1f5f9; padding: 10px; border-left: 3px solid #64748b; font-size: 10px; }
         .catatan-box { background-color: #eff6ff; padding: 10px; border-left: 3px solid #3b82f6; margin-top: 8px; font-size: 10px; }
+
+        /* 💡 FIX: Class pembatas halaman ditaruh sesudah laporan */
+        .page-break { page-break-after: always; }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <h1>LAPORAN CCTV (BULK EXPORT)</h1>
-        <p>TANGGAL CETAK: {{ now()->format('d F Y, H:i') }} WIB</p>
-    </div>
+    @php
+        // 💡 MENGHITUNG TOTAL DATA UNTUK MENCEGAH HALAMAN KOSONG DI AKHIR
+        $count = 0;
+        $total = 0;
+        foreach($groupedLaporans as $lokasi => $laporans) {
+            $total += count($laporans);
+        }
+    @endphp
 
     @foreach($groupedLaporans as $lokasi => $laporans)
         @foreach($laporans as $laporan)
-            <div class="laporan-card">
-                <table class="laporan-header-table">
-                    <tr>
-                        <td align="left">ARMADA: {{ $lokasi }}</td>
-                        <td align="right">WAKTU: {{ $laporan->waktu_kejadian ? $laporan->waktu_kejadian->format('d M Y, H:i') : '-' }} WIB</td>
-                    </tr>
-                </table>
+            @php $count++; @endphp
 
-                <div class="status-container">
-                    @php
-                        $chs = ['AJG' => $laporan->status_ajg, 'BRT' => $laporan->status_brt, 'CCR' => $laporan->status_ccr, 'ECR' => $laporan->status_ecr, 'WKN' => $laporan->status_wkn, 'WKR' => $laporan->status_wkr];
-                    @endphp
-                    @foreach($chs as $label => $status)
+            {{-- 💡 FIX: Bungkus dalam 1 blok halaman. Jangan break page kalau ini data terakhir. --}}
+            <div class="{{ $count < $total ? 'page-break' : '' }}">
+
+                {{-- Header akan dicetak berulang di setiap halaman laporan --}}
+                <div class="header">
+                    <h1>LAPORAN CCTV (BULK EXPORT)</h1>
+                    <p>TANGGAL CETAK: {{ now()->format('d F Y, H:i') }} WIB</p>
+                </div>
+
+                <div class="laporan-card">
+                    <table class="laporan-header-table">
+                        <tr>
+                            <td align="left">ARMADA: {{ $lokasi }}</td>
+                            <td align="right">WAKTU: {{ $laporan->waktu_kejadian ? $laporan->waktu_kejadian->format('d M Y, H:i') : '-' }} WIB</td>
+                        </tr>
+                    </table>
+
+                    <div class="status-container">
                         @php
-                            $status = $status ?? 'Clear';
-                            $bgClass = match($status) { 'Clear' => 'bg-clear', 'Blur' => 'bg-blur', 'NA' => 'bg-na', default => 'bg-clear' };
+                            $chs = ['AJG' => $laporan->status_ajg, 'BRT' => $laporan->status_brt, 'CCR' => $laporan->status_ccr, 'ECR' => $laporan->status_ecr, 'WKN' => $laporan->status_wkn, 'WKR' => $laporan->status_wkr];
                         @endphp
-                        <span class="status-badge {{ $bgClass }}">{{ $label }}: {{ $status }}</span>
-                    @endforeach
-                    <span class="info-text">Total Snapshot terlampir: {{ $laporan->gambars->count() }} Foto</span>
-                </div>
-
-                <div class="image-container">
-                    @foreach($laporan->gambars as $gambar)
-                        <div class="image-box">
+                        @foreach($chs as $label => $status)
                             @php
-                                $path = storage_path('app/public/' . $gambar->path_gambar);
-                                $base64 = '';
-                                if(file_exists($path)) {
-                                    $type = pathinfo($path, PATHINFO_EXTENSION);
-                                    $data = file_get_contents($path);
-                                    $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
-                                }
+                                $status = $status ?? 'Clear';
+                                $bgClass = match($status) { 'Clear' => 'bg-clear', 'Blur' => 'bg-blur', 'NA' => 'bg-na', default => 'bg-clear' };
+                                $customLabel = $vesselCustomLabels[$lokasi][$label] ?? $label;
                             @endphp
-                            @if($base64)
-                                <img src="{{ $base64 }}" alt="IMG">
-                            @else
-                                <div style="height: 110px; line-height: 110px; border: 1px dashed #ccc; font-size: 10px; color: #999;">NO IMAGE</div>
-                            @endif
+                            <span class="status-badge {{ $bgClass }}">{{ $customLabel }}: {{ $status }}</span>
+                        @endforeach
+                        <span class="info-text">Total Snapshot terlampir: {{ $laporan->gambars->count() }} Foto</span>
+                    </div>
 
-                            <div class="image-channel">
-                                {{ $vesselCustomLabels[$lokasi][$gambar->channel] ?? 'CH: ' . $gambar->channel }}
+                    <div class="image-container">
+                        @foreach($laporan->gambars as $gambar)
+                            <div class="image-box">
+                                @php
+                                    $path = storage_path('app/public/' . $gambar->path_gambar);
+                                    $base64 = '';
+                                    if(file_exists($path)) {
+                                        $type = pathinfo($path, PATHINFO_EXTENSION);
+                                        $data = file_get_contents($path);
+                                        $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
+                                    }
+                                @endphp
+                                @if($base64)
+                                    <img src="{{ $base64 }}" alt="IMG">
+                                @else
+                                    <div style="height: 110px; line-height: 110px; border: 1px dashed #ccc; font-size: 10px; color: #999;">NO IMAGE</div>
+                                @endif
+
+                                <div class="image-channel">
+                                    {{ $vesselCustomLabels[$lokasi][$gambar->channel] ?? 'CH: ' . $gambar->channel }}
+                                </div>
                             </div>
+                        @endforeach
+                    </div>
+
+                    <div class="text-section">
+                        <div class="narrative-box">
+                            <strong>NARRATIVE (ASLI):</strong><br>
+                            {{ $laporan->isi_laporan ?: '-' }}
                         </div>
-                    @endforeach
-                </div>
 
-                <div class="text-section">
-                    <div class="narrative-box">
-                        <strong>NARRATIVE (ASLI):</strong><br>
-                        {{ $laporan->isi_laporan ?: '-' }}
+                        @if($laporan->catatan_tambahan)
+                        <div class="catatan-box">
+                            <strong>CATATAN IT (ANALISA):</strong><br>
+                            {{ $laporan->catatan_tambahan }}
+                        </div>
+                        @endif
                     </div>
-
-                    @if($laporan->catatan_tambahan)
-                    <div class="catatan-box">
-                        <strong>CATATAN IT (ANALISA):</strong><br>
-                        {{ $laporan->catatan_tambahan }}
-                    </div>
-                    @endif
                 </div>
             </div>
         @endforeach

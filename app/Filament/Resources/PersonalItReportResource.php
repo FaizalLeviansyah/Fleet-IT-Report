@@ -337,8 +337,9 @@ class PersonalItReportResource extends Resource
             ])
             ->defaultSort('created_at', 'desc')
             ->actions([
-                Tables\Actions\ViewAction::make()->modalWidth('7xl'),
-                Tables\Actions\EditAction::make()->modalWidth('7xl')->successNotificationTitle('Laporan Tersimpan! 🟢'),
+                // 💡 FIX: Tambahkan ->slideOver() agar panel muncul dari samping (tidak terpotong atasnya)
+                Tables\Actions\ViewAction::make()->modalWidth('7xl')->slideOver(),
+                Tables\Actions\EditAction::make()->modalWidth('7xl')->slideOver()->successNotificationTitle('Laporan Tersimpan! 🟢'),
             ])
             ->bulkActions([
                 Tables\Actions\DeleteBulkAction::make(),

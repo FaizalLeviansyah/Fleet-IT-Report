@@ -33,6 +33,8 @@ class AdminPanelProvider extends PanelProvider
                 'Master Data',
                 'My Profile & Support',
             ])
+            // 👇 TAMBAHKAN BARIS SAKTI INI DI SINI 👇
+            ->sidebarFullyCollapsibleOnDesktop()
             ->path('admin')
             // TAB BROWSER & FAVICON
             ->brandName('ITSM Stack')
